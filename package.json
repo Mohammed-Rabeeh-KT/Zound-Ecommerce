@@ -1,0 +1,31 @@
+{
+  "name": "zound-(e-commerce)",
+  "version": "1.0.0",
+  "main": "sample.js",
+  "scripts": {
+    "start": "nodemon app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mohammed-Rabeeh-KT/Zound-Ecommerce.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Mohammed-Rabeeh-KT/Zound-Ecommerce/issues"
+  },
+  "homepage": "https://github.com/Mohammed-Rabeeh-KT/Zound-Ecommerce#readme",
+  "description": "",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "dotenv": "^17.2.3",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-ejs-layouts": "^2.5.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^7.0.0",
+    "mongoose": "^9.0.0",
+    "nodemon": "^3.1.11"
+  }
+}

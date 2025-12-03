@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ZOUND – Experience Sound, Redefined</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Tailwind CSS CDN (You can switch to a build later) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Material Icons for UI elements -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <!-- Global Custom CSS (optional) -->
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body class="bg-neutral-50 text-neutral-900">
+
+  <!-- HEADER -->
+  <%- include('partials/user/header') %>
+
+  <!-- MAIN CONTENT -->
+  <main class="min-h-screen">
+    <%- body %>
+  </main>
+
+  <!-- FOOTER -->
+  <%- include('partials/user/footer') %>
+
+  <!-- Page Scripts -->
+  <script src="/js/main.js"></script>
+</body>
+</html>

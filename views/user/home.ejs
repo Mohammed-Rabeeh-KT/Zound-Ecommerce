@@ -1,0 +1,363 @@
+
+
+<%
+// ---------- TEMP STATIC DATA (replace with DB later) ----------
+const categories = [
+  { name: "Headphones", image: "/images/cat/headphones.jpg" },
+  { name: "Earbuds", image: "/images/cat/earbuds.jpg" },
+  { name: "Speakers", image: "/images/cat/speakers.jpg" },
+  { name: "IEMs", image: "/images/cat/iems.jpg" },
+  { name: "Home Audio", image: "/images/cat/homeaudio.jpg" },
+  { name: "Gaming", image: "/images/cat/gaming.jpg" },
+];
+
+const topProducts = [
+  {
+    _id: "1",
+    name: "Sony WH-1000XM5 Wireless Noise Cancelling Headphones",
+    brand: "Sony",
+    price: 29999,
+    oldPrice: 34999,
+    discount: 15,
+    image: "/images/products/sony-m5.jpg"
+  },
+  {
+    _id: "2",
+    name: "Sennheiser HD 800 S Reference Headphones",
+    brand: "Sennheiser",
+    price: 139999,
+    oldPrice: 149999,
+    discount: 7,
+    image: "/images/products/hd800s.jpg"
+  },
+  {
+    _id: "3",
+    name: "Apple AirPods Pro (2nd generation)",
+    brand: "Apple",
+    price: 24999,
+    oldPrice: 26999,
+    discount: 8,
+    image: "/images/products/airpods-pro.jpg"
+  },
+  {
+    _id: "4",
+    name: "HiFiMan Arya Stealth Planar Magnetic Headphones",
+    brand: "HiFiMan",
+    price: 129999,
+    oldPrice: null,
+    discount: null,
+    image: "/images/products/aryastealth.jpg"
+  },
+  {
+    _id: "5",
+    name: "Focal Clear MG Over-Ear Headphones",
+    brand: "Focal",
+    price: 99999,
+    oldPrice: 109999,
+    discount: 9,
+    image: "/images/products/clear-mg.jpg"
+  },
+  {
+    _id: "6",
+    name: "Bose QuietComfort Ultra Headphones",
+    brand: "Bose",
+    price: 32999,
+    oldPrice: 34999,
+    discount: 6,
+    image: "/images/products/bose-qc.jpg"
+  },
+  {
+    _id: "7",
+    name: "Audeze LCD-X Planar Magnetic Headphones",
+    brand: "Audeze",
+    price: 119999,
+    oldPrice: 129999,
+    discount: 8,
+    image: "/images/products/lcdx.jpg"
+  },
+  {
+    _id: "8",
+    name: "KEF LSX II Wireless HiFi Speaker System",
+    brand: "KEF",
+    price: 154999,
+    oldPrice: 164999,
+    discount: 6,
+    image: "/images/products/lsx2.jpg"
+  }
+];
+
+const curatedBrands = [
+  "Apple", "boAt", "Samsung", "Sony", "Bose",
+  "Sennheiser", "Focal", "Audeze", "HiFiMan", "All brands"
+];
+
+const specialOffers = [
+  {
+    _id: "101",
+    name: "Xiaomi Wireless Buds Pro",
+    brand: "Xiaomi",
+    price: 4999,
+    oldPrice: 5799,
+    discount: 14,
+    image: "/images/products/xiaomi-buds.jpg"
+  },
+  {
+    _id: "102",
+    name: "Sony WH-CH720N Wireless Headphones",
+    brand: "Sony",
+    price: 9999,
+    oldPrice: 12499,
+    discount: 20,
+    image: "/images/products/sony-ch720.jpg"
+  },
+  {
+    _id: "103",
+    name: "boAt Stone 1200 Bluetooth Speaker",
+    brand: "boAt",
+    price: 3499,
+    oldPrice: 4299,
+    discount: 18,
+    image: "/images/products/boat-stone.jpg"
+  },
+  {
+    _id: "104",
+    name: "Samsung Galaxy Buds 3 Pro",
+    brand: "Samsung",
+    price: 13999,
+    oldPrice: 15999,
+    discount: 13,
+    image: "/images/products/galaxy-buds3.jpg"
+  }
+];
+%>
+
+<div class="max-w-7xl mx-auto px-4 pb-16 space-y-14">
+
+  <!-- HERO SECTION -->
+  <section class="mt-6">
+    <div class="relative bg-black text-white rounded-3xl overflow-hidden min-h-[260px] flex flex-col md:flex-row items-center px-8 md:px-10 py-10 gap-6">
+      
+      <!-- Left content -->
+      <div class="max-w-xl space-y-4">
+        <p class="text-[11px] tracking-[0.25em] uppercase text-neutral-300">
+          Premium Audio
+        </p>
+        <h1 class="text-3xl md:text-4xl font-semibold leading-tight">
+          Experience sound<br class="hidden md:block" /> redefined.
+        </h1>
+        <p class="text-sm md:text-base text-neutral-300 max-w-md">
+          Discover curated headphones, speakers and IEMs crafted for true audiophiles.
+        </p>
+        <button class="mt-2 inline-flex items-center px-5 py-2.5 rounded-full bg-[#002366] text-white text-sm font-semibold hover:opacity-90">
+          Explore the Collection
+          <span class="material-icons text-[16px] ml-1">arrow_forward</span>
+        </button>
+      </div>
+
+      <!-- Right image (hero visual) -->
+      <div class="flex-1 flex justify-end">
+        <img
+          src="/images/hero/headphones-hero.png"
+          alt="Zound premium headphones"
+          class="w-56 md:w-72 object-contain"
+        />
+      </div>
+
+      <!-- Slider arrows + dots (visual only) -->
+      <button class="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 bg-neutral-900/80 text-white rounded-full w-9 h-9 items-center justify-center text-lg">
+        ‹
+      </button>
+      <button class="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 bg-neutral-900/80 text-white rounded-full w-9 h-9 items-center justify-center text-lg">
+        ›
+      </button>
+
+      <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+        <span class="w-2 h-2 rounded-full bg-white"></span>
+        <span class="w-2 h-2 rounded-full bg-neutral-500"></span>
+        <span class="w-2 h-2 rounded-full bg-neutral-500"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SHOP BY CATEGORY -->
+  <section class="space-y-4">
+    <div class="flex items-center justify-between">
+      <h2 class="font-semibold text-lg">Shop by category</h2>
+      <div class="flex gap-2">
+        <button class="w-8 h-8 rounded-full border flex items-center justify-center text-sm hover:bg-neutral-100">‹</button>
+        <button class="w-8 h-8 rounded-full border flex items-center justify-center text-sm hover:bg-neutral-100">›</button>
+      </div>
+    </div>
+
+    <div class="flex gap-6 overflow-x-auto pt-2">
+      <% categories.forEach(cat => { %>
+        <%- include('../partials/user/category-card', {
+          name: cat.name,
+          image: cat.image
+        }) %>
+      <% }) %>
+    </div>
+  </section>
+
+  <!-- SEASONAL SALE BANNER -->
+  <section>
+    <div class="bg-gradient-to-r from-blue-100 to-blue-200 rounded-3xl flex flex-col md:flex-row items-center p-6 md:p-10 gap-6">
+      <div class="flex-1 flex flex-col md:flex-row items-center gap-6">
+        <div class="flex flex-col items-start">
+          <p class="text-sm font-semibold text-[#002366]">20% OFF</p>
+          <p class="text-xs text-neutral-600">On select products</p>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-semibold text-lg mb-1 text-[#00153f]">
+            Seasonal weekly sale 2025
+          </h3>
+          <p class="text-xs text-neutral-700 mb-2">
+            Use code 
+            <span class="font-semibold bg-white/70 px-2 py-0.5 rounded-full border text-[11px] uppercase">
+              SALE2025
+            </span>
+            to get the best offer.
+          </p>
+        </div>
+      </div>
+      <div class="flex-shrink-0">
+        <img
+          src="/images/banners/sale-headphones.png"
+          alt="Seasonal sale headphones"
+          class="w-40 md:w-48 object-contain"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICE ICONS ROW -->
+  <section class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+    <div class="flex items-center gap-2 bg-white rounded-2xl px-4 py-3 border">
+      <span class="material-icons text-[18px]">local_shipping</span>
+      <div>
+        <p class="font-semibold text-[12px]">Free shipping & returns</p>
+        <p class="text-[11px] text-neutral-500">On orders over ₹999</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 bg-white rounded-2xl px-4 py-3 border">
+      <span class="material-icons text-[18px]">lock</span>
+      <div>
+        <p class="font-semibold text-[12px]">Secure payment</p>
+        <p class="text-[11px] text-neutral-500">100% secure checkout</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 bg-white rounded-2xl px-4 py-3 border">
+      <span class="material-icons text-[18px]">verified</span>
+      <div>
+        <p class="font-semibold text-[12px]">Money-back guarantee</p>
+        <p class="text-[11px] text-neutral-500">30-day return policy</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 bg-white rounded-2xl px-4 py-3 border">
+      <span class="material-icons text-[18px]">support_agent</span>
+      <div>
+        <p class="font-semibold text-[12px]">24/7 support</p>
+        <p class="text-[11px] text-neutral-500">Dedicated audio experts</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOP SELLING PRODUCTS -->
+  <section class="space-y-4">
+    <div class="flex items-center justify-between mt-4">
+      <h2 class="font-semibold text-lg">Top selling products</h2>
+    </div>
+
+    <!-- Tabs (visual only) -->
+    <div class="flex gap-4 text-xs border-b">
+      <button class="pb-2 border-b-2 border-black font-semibold">Headphones</button>
+      <button class="pb-2 text-neutral-500">IEMs</button>
+      <button class="pb-2 text-neutral-500">Speakers</button>
+      <button class="pb-2 text-neutral-500">Earbuds</button>
+      <button class="pb-2 text-neutral-500">Accessories</button>
+    </div>
+
+    <!-- Product grid -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+      <% topProducts.forEach(p => { %>
+        <%- include('../partials/user/product-card', {
+          _id: p._id,
+          name: p.name,
+          brand: p.brand,
+          price: p.price,
+          oldPrice: p.oldPrice,
+          discount: p.discount,
+          image: p.image
+        }) %>
+      <% }) %>
+    </div>
+  </section>
+
+  <!-- CURATED BRANDS -->
+  <section class="mt-10 space-y-4">
+    <h2 class="text-center font-semibold text-lg">Our curated brands</h2>
+    <p class="text-center text-xs text-neutral-600 max-w-xl mx-auto">
+      We partner with the world's most revered audio manufacturers to bring you an unparalleled listening experience.
+    </p>
+
+    <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 items-center">
+      <% curatedBrands.forEach(name => { %>
+        <%- include('../partials/user/brand-card', { name }) %>
+      <% }) %>
+    </div>
+  </section>
+
+  <!-- SPECIAL OFFERS -->
+  <section class="mt-10 space-y-4">
+    <div class="flex items-center justify-between">
+      <h2 class="font-semibold text-lg">Special offers for you</h2>
+      <button class="text-xs text-neutral-600 hover:text-black">View all</button>
+    </div>
+
+    <!-- simple timer pills -->
+    <div class="flex gap-2 text-[11px]">
+      <button class="px-2 py-1 rounded-full bg-black text-white">12d</button>
+      <button class="px-2 py-1 rounded-full bg-neutral-200 text-neutral-800">10h</button>
+      <button class="px-2 py-1 rounded-full bg-neutral-200 text-neutral-800">12m</button>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3">
+      <% specialOffers.forEach(p => { %>
+        <%- include('../partials/user/product-card', {
+          _id: p._id,
+          name: p.name,
+          brand: p.brand,
+          price: p.price,
+          oldPrice: p.oldPrice,
+          discount: p.discount,
+          image: p.image
+        }) %>
+      <% }) %>
+    </div>
+  </section>
+
+  <!-- NEWSLETTER / JOIN THE INNER CIRCLE -->
+  <section class="mt-10">
+    <div class="bg-[#002366] text-white rounded-3xl px-6 md:px-12 py-10 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="space-y-2 max-w-md">
+        <h2 class="text-xl md:text-2xl font-semibold">Join the inner circle</h2>
+        <p class="text-xs text-blue-100">
+          Stay tuned for exclusive releases, special offers, and the latest in high-fidelity audio.
+        </p>
+      </div>
+      <div class="w-full md:w-96">
+        <form class="flex flex-col sm:flex-row gap-3">
+          <input
+            type="email"
+            placeholder="Enter your email address"
+            class="flex-1 rounded-full px-4 py-2 text-sm text-neutral-900 outline-none"
+          />
+          <button class="px-5 py-2 rounded-full bg-yellow-400 text-black text-sm font-semibold hover:opacity-90">
+            Subscribe
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+</div>

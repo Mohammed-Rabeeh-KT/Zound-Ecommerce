@@ -1,0 +1,65 @@
+<header class="w-full border-b bg-white sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+
+    <!-- Logo -->
+    <a href="/" class="flex items-center gap-2">
+      <span class="font-bold text-2xl tracking-wide">ZOUND</span>
+    </a>
+
+    <!-- Primary Nav Links -->
+    <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-neutral-700">
+      <a href="/products" class="hover:text-black">Products</a>
+      <a href="/brands" class="hover:text-black">Brands</a>
+      <a href="/deals" class="hover:text-black">Deals</a>
+      <a href="/support" class="hover:text-black">Support</a>
+    </nav>
+
+    <!-- Right Side Controls -->
+    <div class="flex items-center gap-4">
+
+      <!-- Search -->
+      <div class="hidden md:flex items-center border rounded-full px-3 py-2 bg-neutral-50 w-52">
+        <input 
+          class="flex-1 bg-transparent text-sm outline-none"
+          placeholder="Search products..."
+        />
+        <span class="material-icons text-neutral-600 text-[18px]">search</span>
+      </div>
+
+      <% if (user) { %>
+        <!-- Logged-in view -->
+        
+        <!-- Wishlist -->
+        <a href="/wishlist" class="p-2 rounded-full border bg-white hover:bg-neutral-100">
+          <span class="material-icons text-neutral-700 text-[20px]">favorite_border</span>
+        </a>
+        
+        <!-- Cart -->
+        <a href="/cart" class="relative p-2 rounded-full border bg-white hover:bg-neutral-100">
+          <span class="material-icons text-neutral-700 text-[20px]">shopping_cart</span>
+
+          <% if (cartCount && cartCount > 0) { %>
+            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full px-1">
+              <%= cartCount %>
+            </span>
+          <% } %>
+        </a>
+
+        <!-- Profile Dropdown Trigger -->
+        <div class="relative">
+          <button class="p-2 rounded-full border bg-white hover:bg-neutral-100">
+            <span class="material-icons text-neutral-700 text-[20px]">person</span>
+          </button>
+          <!-- Future Dropdown can go here -->
+        </div>
+
+      <% } else { %>
+        <!-- Guest view -->
+        <a href="/login" class="px-4 py-2 text-sm font-medium rounded-full bg-[#002366] text-white hover:bg-[#001a4d]">
+          Login / Signup
+        </a>
+      <% } %>
+
+    </div>
+  </div>
+</header>
