@@ -19,47 +19,161 @@
 
       <!-- Search -->
       <div class="hidden md:flex items-center border rounded-full px-3 py-2 bg-neutral-50 w-52">
-        <input 
-          class="flex-1 bg-transparent text-sm outline-none"
-          placeholder="Search products..."
-        />
+        <input class="flex-1 bg-transparent text-sm outline-none" placeholder="Search products..." />
         <span class="material-icons text-neutral-600 text-[18px]">search</span>
       </div>
 
       <% if (user) { %>
         <!-- Logged-in view -->
-        
+
         <!-- Wishlist -->
         <a href="/wishlist" class="p-2 rounded-full border bg-white hover:bg-neutral-100">
           <span class="material-icons text-neutral-700 text-[20px]">favorite_border</span>
         </a>
-        
+
         <!-- Cart -->
         <a href="/cart" class="relative p-2 rounded-full border bg-white hover:bg-neutral-100">
           <span class="material-icons text-neutral-700 text-[20px]">shopping_cart</span>
 
-          <% if (cartCount && cartCount > 0) { %>
+          <% if (cartCount && cartCount> 0) { %>
             <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full px-1">
               <%= cartCount %>
             </span>
-          <% } %>
+            <% } %>
         </a>
 
-        <!-- Profile Dropdown Trigger -->
+        <!-- USER AVATAR -->
         <div class="relative">
-          <button class="p-2 rounded-full border bg-white hover:bg-neutral-100">
-            <span class="material-icons text-neutral-700 text-[20px]">person</span>
-          </button>
-          <!-- Future Dropdown can go here -->
+          <% if (user) { %>
+
+            <!-- Avatar Button -->
+            <button id="avatarBtn" class="flex items-center space-x-2 focus:outline-none">
+
+              <% if (user.profile_picture) { %>
+                <img src="<%= user.profile_picture %>"
+                  class="w-10 h-10 rounded-full object-cover border border-gray-300 shadow" />
+
+                <% } else { %>
+                  <div class="w-10 h-10 flex items-center justify-center 
+                      bg-blue-900 text-white text-lg font-semibold rounded-full shadow">
+                    <%= user.name.charAt(0).toUpperCase() %>
+                  </div>
+                  <% } %>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div id="avatarDropdown"
+              class="hidden absolute right-0 mt-3 w-48 bg-white shadow-xl rounded-lg overflow-hidden z-50">
+
+              <div class="px-4 py-3 border-b">
+                <p class="font-semibold text-gray-900">
+                  <%= user.name %>
+                </p>
+                <p class="text-sm text-gray-500 truncate">
+                  <%= user.email %>
+                </p>
+              </div>
+
+              <a href="/user/profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">My Profile</a>
+
+              <button type="button" onclick="Logout()"
+                class="w-full text-left px-4 py-2 text-red-600 hover:bg-red-100 font-semibold">
+                Logout
+              </button>
+
+            </div>
+
+            <% } else { %>
+              <!-- If user NOT logged in -->
+              <a href="/user/login" class="text-white bg-blue-900 px-4 py-2 rounded-lg hover:bg-blue-800">
+                Login
+              </a>
+              <% } %>
         </div>
 
-      <% } else { %>
-        <!-- Guest view -->
-        <a href="/login" class="px-4 py-2 text-sm font-medium rounded-full bg-[#002366] text-white hover:bg-[#001a4d]">
-          Login / Signup
-        </a>
-      <% } %>
+        <% } else { %>
+          <!-- Guest view -->
+
+          <!-- Cart -->
+          <a href="/cart" class="relative p-2 rounded-full border bg-white hover:bg-neutral-100">
+            <span class="material-icons text-neutral-700 text-[20px]">shopping_cart</span>
+
+            <% if (cartCount && cartCount> 0) { %>
+              <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full px-1">
+                <%= cartCount %>
+              </span>
+              <% } %>
+          </a>
+
+
+          <a href="/user/login"
+            class="px-4 py-2 text-sm font-medium rounded-full bg-[#002366] text-white hover:bg-[#001a4d]">
+            Login / Signup
+          </a>
+          <% } %>
 
     </div>
   </div>
 </header>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+
+  // Avatar Dropdown Toggle
+  const avatarBtn = document.getElementById("avatarBtn");
+  const avatarDropdown = document.getElementById("avatarDropdown");
+
+  if (avatarBtn) {
+    avatarBtn.addEventListener("click", () => {
+      avatarDropdown.classList.toggle("hidden");
+    });
+
+    // Close dropdown when clicking outside
+    window.addEventListener("click", (e) => {
+      if (!avatarBtn.contains(e.target) && !avatarDropdown.contains(e.target)) {
+        avatarDropdown.classList.add("hidden");
+      }
+    });
+  }
+
+
+  function Logout() {
+   
+     Swal.fire({
+      title: "Are you sure?",
+      text: "You will be logged out of your account.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, Logout",
+      cancelButtonText: "Cancel"
+    }).then((result) => {
+      if (result.isConfirmed) {
+
+        axios.post('/user/logout')
+          .then(() => {
+            Swal.fire({
+              title: "Logged Out",
+              text: "You have been successfully logged out.",
+              icon: "success",
+              timer: 1200,
+              showConfirmButton: false
+            });
+
+            setTimeout(() => {
+              window.location.href = '/user/login';
+            }, 1200);
+
+          })
+          .catch(error => {
+            console.error("Logout error:", error);
+            Swal.fire("Error", "Something went wrong. Try again!", "error");
+          });
+      }
+    });
+  }
+
+
+
+</script>

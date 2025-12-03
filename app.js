@@ -1,37 +1,64 @@
-const express = require("express")
+import express from 'express';
 const app = express();
-const path = require('path')
-const env = require('dotenv').config();
-const db = require('./config/db')
-const userRouter = require('./routes/userRouter.js')
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+import db from './config/db.js';
+import session from 'express-session';
+import cookieParser from 'cookie-parser';
+import passport from 'passport';
+import './config/passport.js';
+import expressEjsLayouts from 'express-ejs-layouts';
+import userRouter from './routes/userRouter.js';
+import authRouter from './routes/authRouter.js';
+import { authenticateUser } from './middlewares/authMiddleware.js';
+
+// Get __dirname equivalent in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config();
 db();
 
 app.use(express.json());
-app.use(express.urlencoded({extended : true}))
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 
-app.set('view engine','ejs');
-// Use the root `views` directory so layout and partials are resolvable
-app.set('views', path.join(__dirname, 'views'));
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false }
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Prevent caching for authenticated pages
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(require("express-ejs-layouts"));
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+app.use(expressEjsLayouts);
 app.set("layout", "layout");
 
-app.use('/',userRouter);
+app.use(authenticateUser);
 
+app.use('/user', userRouter);
+app.use('/auth', authRouter);
 
-// app.get('/',(req,res)=>{
-//     res.render('home');
-// })
-
- 
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, ()=>{
-    console.log(`Server running on http://localhost:${PORT}`)
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}/user/home`)
 })
 
-
-module.exports = app;
+export default app;

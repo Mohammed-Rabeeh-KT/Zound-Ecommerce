@@ -1,0 +1,191 @@
+<link rel="stylesheet" href="/styles/user/userLogin.css" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+
+
+
+<div class="login-wrapper">
+
+    <form class="login-card" action="/user/login" method="POST">
+
+        <h2 class="title">Welcome Back</h2>
+
+        <!-- EMAIL -->
+        <label>Email address <span class="required">*</span></label>
+        <input type="email" name="email" placeholder="Enter your email address" required />
+        <% if (typeof errors !=='undefined' && errors && errors.email) { %>
+            <p class="error-msg">
+                <%= errors.email %>
+            </p>
+            <% } %>
+                <!-- PASSWORD -->
+                <label>Password <span class="required">*</span></label>
+                <div class="password-box">
+                    <input id="passwordInput" type="password" name="password" placeholder="Enter your password"
+                        required />
+                    <span id="togglePassword" class="material-symbols-outlined eye-icon">visibility</span>
+                </div>
+                <% if (typeof errors !=='undefined' && errors && errors.password) { %>
+                    <p class="error-msg">
+                        <%= errors.password %>
+                    </p>
+                    <% } %>
+
+                        <!-- REMEMBER + FORGOT -->
+                        <div class="row-between">
+                            <label class="remember">
+                                <input type="checkbox" name="remember" /> Remember me
+                            </label>
+                            <a href="/user/forgot-password" class="forgot">Forgot password?</a>
+                        </div>
+
+                        <!-- LOGIN BUTTON -->
+                        <button type="submit" class="login-btn">Login</button>
+
+                        <!-- DIVIDER -->
+                        <div class="divider-row">
+                            <div class="line"></div>
+                            <span>Or continue with</span>
+                            <div class="line"></div>
+                        </div>
+
+                        <!-- SOCIAL BUTTONS -->
+                        <div class="social-buttons">
+                            <a href="/auth/google" class="social-btn">
+                                <img src="/images/icons/google.svg" alt="Google sign-in" width="20" height="20" /> Sign in with Google
+                            </a>
+                            <!-- <button type="button" class="social-btn">
+                <img src="/images/icons/facebook.svg" /> Facebook
+            </button>
+            <button type="button" class="social-btn">
+                <img src="/images/icons/apple.svg" /> Apple
+            </button> -->
+                        </div>
+
+                        <!-- SIGNUP LINK -->
+                        <div class="signup-row">
+                            <span>New to Zound?</span>
+                            <a href="/user/signup">Create an account</a>
+                        </div>
+
+                        <% if (typeof message !=='undefined' && message) { %>
+                            <p class="error-msg">
+                                <%= message %>
+                            </p>
+                            <% } %>
+
+    </form>
+
+    <footer class="footer">
+        <a href="/privacy">Privacy Policy</a>
+    </footer>
+
+</div>
+
+<script>
+    const togglePassword = document.getElementById("togglePassword");
+    const passInput = document.getElementById("passwordInput");
+
+    togglePassword.addEventListener("click", () => {
+        const type = passInput.type === "password" ? "text" : "password";
+        passInput.type = type;
+        togglePassword.textContent = type === "password" ? "visibility" : "visibility_off";
+    });
+
+
+    const emailInput = document.querySelector('input[name="email"]');
+    const passwordInput = document.querySelector('input[name="password"]');
+    const loginForm = document.querySelector('.login-card');
+
+    const emailError = document.createElement('div');
+    emailError.className = 'error-message';
+    emailError.style.display = 'none';
+    emailInput.parentElement.insertBefore(emailError, emailInput.nextSibling);
+
+    const passwordError = document.createElement('div');
+    passwordError.className = 'error-message';
+    passwordError.style.display = 'none';
+    passwordInput.parentElement.parentElement.insertBefore(passwordError, passwordInput.parentElement.nextSibling);
+
+    function emailValidateChecking() {
+        const emailVal = emailInput.value;
+        const emailPattern = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+        if (emailVal.trim() === "") {
+            emailError.style.display = "block";
+            emailError.innerHTML = "Please enter your email address";
+            emailInput.style.borderColor = "#dc3545";
+            return false;
+        } else if (!emailPattern.test(emailVal)) {
+            emailError.style.display = "block";
+            emailError.innerHTML = "Invalid email format. Please enter a valid email address.";
+            emailInput.style.borderColor = "#dc3545";
+            return false;
+        } else {
+            emailError.style.display = "none";
+            emailError.innerHTML = "";
+            emailInput.style.borderColor = "";
+            return true;
+        }
+    }
+
+    function passwordValidateChecking() {
+        const passVal = passwordInput.value;
+
+        if (passVal.trim() === "") {
+            passwordError.style.display = "block";
+            passwordError.innerHTML = "Please enter your password";
+            passwordInput.style.borderColor = "#dc3545";
+            return false;
+        } else if (passVal.length < 8) {
+            passwordError.style.display = "block";
+            passwordError.innerHTML = "Password must be at least 8 characters long";
+            passwordInput.style.borderColor = "#dc3545";
+            return false;
+        } else {
+            passwordError.style.display = "none";
+            passwordError.innerHTML = "";
+            passwordInput.style.borderColor = "";
+            return true;
+        }
+    }
+
+    // Real-time validation on blur
+    emailInput.addEventListener('blur', emailValidateChecking);
+    passwordInput.addEventListener('blur', passwordValidateChecking);
+
+    // Clear errors on input
+    emailInput.addEventListener('input', () => {
+        if (emailInput.value.trim() !== '') {
+            emailError.style.display = "none";
+            emailInput.style.borderColor = "";
+        }
+    });
+
+    passwordInput.addEventListener('input', () => {
+        if (passwordInput.value !== '') {
+            passwordError.style.display = "none";
+            passwordInput.style.borderColor = "";
+        }
+    });
+
+
+    // Form submission validation
+    loginForm.addEventListener('submit', (e) => {
+        const isEmailValid = emailValidateChecking();
+        const isPasswordValid = passwordValidateChecking();
+
+        if (!isEmailValid || !isPasswordValid) {
+            e.preventDefault();
+
+            // Focus on first invalid field
+            if (!isEmailValid) {
+                emailInput.focus();
+            } else if (!isPasswordValid) {
+                passwordInput.focus();
+            }
+
+        }
+
+    })
+
+</script>

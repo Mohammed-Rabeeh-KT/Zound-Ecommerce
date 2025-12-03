@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
 const userSchema = new Schema({
@@ -18,23 +18,14 @@ const userSchema = new Schema({
 
     phone: {
         type: String,
-        required: false,
-        unique: true, // Keep unique to avoid duplicate phone
-        sparse: true, // Allows multiple nulls
         default: null,
     },
 
     googleId: {
         type: String,
         unique: true,
-        sparse: true, // Only enforce uniqueness if exists
-        default: null,
-    },
-    facebookId: {
-        type: String
-    },
-    appleId: {
-        type: String
+        sparse: true,  // This allows multiple null values
+        default: undefined,
     },
 
     password: {
@@ -49,7 +40,7 @@ const userSchema = new Schema({
 
     referralCode: {
         type: String,
-        unique: true,
+        // unique: true,
         sparse: true,
         default: null,
     },
@@ -142,5 +133,4 @@ const userSchema = new Schema({
 
 const User = mongoose.model('User', userSchema);
 
-module.exports = User;
-
+export default User;
