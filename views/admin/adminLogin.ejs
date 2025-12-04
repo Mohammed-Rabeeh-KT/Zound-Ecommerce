@@ -1,0 +1,174 @@
+<link rel="stylesheet" href="/styles/admin/adminLogin.css" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+
+<div class="admin-login-wrapper">
+    
+    <div class="admin-login-container">
+        
+        
+
+        <!-- LOGIN CARD -->
+        <form class="admin-login-card" action="/admin/login" method="POST">
+
+            <!-- BRAND HEADER -->
+        <div class="brand-header">
+            <h1 class="brand-name">ZOUND</h1>
+            <p class="brand-subtitle">Admin Portal</p>
+        </div>
+            
+            <h2 class="welcome-title">Welcome Back</h2>
+            <p class="welcome-subtitle">Sign in to manage your admin dashboard</p>
+
+            <!-- EMAIL -->
+            <label class="input-label">Email Address</label>
+            <input 
+                id="emailInput"
+                type="email" 
+                name="email" 
+                class="admin-input" 
+                placeholder="Enter your email" 
+                required 
+            />
+            <div class="error-message" id="emailError"></div>
+            <% if (typeof errors !== 'undefined' && errors && errors.email) { %>
+                <p class="server-error-msg"><%= errors.email %></p>
+            <% } %>
+
+            <!-- PASSWORD -->
+            <label class="input-label">Password</label>
+            <div class="password-wrapper">
+                <input 
+                    id="passwordInput"
+                    type="password" 
+                    name="password" 
+                    class="admin-input" 
+                    placeholder="Enter your password" 
+                    required 
+                />
+                <span id="togglePassword" class="material-symbols-outlined eye-toggle">visibility_off</span>
+            </div>
+            <div class="error-message" id="passwordError"></div>
+            <% if (typeof errors !== 'undefined' && errors && errors.password) { %>
+                <p class="server-error-msg"><%= errors.password %></p>
+            <% } %>
+
+            <!-- LOGIN BUTTON -->
+            <button type="submit" class="admin-login-btn">Login</button>
+
+            <!-- SECURITY FOOTER -->
+            <p class="security-text">protected by industry-leading security protocols</p>
+
+            <!-- SUPPORT LINKS -->
+            <div class="support-links">
+                <span>Need help?</span>
+                <a href="/admin/contact-support" class="support-link">Contact Support</a>
+            </div>
+
+            <% if (typeof message !== 'undefined' && message) { %>
+                <p class="server-error-msg"><%= message %></p>
+            <% } %>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+    // Password visibility toggle
+    const togglePassword = document.getElementById("togglePassword");
+    const passwordInput = document.getElementById("passwordInput");
+
+    togglePassword.addEventListener("click", () => {
+        const type = passwordInput.type === "password" ? "text" : "password";
+        passwordInput.type = type;
+        togglePassword.textContent = type === "password" ? "visibility_off" : "visibility";
+    });
+
+    // Get form elements
+    const emailInput = document.getElementById('emailInput');
+    const adminLoginForm = document.querySelector('.admin-login-card');
+    const emailError = document.getElementById('emailError');
+    const passwordError = document.getElementById('passwordError');
+
+    // Email validation
+    function emailValidateChecking() {
+        const emailVal = emailInput.value;
+        const emailPattern = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+        if (emailVal.trim() === "") {
+            emailError.style.display = "block";
+            emailError.textContent = "Please enter your email address";
+            emailInput.style.borderColor = "#dc3545";
+            return false;
+        } else if (!emailPattern.test(emailVal)) {
+            emailError.style.display = "block";
+            emailError.textContent = "Invalid email format. Please enter a valid email address.";
+            emailInput.style.borderColor = "#dc3545";
+            return false;
+        } else {
+            emailError.style.display = "none";
+            emailError.textContent = "";
+            emailInput.style.borderColor = "";
+            return true;
+        }
+    }
+
+    // Password validation
+    function passwordValidateChecking() {
+        const passVal = passwordInput.value;
+
+        if (passVal.trim() === "") {
+            passwordError.style.display = "block";
+            passwordError.textContent = "Please enter your password";
+            passwordInput.style.borderColor = "#dc3545";
+            return false;
+        } else if (passVal.length < 8) {
+            passwordError.style.display = "block";
+            passwordError.textContent = "Password must be at least 8 characters long";
+            passwordInput.style.borderColor = "#dc3545";
+            return false;
+        } else {
+            passwordError.style.display = "none";
+            passwordError.textContent = "";
+            passwordInput.style.borderColor = "";
+            return true;
+        }
+    }
+
+    // Real-time validation on blur
+    emailInput.addEventListener('blur', emailValidateChecking);
+    passwordInput.addEventListener('blur', passwordValidateChecking);
+
+    // Clear errors on input
+    emailInput.addEventListener('input', () => {
+        if (emailInput.value.trim() !== '') {
+            emailError.style.display = "none";
+            emailInput.style.borderColor = "";
+        }
+    });
+
+    passwordInput.addEventListener('input', () => {
+        if (passwordInput.value !== '') {
+            passwordError.style.display = "none";
+            passwordInput.style.borderColor = "";
+        }
+    });
+
+    // Form submission validation
+    adminLoginForm.addEventListener('submit', (e) => {
+        const isEmailValid = emailValidateChecking();
+        const isPasswordValid = passwordValidateChecking();
+
+        if (!isEmailValid || !isPasswordValid) {
+            e.preventDefault();
+
+            // Focus on first invalid field
+            if (!isEmailValid) {
+                emailInput.focus();
+            } else if (!isPasswordValid) {
+                passwordInput.focus();
+            }
+        }
+    });
+</script>

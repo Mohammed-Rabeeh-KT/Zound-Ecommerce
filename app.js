@@ -11,6 +11,7 @@ import './config/passport.js';
 import expressEjsLayouts from 'express-ejs-layouts';
 import userRouter from './routes/userRouter.js';
 import authRouter from './routes/authRouter.js';
+import adminRouter from './routes/adminRouter.js';
 import { authenticateUser } from './middlewares/authMiddleware.js';
 
 // Get __dirname equivalent in ESM
@@ -59,6 +60,7 @@ app.use(authenticateUser);
 
 app.use('/auth', authRouter);
 app.use('/user', userRouter);
+app.use('/admin',adminRouter);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
@@ -66,3 +68,4 @@ app.listen(PORT, () => {
 })
 
 export default app;
+
