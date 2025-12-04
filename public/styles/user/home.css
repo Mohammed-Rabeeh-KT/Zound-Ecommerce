@@ -1,0 +1,19 @@
+.card-hover {
+  transition: all 0.25s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+.hero-arrow { transition: .2s; }
+.hero-arrow:hover { background: rgba(0,0,0,0.5); }
+
+.category-circle { transition: .2s; }
+.category-circle:hover { transform: scale(1.06); }
+
+.time-pill-active { background: #000; color:#fff; }
+.time-pill { background:#e5e7eb; color:#111; }

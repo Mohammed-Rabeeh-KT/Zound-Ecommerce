@@ -35,6 +35,11 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+app.use((req, res, next) => {
+  res.locals.user = req.user || null;
+  next();
+});
+
 // Prevent caching for authenticated pages
 app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
@@ -52,9 +57,8 @@ app.set("layout", "layout");
 
 app.use(authenticateUser);
 
-app.use('/user', userRouter);
 app.use('/auth', authRouter);
-
+app.use('/user', userRouter);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
