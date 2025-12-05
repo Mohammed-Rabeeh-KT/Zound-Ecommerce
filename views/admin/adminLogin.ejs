@@ -74,6 +74,24 @@
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script type="module" src="/js/swalUtils.js"></script>
+
+<!-- SWEET ALERT HANDLING -->
+<script>
+    const successMessage = "<%= typeof successMessage !== 'undefined' ? successMessage : '' %>";
+    const redirectTo = "<%= typeof redirectTo !== 'undefined' ? redirectTo : '' %>";
+</script>
+
+
+<script type="module">
+    import { showSuccess } from "/js/swalUtils.js";
+
+    if (successMessage) {
+        showSuccess(successMessage, redirectTo);
+    }
+</script>
+
 <script>
     // Password visibility toggle
     const togglePassword = document.getElementById("togglePassword");

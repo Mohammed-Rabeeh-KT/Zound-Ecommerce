@@ -9,10 +9,14 @@ import cookieParser from 'cookie-parser';
 import passport from 'passport';
 import './config/passport.js';
 import expressEjsLayouts from 'express-ejs-layouts';
+import AppError from "./utils/AppError.js";
+
+import globalErrorHandler from "./middlewares/globalErrorHandler.js";
 import userRouter from './routes/userRouter.js';
 import authRouter from './routes/authRouter.js';
 import adminRouter from './routes/adminRouter.js';
 import { authenticateUser } from './middlewares/authMiddleware.js';
+
 
 // Get __dirname equivalent in ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -61,6 +65,24 @@ app.use(authenticateUser);
 app.use('/auth', authRouter);
 app.use('/user', userRouter);
 app.use('/admin',adminRouter);
+
+
+//DO NOT throw AppError for static files
+app.use((req, res, next) => {
+    if (req.accepts('html')) {
+        return next(new AppError(`Page not found`, 404));
+    }
+    res.status(404).end(); // Quietly ignore asset errors
+});
+
+
+app.use((req, res, next) => {
+    next(new AppError(`Cannot find ${req.originalUrl} on this server`, 404));
+});
+
+
+app.use(globalErrorHandler);
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
