@@ -32,3 +32,4 @@ router.post('/fp-reset-password', authController.resetPassword);
 
 
 export default router;
+

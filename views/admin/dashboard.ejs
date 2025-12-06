@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Zound</title>
+    <link rel="stylesheet" href="/styles/admin/adminDashboard.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="admin-layout">
+        
+        <!-- INCLUDE SIDEBAR PARTIAL -->
+        <%- include('../partials/admin/adminSidebar', { 
+            currentPage: 'dashboard',
+            adminName: adminName,
+            adminEmail: adminEmail
+        }) %>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            
+            <!-- HEADER -->
+            <header class="content-header">
+                <div>
+                    <h1 class="page-title">Dashboard</h1>
+                    <p class="page-subtitle">Welcome back! Here is your store overview</p>
+                </div>
+            </header>
+
+            <!-- STATS CARDS -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-content">
+                        <p class="stat-label">Total Revenue</p>
+                        <h2 class="stat-value">₹<%= totalRevenue.toLocaleString('en-IN') %></h2>
+                        <p class="stat-change <%= revenueChange >= 0 ? 'positive' : 'negative' %>">
+                            <span class="material-symbols-outlined"><%= revenueChange >= 0 ? 'arrow_upward' : 'arrow_downward' %></span>
+                            <%= Math.abs(revenueChange).toFixed(1) %>%
+                        </p>
+                    </div>
+                    <div class="stat-icon revenue-icon">
+                        <span class="material-symbols-outlined">currency_rupee</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-content">
+                        <p class="stat-label">Total Orders</p>
+                        <h2 class="stat-value"><%= totalOrders.toLocaleString('en-IN') %></h2>
+                        <p class="stat-change <%= ordersChange >= 0 ? 'positive' : 'negative' %>">
+                            <span class="material-symbols-outlined"><%= ordersChange >= 0 ? 'arrow_upward' : 'arrow_downward' %></span>
+                            <%= Math.abs(ordersChange).toFixed(1) %>%
+                        </p>
+                    </div>
+                    <div class="stat-icon orders-icon">
+                        <span class="material-symbols-outlined">shopping_cart</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-content">
+                        <p class="stat-label">Active Users</p>
+                        <h2 class="stat-value"><%= activeUsers.toLocaleString('en-IN') %></h2>
+                        <p class="stat-change <%= usersChange >= 0 ? 'positive' : 'negative' %>">
+                            <span class="material-symbols-outlined"><%= usersChange >= 0 ? 'arrow_upward' : 'arrow_downward' %></span>
+                            <%= Math.abs(usersChange).toFixed(1) %>%
+                        </p>
+                    </div>
+                    <div class="stat-icon users-icon">
+                        <span class="material-symbols-outlined">group</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-content">
+                        <p class="stat-label">Conversion Rate</p>
+                        <h2 class="stat-value"><%= conversionRate.toFixed(2) %>%</h2>
+                        <p class="stat-change <%= conversionChange >= 0 ? 'positive' : 'negative' %>">
+                            <span class="material-symbols-outlined"><%= conversionChange >= 0 ? 'arrow_upward' : 'arrow_downward' %></span>
+                            <%= Math.abs(conversionChange).toFixed(1) %>%
+                        </p>
+                    </div>
+                    <div class="stat-icon conversion-icon">
+                        <span class="material-symbols-outlined">percent</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHARTS -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">Sales Overview</h3>
+                    <canvas id="salesChart"></canvas>
+                </div>
+
+                <div class="chart-card">
+                    <h3 class="chart-title">Sales by Category</h3>
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- RECENT ORDERS TABLE -->
+            <div class="orders-card">
+                <h3 class="orders-title">Recent Orders</h3>
+                
+                <div class="table-wrapper">
+                    <table class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Product</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (recentOrders && recentOrders.length > 0) { %>
+                                <% recentOrders.forEach(order => { %>
+                                    <tr>
+                                        <td class="order-id">#<%= order.orderId %></td>
+                                        <td><%= order.customerName %></td>
+                                        <td><%= order.productName %></td>
+                                        <td class="order-amount">₹<%= order.finalAmount.toLocaleString('en-IN') %></td>
+                                        <td>
+                                            <span class="status-badge status-<%= order.status.toLowerCase().replace(' ', '-') %>">
+                                                <%= order.status %>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="5" class="no-data">No orders found</td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // Sales Overview Chart
+        const salesCtx = document.getElementById('salesChart').getContext('2d');
+        const salesData = <%- JSON.stringify(salesChartData) %>;
+        
+        new Chart(salesCtx, {
+            type: 'line',
+            data: {
+                labels: salesData.labels,
+                datasets: [{
+                    data: salesData.values,
+                    borderColor: '#2c5aa0',
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#2c5aa0',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '₹' + value.toLocaleString('en-IN');
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Category Chart
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        const categoryData = <%- JSON.stringify(categoryChartData) %>;
+        
+        new Chart(categoryCtx, {
+            type: 'bar',
+            data: {
+                labels: categoryData.labels,
+                datasets: [{
+                    data: categoryData.values,
+                    backgroundColor: ['#4c8bf5', '#5094f7', '#6ba3f8', '#7caef9', '#a0c4fb'],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '₹' + value.toLocaleString('en-IN');
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
