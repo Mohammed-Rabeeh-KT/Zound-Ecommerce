@@ -84,6 +84,7 @@ const loginAdmin = catchAsync(async (req, res, next) => {
     // if SUCCESS → Create admin session
     req.session.admin = {
         id: admin._id,
+        name:admin.name,
         email: admin.email,
         role: admin.role,
     };

@@ -7,4 +7,3 @@ export const protectAdmin = (req, res, next) => {
     }
     next();
 }
-

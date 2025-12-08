@@ -40,10 +40,6 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use((req, res, next) => {
-  res.locals.user = req.user || null;
-  next();
-});
 
 // Prevent caching for authenticated pages
 app.use((req, res, next) => {
@@ -64,20 +60,11 @@ app.use(authenticateUser);
 
 app.use('/auth', authRouter);
 app.use('/user', userRouter);
-app.use('/admin',adminRouter);
-
-
-//DO NOT throw AppError for static files
-app.use((req, res, next) => {
-    if (req.accepts('html')) {
-        return next(new AppError(`Page not found`, 404));
-    }
-    res.status(404).end(); // Quietly ignore asset errors
-});
+app.use('/admin',authenticateUser,adminRouter);
 
 
 app.use((req, res, next) => {
-    next(new AppError(`Cannot find ${req.originalUrl} on this server`, 404));
+    next(new AppError(`Page not found`, 404));
 });
 
 
