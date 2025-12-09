@@ -163,7 +163,11 @@ function renderTable(categories, page, limit) {
         row.innerHTML = `
             <td>${serial}</td>
             <td>${escapeHtml(cat.name || "")}</td>
-            <td class="desc-cell" data-description="${desc}">${escapeHtml(cat.description || "-")}</td>
+            <td class="desc-cell"
+                data-description="${escapeAttr(cat.description || '')}"
+                onclick="openDescription(this.getAttribute('data-description'))">
+                ${escapeHtml(cat.description || "-")}
+            </td>
             <td class="product-count-cell">${cat.productCount ?? 0}</td>
             <td><span class="status-badge ${status ? "status-active" : "status-inactive"}">${status ? "active" : "inactive"}</span></td>
             <td>${cat.createdAt ? new Date(cat.createdAt).toLocaleDateString("en-GB") : "-"}</td>
@@ -330,10 +334,16 @@ async function toggleStatusConfirm() {
    Description popup
    ============================ */
 window.openDescription = function (text) {
-    const modal = document.getElementById("descModal");
-    const textEl = document.getElementById("fullDescText");
-    if (textEl) textEl.innerText = text || "";
-    if (modal) modal.classList.add("active");
+   const decoded = text
+        .replace(/&amp;/g, "&")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&#10;/g, "\n");
+
+    document.getElementById("fullDescText").innerText = decoded;
+    document.getElementById("descModal").classList.add("active");
 };
 window.closeDescModal = function () {
     const modal = document.getElementById("descModal");
@@ -350,9 +360,17 @@ function escapeHtml(str = "") {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;");
 }
-function escapeAttr(str = "") {
-    return String(str).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+function escapeAttr(str) {
+    if (!str) return "";
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\n/g, "&#10;"); // FIX newline break
 }
+
 function unescapeHtmlAttr(str = "") {
     // reverse of escapeAttr for filling inputs (only simple)
     return String(str).replace(/&quot;/g, '"').replace(/&#39;/g, "'");
