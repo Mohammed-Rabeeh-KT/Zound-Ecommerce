@@ -6,23 +6,6 @@ import { catchAsync } from "../../utils/catchAsync.js";
 import { successResponse, errorResponse, STATUS, MESSAGE } from "../../utils/response.js";
 
 
-//  const loadAdminLogin = async (req, res) => {
-//     try {
-
-//         if(req.session.admin){
-//             return res.redirect('/admin/dashboard');
-//         }
-//         res.render('admin/adminLogin', {
-//             layout: 'adminLayout',
-//             title: 'Admin Login',
-//             message: null,
-//             errors: {} 
-//         });
-//     } catch (error) {
-//         console.log(error.message);
-//     }
-// }
-
 const loadAdminLogin = catchAsync(async (req, res, next) => {
     if (req.session.admin) {
         return res.redirect('/admin/dashboard');

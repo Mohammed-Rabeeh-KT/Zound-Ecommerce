@@ -5,7 +5,8 @@ const categorySchema = new mongoose.Schema({
     name : {
         type : String,
         required : true ,
-        unique : true
+        unique : true,
+        trim : true
     },
     description : {
         type : String,
@@ -22,7 +23,7 @@ const categorySchema = new mongoose.Schema({
 
     offer_id : {
             type : Schema.Types.ObjectId,
-            ref : 'Offers'
+            ref : 'Offer'
         }
     
 },{timestamps : true})
