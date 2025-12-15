@@ -499,8 +499,12 @@ textarea {
  * UNLIST MODAL ICON (Red Warning)
  **********************************************/
 .delete-icon {
-    text-align: center;
-    margin-bottom: 12px;
+     display: flex;            
+    justify-content: center;  
+    align-items: center;      
+    margin-bottom: 20px; 
+    min-height: 80px; 
+    height: auto; 
 }
 
 .delete-title {

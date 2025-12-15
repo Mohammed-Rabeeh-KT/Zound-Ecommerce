@@ -236,7 +236,7 @@ async function submitAddCategory(e) {
    Edit category
    ============================ */
 function openEditModal(btn) {
-    if (!btn) return;
+    if (!btn) return;   
     const id = btn.dataset.id;
     const name = btn.dataset.name || "";
     const description = btn.dataset.description || "";
@@ -262,7 +262,7 @@ async function submitEditCategory(e) {
     const statusEl = document.getElementById("editCategoryStatus");
     formData.set("isListed", statusEl && statusEl.checked ? "on" : "off");
 
-    const res = await fetch(`/admin/categories/update/${id}`, { method: "PUT", body: formData });
+    const res = await fetch(`/admin/categories/update/${id}`, { method: "PATCH", body: formData });
     const json = await res.json();
 
     if (!json || !json.success) {
@@ -412,17 +412,19 @@ function listIcon() {
 
 function redUnlistModalIcon() {
     return `
-    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-        <line x1="12" y1="9" x2="12" y2="13"></line>
-        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+    <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" fill="#dc3545" fill-opacity="0.15"/>
+        
+        <path d="M12 8V12" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M12 16H12.01" stroke="#dc3545" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`;
 }
 
 function greenListModalIcon() {
     return `
-    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" stroke="#1dbf4f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="9"></circle>
-        <path d="M9 12l2 2 4-4"></path>
+    <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" fill="#1dbf4f" fill-opacity="0.15"/>
+        
+        <path d="M8 12L11 15L16 9" stroke="#1dbf4f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`;
 }

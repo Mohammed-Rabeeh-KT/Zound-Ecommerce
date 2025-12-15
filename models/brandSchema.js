@@ -5,16 +5,19 @@ const {Schema} = mongoose ;
 const brandSchema = new Schema({
     brandName : {
         type : String,
-        required : true
+        required : true,
+        trim : true,
+        unique:true
     },
     logo : {
-        type : [String],
+        type : String,
         required : true
     },
-    isActive : {
+    isListed : {
         type : Boolean,
         default : true
-    }
+    },
+    
 },{timestamps : true})
 
 

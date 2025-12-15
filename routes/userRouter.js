@@ -2,22 +2,22 @@ import express from 'express';
 const router = express.Router();
 import userController from '../controllers/user/userController.js';
 import authController from '../controllers/user/authController.js';
-import { authenticateUser, requireAuth, requireNoAuth } from '../middlewares/authMiddleware.js';
+import { authenticateUser, requireUser, requireAdmin } from '../middlewares/authMiddleware.js';
 
 
 router.get('/pageNotFound', userController.pageNotFound)
 router.get('/home', userController.loadHomepage)
 
 // AUTH ROUTES
-router.get('/login', requireNoAuth, authController.loadLogin)
+router.get('/login', authController.loadLogin)
 router.post('/login', authController.login)
 
-router.get('/signup', requireNoAuth, authController.loadSignup)
+router.get('/signup', authController.loadSignup)
 router.post('/signup', authController.signup)
 router.post('/verify-otp', authController.verifyOTP)
 router.post('/resend-otp', authController.resendOTP)
 
-router.post("/logout", requireAuth, authController.logout);
+router.post("/logout", authController.logout);
 
 // AJAX email validation
 router.post('/check-email', authController.checkEmail);
@@ -32,4 +32,3 @@ router.post('/fp-reset-password', authController.resetPassword);
 
 
 export default router;
-

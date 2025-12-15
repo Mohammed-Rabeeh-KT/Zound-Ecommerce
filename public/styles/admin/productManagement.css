@@ -1,0 +1,443 @@
+/********************************************
+ * GENERAL LAYOUT 
+ ********************************************/
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: "Inter", sans-serif;
+}
+
+.main-content {
+  margin-left: 250px;
+  padding: 0 40px;
+  background: #f7f9fc;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/******************************************** 
+ * HEADER
+ ********************************************/
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0 25px;
+}
+
+.page-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: #6c6c6c;
+}
+
+/* Add Product Button */
+.add-product-btn {
+  background: #1e3a5f;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  border: none;
+  transition: 0.25s ease;
+  text-decoration: none;
+}
+
+.add-product-btn:hover {
+  background: #152a45;
+}
+
+/********************************************
+ * SEARCH + FILTER BAR
+ ********************************************/
+.search-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: white;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #e3e6eb;
+  margin-bottom: 20px;
+}
+
+.search-wrapper {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.search-input {
+  width: 100%;
+  height: 42px;
+  padding: 0 42px 0 42px;
+  background: #f1f3f7;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.6;
+}
+
+.clear-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.clear-icon:hover {
+  opacity: 1;
+}
+
+.status-filter {
+  flex: 0 0 180px;
+}
+
+.status-select {
+  width: 100%;
+  height: 42px;
+  border: 1px solid #e3e6eb;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* Custom arrow on select */
+.status-select,
+select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+/********************************************
+ * TABLE CONTAINER + TABLE
+ ********************************************/
+.table-container {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e3e6eb;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: calc(100vh - 260px);
+}
+
+.products-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* Column widths tuned for products (Option B) */
+.products-table thead th:nth-child(1) { width: 8%;  }
+.products-table thead th:nth-child(2) { width: 25%; }
+.products-table thead th:nth-child(3) { width: 15%; }
+.products-table thead th:nth-child(4) { width: 15%; }
+.products-table thead th:nth-child(5) { width: 10%; }
+.products-table thead th:nth-child(6) { width: 10%; }
+.products-table thead th:nth-child(7) { width: 7%;  }
+.products-table thead th:nth-child(8) { width: 5%;  }
+.products-table thead th:nth-child(9) { width: 5%;  }
+
+.products-table thead {
+  background: #f0f4ff;
+}
+
+.products-table th {
+  padding: 16px;
+  font-size: 13px;
+  color: #6c6c6c;
+  border-bottom: 1px solid #eef0f3;
+  font-weight: 600;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.products-table td {
+  padding: 14px 16px;
+  font-size: 14px;
+  border-bottom: 1px solid #f3f4f6;
+  color: #222;
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.products-table tr:hover {
+  background: #f5faff;
+}
+
+.products-table th:first-child,
+.products-table td:first-child {
+  padding-left: 25px !important;
+}
+
+/* Product image */
+.product-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid #e5e7eb;
+}
+
+/* Product name cell */
+.product-name-cell {
+  display: flex;
+  flex-direction: column;
+}
+
+.product-name-text {
+  font-weight: 500;
+  color: #111827;
+}
+
+.product-subtext {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Price styling */
+.price-base {
+  color: #111827;
+}
+
+.price-sale {
+  color: #15803d;
+  font-weight: 600;
+}
+
+/* Stock statuses */
+.stock-low {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.stock-ok {
+  color: #111827;
+}
+
+/* Generic cell text */
+.cell-text {
+  display: inline-block;
+  max-width: 100%;
+}
+
+/********************************************
+ * ACTION BUTTONS
+ ********************************************/
+.action-btns {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+}
+
+.action-btn svg {
+  transition: 0.2s ease;
+}
+
+.action-btn:hover svg {
+  opacity: 0.7;
+}
+
+/********************************************
+ * EMPTY STATE ROW
+ ********************************************/
+.empty-state {
+  text-align: center;
+  padding: 24px 16px;
+  color: #6c6c6c;
+  font-size: 14px;
+}
+
+/********************************************
+ * PAGINATION
+ ********************************************/
+.pagination-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 14px 0 22px;
+}
+
+.pagination-info {
+  font-size: 13px;
+  color: #6c6c6c;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.page-btn {
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 2px solid #002366;
+  background: white;
+  color: #002366;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.page-btn:hover {
+  background: #002366;
+  color: white;
+}
+
+.page-btn.active {
+  background: #002366;
+  color: white;
+  transform: scale(1.05);
+}
+
+.page-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/********************************************
+ * TOGGLE SWITCH
+ ********************************************/
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 24px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ef4444;
+  transition: 0.3s;
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: #10b981;
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(24px);
+}
+
+/********************************************
+ * MODAL OVERLAY 
+ ********************************************/
+.modal-overlay {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+/********************************************
+ * TEXTAREA SCROLLBAR
+ ********************************************/
+textarea::-webkit-scrollbar {
+  width: 6px;
+}
+
+textarea::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+textarea::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/********************************************
+ * ROW HOVER (reinforced)
+ ********************************************/
+.table-row-hover:hover {
+  background-color: #f8fafc;
+  transition: background-color 0.2s ease;
+}
+
+/********************************************
+ * VARIANT COLOR INDICATOR (if needed)
+ ********************************************/
+.color-indicator {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #e5e7eb;
+  display: inline-block;
+}
+
+/********************************************
+ * RESPONSIVE FIXES
+ ********************************************/
+@media (max-width: 900px) {
+  .search-container {
+    flex-direction: column;
+  }
+  .status-filter {
+    width: 100%;
+  }
+}

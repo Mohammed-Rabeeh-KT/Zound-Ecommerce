@@ -1,0 +1,660 @@
+/* ----------------------------------------
+   GENERAL LAYOUT
+-----------------------------------------*/
+html,
+body {
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    font-family: "Inter", sans-serif;
+}
+
+.main-content {
+    margin-left: 250px;
+    padding: 0 40px;
+    background: #f7f9fc;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ----------------------------------------
+   HEADER
+-----------------------------------------*/
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.page-title {
+    font-size: 26px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.page-subtitle {
+    font-size: 14px;
+    color: #6c6c6c;
+}
+
+/* ----------------------------------------
+   ADD BUTTON
+-----------------------------------------*/
+.add-brand-btn {
+    background: #1e3a5f;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.25s ease;
+}
+
+.add-brand-btn:hover {
+    background: #152a45;
+}
+
+/* ----------------------------------------
+   SEARCH & FILTER
+-----------------------------------------*/
+.search-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: white;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid #e3e6eb;
+    margin-bottom: 20px;
+}
+
+.search-wrapper {
+    position: relative;
+    flex: 1;
+}
+
+.search-input {
+    width: 100%;
+    height: 42px;
+    padding-left: 45px;
+    padding-right: 40px;
+    background: #f1f3f7;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.search-icon {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    transform: translateY(-50%);
+    opacity: 0.6;
+}
+
+.clear-icon {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+.clear-icon:hover {
+    opacity: 1;
+}
+
+.status-filter {
+    flex: 0 0 180px;
+}
+
+.status-select {
+    width: 100%;
+    height: 42px;
+    border-radius: 8px;
+    padding: 0 12px;
+    border: 1px solid #e3e6eb;
+    background: white;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* ----------------------------------------
+   TABLE STYLING
+-----------------------------------------*/
+.table-container {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e3e6eb;
+    overflow-x: hidden;
+    overflow-y: auto;
+    flex: 1;
+    max-height: calc(100vh - 240px);
+}
+
+.brands-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.brands-table th:nth-child(1) {
+    width: 6%;
+    padding-left: 25px !important;
+}
+
+.brands-table th:nth-child(2) {
+    width: 12%;
+}
+
+/* Logo */
+.brands-table th:nth-child(3) {
+    width: 25%;
+}
+
+/* Name */
+.brands-table th:nth-child(4) {
+    width: 15%;
+    text-align: center;
+}
+
+/* Products */
+.brands-table th:nth-child(5) {
+    width: 15%;
+}
+
+/* Status */
+.brands-table th:nth-child(6) {
+    width: 15%;
+}
+
+/* Date */
+.brands-table th:nth-child(7) {
+    width: 12%;
+}
+
+/* Actions */
+
+.brands-table td:nth-child(1) {
+    padding-left: 25px !important;
+}
+
+.brands-table thead {
+    background: #f0f4ff;
+}
+
+.brands-table th {
+    padding: 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6c6c6c;
+    border-bottom: 1px solid #eef0f3;
+    text-align: left;
+}
+
+.brands-table td {
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #2b2b2b;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: middle;
+}
+
+.brands-table tr:hover {
+    background: #f5faff;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+/* Image Styling */
+.brand-logo-img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    border-radius: 6px;
+    border: 1px solid #eee;
+    background: #fff;
+}
+
+/* ----------------------------------------
+   STATUS BADGES
+-----------------------------------------*/
+.status-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-listed {
+    background: #d4f7d7;
+    color: #1b8a2b;
+}
+
+.status-unlisted {
+    background: #ffe1e1;
+    color: #d63b3b;
+}
+
+/* ----------------------------------------
+   ACTION BUTTONS
+-----------------------------------------*/
+.action-btns {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    transition: 0.2s;
+}
+
+.action-btn:hover {
+    opacity: 0.7;
+}
+
+/* ----------------------------------------
+   PAGINATION
+-----------------------------------------*/
+.pagination {
+    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.page-btn {
+    padding: 7px 12px;
+    border-radius: 8px;
+    border: 2px solid #002366;
+    background: white;
+    color: #002366;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.page-btn:hover,
+.page-btn.active {
+    background: #002366;
+    color: white;
+}
+
+/* ----------------------------------------
+   MODALS
+-----------------------------------------*/
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    padding: 28px 32px;
+    width: 450px;
+    border-radius: 12px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-small {
+    width: 420px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.modal-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e3a5f;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modal-close {
+    background: #f3f3f3;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    background: #e2e2e2;
+}
+
+.modal-subtitle {
+    color: #6c6c6c;
+    margin-bottom: 12px;
+}
+
+/* Form Elements */
+.form-group {
+    margin-top: 14px;
+}
+
+.form-group label {
+    font-weight: 500;
+    color: #333;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.form-group input[type="text"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #dcdfe3;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #fafafa;
+    box-sizing: border-box;
+}
+
+/* Toggle Switch */
+.toggle-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.toggle-label {
+    font-size: 14px;
+    color: #777;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 48px;
+    height: 26px;
+    display: inline-block;
+}
+
+.toggle-switch input {
+    display: none;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: #d1d1d1;
+    border-radius: 30px;
+    transition: 0.3s ease;
+}
+
+.toggle-slider::before {
+    content: "";
+    position: absolute;
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch input:checked+.toggle-slider {
+    background: #1e3a5f;
+}
+
+.toggle-switch input:checked+.toggle-slider::before {
+    transform: translateX(22px);
+}
+
+/* Modal Actions */
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.btn-cancel {
+    padding: 9px 16px;
+    border-radius: 8px;
+    background: #f0f0f0;
+    border: 1px solid #d0d0d0;
+    cursor: pointer;
+}
+
+.btn-save {
+    padding: 9px 18px;
+    border-radius: 8px;
+    background: #1e3a5f;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-delete {
+    padding: 10px 18px;
+    border-radius: 8px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-delete.list {
+    background: #1dbf4f;
+}
+
+/* Delete Icon Specifics */
+.delete-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+    min-height: 80px;
+    height: auto;
+}
+
+/* Force SVG Size */
+.delete-icon svg {
+    width: 80px !important;
+    height: 80px !important;
+    /* Remove stroke styles since we are using fill now */
+    stroke: none;
+}
+
+
+
+.delete-title {
+    text-align: center;
+    font-size: 20px;
+    margin-bottom: 5px;
+}
+
+.delete-message {
+    text-align: center;
+    color: #333;
+}
+
+
+/* ----------------------------------------
+   PREMIUM UPLOAD (DRAG & DROP)
+-----------------------------------------*/
+.drop-zone {
+    max-width: 100%;
+    height: 160px;
+    padding: 20px;
+
+    /* FORCE CENTER ALIGNMENT */
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    /* Horizontal Center */
+    justify-content: center !important;
+    /* Vertical Center */
+    text-align: center !important;
+    /* ---------------------- */
+
+    font-family: "Inter", sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    color: #6c6c6c;
+    border: 2px dashed #cbd5e1;
+    border-radius: 10px;
+    background-color: #f8fafc;
+    transition: 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Hover state for drag over */
+.drop-zone.drop-zone--over {
+    border-style: solid;
+    border-color: #1e3a5f;
+    background-color: #eff6ff;
+    color: #1e3a5f;
+}
+
+.drop-zone-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+/* Container for Icon and Text */
+.drop-zone-prompt {
+    pointer-events: none;
+    width: 100%;
+    /* Ensure it spans full width to allow centering */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.drop-zone-prompt svg {
+    margin-bottom: 8px;
+    stroke: #94a3b8;
+    transition: 0.2s;
+    display: block;
+    /* Ensure SVG behaves as block for margin auto */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.drop-zone:hover .drop-zone-prompt svg {
+    stroke: #1e3a5f;
+}
+
+/* Thumb/Preview Image */
+.drop-zone-thumb {
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #fff;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: absolute;
+    display: none;
+    z-index: 10;
+}
+
+.drop-zone-thumb::after {
+    content: "Click to change";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 8px 0;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    font-size: 12px;
+    opacity: 0;
+    transition: 0.2s;
+    text-align: center;
+}
+
+.drop-zone:hover .drop-zone-thumb::after {
+    opacity: 1;
+}
+
+/* ----------------------------------------
+    SweetAlert2 Z-Index
+-----------------------------------------*/
+div:where(.swal2-container) {
+    z-index: 99999 !important;
+    /* Ensure it is above the custom modal (9999) */
+}
+
+/* ----------------------------------------
+   CROPPER MODAL STYLING
+-----------------------------------------*/
+.crop-container {
+    background-color: #2b2b2b;
+    /* Dark background like Photoshop */
+    border-radius: 8px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+    margin-bottom: 20px;
+}
+
+/* Ensure the image fits perfectly inside */
+.cropper-view-box,
+.cropper-face {
+    border-radius: 4px;
+}
+
+/* Customize the drag handles to look modern */
+.cropper-point {
+    background-color: #3b82f6;
+    width: 8px;
+    height: 8px;
+}
+
+.cropper-line {
+    background-color: rgba(59, 130, 246, 0.5);
+    /* Blue guidelines */
+}
+
+#cropperModal {
+    z-index: 10000;
+}

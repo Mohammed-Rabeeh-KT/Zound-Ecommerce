@@ -324,10 +324,11 @@
       },
       error: function (xhr, status, error) {
         console.log(xhr, status, error)
+    let msg = xhr.responseJSON?.message ?? "Invalid OTP";
         Swal.fire({
           icon: "error",
-          title: "Error",
-          text: "An error occurred while verifying OTP. Please try again.",
+          title: "Invalid OTP",
+          text: msg
         })
       }
     })

@@ -46,18 +46,38 @@ export const authenticateUser = async (req, res, next) => {
     }
 }
 
-export const requireAuth = (req, res, next) => {
-  if(!req.user){
-    return res.redirect('/user/login');
-  }
-  next();
-}
+export const requireUser = (req, res, next) => {
+    if (!req.user) {
+        // Not logged in
+        return res.redirect('/user/login');
+    }
 
-export const requireNoAuth = (req,res,next)=>{
-  if(req.user){
-    return res.redirect('/user/home');
-  }
-  next();
-}
+    if (req.user.role !== "user") {
+        // Logged in but not user → send them where they belong
+        if (req.user.role === "admin") {
+            return res.redirect('/admin/dashboard');
+        }
+
+        return res.status(403).send("Access Denied");
+    }
+
+    next();
+};
+
+
+export const requireAdmin = (req, res, next) => {
+    if (!req.user) {
+        // Not logged in
+        return res.redirect('/admin/login');
+    }
+
+    if (req.user.role !== "admin") {
+        // Logged in but not admin → redirect properly
+        return res.redirect('/user/home');
+    }
+
+    next();
+};
+
 
 
