@@ -11,6 +11,8 @@ import brandController from "../controllers/admin/brandController.js";
 import { catchAsync } from "../utils/catchAsync.js";
 import { protectAdmin } from "../middlewares/adminAuth.js";
 import uploadBrandLogo from "../middlewares/uploadBrandLogo.js";
+import uploadProductImage from "../middlewares/uploadProductImage.js";
+
 
 // Set admin layout + inject adminName globally
 router.use((req, res, next) => {
@@ -43,8 +45,26 @@ router.patch("/categories/delete/:id", categoryController.unlistCategory);
 router.patch("/categories/toggle-status/:id", categoryController.toggleListCategory);
 
 // PRODUCT MANAGEMENT
-router.get("/products", productController.getProducts);
-// router.get("/products/data", productController.getProductsData); 
+router.get('/products', productController.getProductPage);
+router.get('/products/:id/details', productController.getProductDetailsPage);
+
+// API Actions
+router.post('/products',
+  uploadProductImage.any(),
+  productController.addProduct
+);
+
+router.get('/products/:id', productController.getProductById);
+
+router.put('/products/:id',
+  uploadProductImage.any(),
+  productController.updateProduct
+);
+
+router.patch('/products/:id/toggle', productController.toggleProductStatus);
+router.delete('/products/:id', productController.softDeleteProduct);
+router.post('/product/variant/delete', productController.deleteVariant);
+router.post('/product/variant/toggle', productController.toggleVariantStatus);
 
 // BRAND MANAGEMENT 
 router.get("/brands", brandController.getBrandPage);

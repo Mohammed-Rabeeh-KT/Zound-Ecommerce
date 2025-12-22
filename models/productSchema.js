@@ -2,85 +2,64 @@ import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
 const productSchema = new Schema({
-
     productName: {
         type: String,
         required: true,
         trim: true,
     },
-    category_id: {
+    description: {
+        type: String,
+        required: true
+    },
+    brand: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Category"
+        ref: "Brand",
+        required: true
     },
-    brand_id: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: "Brand" 
+    category: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Category",
+        required: true
     },
-    regularPrice: {
-        type: Number,
-        required: true,
-    },
-    salePrice : {
-        type: Number,
-        required: true,
-    },
-    stock: {
-        type: Number,
-        required: true,
-        default : 0
-    },
-    offerId: {
-        type: Schema.Types.ObjectId,
-        ref: 'Offers'
-    },
-    product_img : [{
-        type : String
+    productImages: [{
+        type: String,
+        required: true
     }],
-    isBestSeller : {
-        type : Boolean,
-        default : false
+    features: [{
+        type: String
+    }],
+    variants: [{
+        type: { type: String, default: 'Color' }, 
+        value: { type: String }, 
+        images: [String], 
+        color: { type: String },
+        size: { type: String },
+        basePrice: { type: Number, required: true },
+        salePrice: { type: Number, required: true },
+        stock: { type: Number, required: true, default: 0 },
+        sku: { type: String },
+        status: {
+            type: String,
+            enum: ["Active", "Inactive"],
+            default: "Active"
+        }
+    }],
+    isBestSeller: {
+        type: Boolean,
+        default: false
     },
-    isLatest : {
-        type : Boolean,
-        default : false
+    isDeleted: {
+        type: Boolean,
+        default: false
     },
-    description : {
-        type : String,
-    },
-    variants : {
-        type : Schema.Types.ObjectId,
-        ref:'Variants'
-    },
-    isDeleted : {
-        type : Boolean
-    },
-    reviews : {
-        type : Schema.Types.ObjectId,
-        ref : 'Reviews'
-    },
-    regularPrice : {
-        type : Number
-    },
-    salePrice : {
-        type : Number
-    },
-    productOffer : {
-        type : Number ,
-        default : 0,
-    },
-    status : {
-        type : String ,
-        enum : ["Available","out of stock","Discontinued"],
-        required : true ,
-        default : 'Available'
-    }},
-    {
-        timestamps : true
+    status: {
+        type: String,
+        enum: ["Active", "Inactive"],
+        default: "Active"
     }
+}, {
+    timestamps: true
+});
 
-);
-
-
-const Product = mongoose.model('Product',productSchema);
-
+const Product = mongoose.model('Product', productSchema);
 export default Product;
