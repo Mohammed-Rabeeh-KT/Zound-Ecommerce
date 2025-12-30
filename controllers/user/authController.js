@@ -157,19 +157,17 @@ const verifyOTP = async (req, res) => {
 
       await userData.save();
 
-      req.session.user = userData._id;
-
       // Clean up OTP and temporary user data from session
       delete req.session.userOTP;
       delete req.session.otpTimestamp;
       delete req.session.userData;
       delete req.session.otpAttempts;
 
-      return res.json({ success: true, redirectUrl: '/user/home', message: "Signup successful!" });
+      return res.json({ success: true, redirectUrl: '/user/login', message: "Signup successful!" });
 
 
     } else {
-      return res.status(400).json({ success: false, message: "Invalid OTP. Please try again." });
+      return res.status(400).json({ success: false, message: "The OTP you entered is incorrect." });
     }
 
   } catch (error) {
@@ -288,8 +286,6 @@ const login = async (req, res) => {
       maxAge: remember ? 7 * 24 * 60 * 60 * 1000 : null
     });
 
-    req.session.userId = user._id.toString();
-
     res.redirect('/user/home');
   }
 
@@ -345,11 +341,14 @@ const logout = (req, res) => {
     // Destroy express-session if it exists
     if (req.session) {
       req.session.destroy(err => {
-        if (err) console.error("Session destroy error:", err);
-      });
-    }
+        if (err) 
+          console.error("Session destroy error:", err);
 
-    return res.redirect("/user/home");
+        return res.redirect("/user/home");
+      });
+    } else {
+          return res.redirect("/user/home");
+    }
 
   } catch (error) {
     console.error("Logout error:", error);
@@ -387,7 +386,7 @@ const googleCallback = (req, res, next) => {
         res.cookie("authToken", token, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
-          sameSite: "strict",
+          sameSite: "lax",
           maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
@@ -437,7 +436,7 @@ const forgotPassword = async (req, res) => {
     if (!user) {
         return res.render('user/forgot-password', {
             layout: "layout",
-            message: "User with this email does not exist",
+            message: "If that email is registered, we have sent an OTP ",
             user: req.user || null,
             cartCount: req.session?.cart?.length || 0,
             errors: { email: "User not found" }

@@ -208,7 +208,7 @@
               timerSpan.innerText = "Expired";
               timerSpan.classList.add("text-red-600");
               verifyBtn.disabled = true;
-              verifyBtn.classList.add("opacity-50", "cursor-not-allowed");
+              verifyBtn.classList.add(" 30300", "cursor-not-allowed");
             }
             totalTime--;
           }, 1000);
@@ -275,8 +275,8 @@
     if (otpVal.length !== 6) {
       Swal.fire({
         icon: 'error',
-        title: 'Invalid OTP',
-        text: 'Please enter a 6-digit OTP.',
+        title: 'Wait!',
+        text: 'Please enter all 6 digits.',
       });
       return false;
     }
@@ -299,11 +299,12 @@
         if (response && response.success) {
           Swal.fire({
             icon: "success",
-            title: "OTP Verified Successfully",
+            title: "Success",
+            text: response.message,
             showConfirmButton: false,
             timer: 1500
           }).then(() => {
-            window.location.href = response.redirectUrl || '/home';
+            window.location.href = response.redirectUrl || '/user/login';
           })
         } else {
           // Check if OTP expired
@@ -322,17 +323,29 @@
           })
         }
       },
-      error: function (xhr, status, error) {
-        console.log(xhr, status, error)
-    let msg = xhr.responseJSON?.message ?? "Invalid OTP";
-        Swal.fire({
-          icon: "error",
-          title: "Invalid OTP",
-          text: msg
-        })
+      error: function (xhr) {
+      // This handles 400, 429, 500 status codes
+      let errorMessage = "An error occurred.";
+      if (xhr.responseJSON && xhr.responseJSON.message) {
+        errorMessage = xhr.responseJSON.message;
       }
-    })
-    return false;
-  }
+
+      // Check if the specific error is expiration
+      if (xhr.responseJSON && xhr.responseJSON.expired) {
+        otpExpired = true;
+        document.querySelector("button[type='submit']").disabled = true;
+        document.getElementById("otp-timer").innerText = "Expired";
+      }
+
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: errorMessage, 
+      });
+    }
+  });
+
+  return false; 
+}
 
 </script>
