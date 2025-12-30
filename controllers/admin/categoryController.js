@@ -13,7 +13,7 @@ import {
 const CATEGORIES_PER_PAGE = 10;
 
 // LOAD PAGE
- const getCategoryPage = catchAsync(async (req, res) => {
+const getCategoryPage = catchAsync(async (req, res) => {
     const search = req.query.search || "";
     const status = req.query.status || "";
 
@@ -26,7 +26,7 @@ const CATEGORIES_PER_PAGE = 10;
 });
 
 // FETCH DATA (AJAX)
- const getCategoriesData = catchAsync(async (req, res, next) => {
+const getCategoriesData = catchAsync(async (req, res, next) => {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || CATEGORIES_PER_PAGE;
     const search = (req.query.search || "").trim();
@@ -41,11 +41,43 @@ const CATEGORIES_PER_PAGE = 10;
     const totalPages = Math.max(1, Math.ceil(totalCategories / limit));
     const safePage = Math.min(Math.max(page, 1), totalPages);
 
-    const categories = await Category.find(filter)
-        .sort({ createdAt: -1 })
-        .skip((safePage - 1) * limit)
-        .limit(limit)
-        .lean();
+    const categories = await Category.aggregate([
+        { $match: filter },
+        {
+            $lookup: {
+                from: "products",
+                let: { categoryId: "$_id" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $eq: ["$category", "$$categoryId"] },
+                                    { $eq: ["$isDeleted", false] }
+                                ]
+                            }
+                        }
+                    }
+                ],
+                as: "products"
+            }
+        },
+
+        {
+            $addFields: {
+                productCount: {
+                    $size: "$products"
+                }
+            }
+        },
+
+        { $project: { products: 0 } }, // remove heavy array
+        { $sort: { createdAt: -1 } },
+        { $skip: (safePage - 1) * limit },
+        { $limit: limit }
+    ])
+
+
 
     return successResponse(res, STATUS.OK, "Categories fetched", {
         categories,
@@ -59,7 +91,7 @@ const CATEGORIES_PER_PAGE = 10;
 });
 
 // ADD CATEGORY
- const addCategory = catchAsync(async (req, res, next) => {
+const addCategory = catchAsync(async (req, res, next) => {
     const { name, description } = req.body;
 
     if (!name?.trim()) {
@@ -81,7 +113,7 @@ const CATEGORIES_PER_PAGE = 10;
 });
 
 // UPDATE CATEGORY
- const updateCategory = catchAsync(async (req, res, next) => {
+const updateCategory = catchAsync(async (req, res, next) => {
     const { id } = req.params;
     const { name, description } = req.body;
 
@@ -101,7 +133,7 @@ const CATEGORIES_PER_PAGE = 10;
 });
 
 // SOFT DELETE (UNLIST)
- const unlistCategory = catchAsync(async (req, res, next) => {
+const unlistCategory = catchAsync(async (req, res, next) => {
     const { id } = req.params;
 
     const category = await Category.findById(id);
@@ -114,7 +146,7 @@ const CATEGORIES_PER_PAGE = 10;
 });
 
 // TOGGLE STATUS: LIST / UNLIST
- const toggleListCategory = catchAsync(async (req, res, next) => {
+const toggleListCategory = catchAsync(async (req, res, next) => {
     const { id } = req.params;
 
     const category = await Category.findById(id);

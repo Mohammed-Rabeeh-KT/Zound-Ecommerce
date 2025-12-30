@@ -193,18 +193,23 @@ const updateProduct = catchAsync(async (req, res, next) => {
   // 1. Separate Files
   let mainImages = [];
   let variantFiles = [];
+
   if (req.files && req.files.length > 0) {
     mainImages = req.files.filter(f => f.fieldname === 'images');
     variantFiles = req.files.filter(f => f.fieldname.startsWith('variantImage_'));
   }
 
   // 2. Handle Common Product Images
-  let keptImages = [];
-  if (existingImages) {
-    keptImages = Array.isArray(existingImages) ? existingImages : [existingImages];
-  }
+ let keptImages;
+
+if (existingImages !== undefined) {
+  keptImages = Array.isArray(existingImages) ? existingImages : [existingImages];
+} else {
+  keptImages = product.productImages || [];
+}
 
   let newImagePaths = [];
+  
   if (mainImages.length > 0) {
     newImagePaths = mainImages.map(file => `/uploads/products/${file.filename}`);
   }

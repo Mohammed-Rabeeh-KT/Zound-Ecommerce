@@ -8,7 +8,7 @@ import { successResponse, STATUS } from "../../utils/response.js";
 /* ===========================================================
    LOAD BRAND PAGE (EJS)
 =========================================================== */
- const getBrandPage = catchAsync(async (req, res) => {
+const getBrandPage = catchAsync(async (req, res) => {
     const { search = "", status = "" } = req.query;
     res.render("admin/brandManagement", {
         currentPage: "brands",
@@ -21,9 +21,11 @@ import { successResponse, STATUS } from "../../utils/response.js";
 /* ===========================================================
    FETCH BRANDS (AJAX)
 =========================================================== */
- const getBrandsData = catchAsync(async (req, res) => {
+const getBrandsData = catchAsync(async (req, res) => {
     const page = Number(req.query.page) || 1;
     const limit = 10;
+    const skip = (page - 1) * limit;
+
     const search = req.query.search?.trim() || "";
     const status = req.query.status || "";
 
@@ -35,24 +37,40 @@ import { successResponse, STATUS } from "../../utils/response.js";
     const totalBrands = await Brand.countDocuments(filter);
     const totalPages = Math.ceil(totalBrands / limit) || 1;
 
-    const brands = await Brand.find(filter)
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean();
+    const brands = await Brand.aggregate([
+        { $match: filter },
+        {
+            $lookup: {
+                from: "products",
+                let: { brandId: "$_id" },
+                pipeline: [{
+                    $match: {
+                        $expr: {
+                            $and: [
+                                { $eq: ["$brand", "$$brandId"] },
+                                { $eq: ["$isDeleted", false] }
+                            ]
+                        }
+                    }
+                }],
+                as: "products"
+            }
+        },
 
-    // Aggregate Product Counts
-    const brandIds = brands.map(b => b._id);
-    const productCounts = await Product.aggregate([
-        { $match: { brand_id: { $in: brandIds }, isDeleted: false } },
-        { $group: { _id: "$brand_id", count: { $sum: 1 } } }
+        {
+            $addFields: {
+                productCount: {
+                    $size: "$products"
+                }
+            }
+        },
+
+        { $project: { products: 0 } }, // remove heavy array
+        { $sort: { createdAt: -1 } },
+        { $skip: skip },
+        { $limit: limit }
     ]);
-    const countMap = {};
-    productCounts.forEach(p => { countMap[p._id.toString()] = p.count; });
 
-    brands.forEach(b => {
-        b.productCount = countMap[b._id.toString()] || 0;
-    });
 
     return successResponse(res, STATUS.OK, "Brands fetched", {
         brands,
@@ -63,15 +81,15 @@ import { successResponse, STATUS } from "../../utils/response.js";
 /* ===========================================================
    ADD NEW BRAND
 =========================================================== */
- const addBrand = catchAsync(async (req, res, next) => {
+const addBrand = catchAsync(async (req, res, next) => {
     const { brandName, isListed } = req.body;
 
     if (!brandName?.trim()) {
         return next(new AppError("Brand name is required", STATUS.BAD_REQUEST));
     }
 
-    const existing = await Brand.findOne({ 
-        brandName: { $regex: new RegExp(`^${brandName.trim()}$`, "i") } 
+    const existing = await Brand.findOne({
+        brandName: { $regex: new RegExp(`^${brandName.trim()}$`, "i") }
     });
 
     if (existing) {
@@ -88,7 +106,7 @@ import { successResponse, STATUS } from "../../utils/response.js";
     // 2. Save directly as string 
     const brand = await Brand.create({
         brandName: brandName.trim(),
-        logo: logoPath,  
+        logo: logoPath,
         isListed: isListed === "on"
     });
 
@@ -98,7 +116,7 @@ import { successResponse, STATUS } from "../../utils/response.js";
 /* ===========================================================
    GET BRAND BY ID
 =========================================================== */
- const getBrandById = catchAsync(async (req, res, next) => {
+const getBrandById = catchAsync(async (req, res, next) => {
     const brand = await Brand.findById(req.params.id);
     if (!brand) return next(new AppError("Brand not found", STATUS.NOT_FOUND));
     return successResponse(res, STATUS.OK, "Brand fetched", brand);
@@ -107,7 +125,7 @@ import { successResponse, STATUS } from "../../utils/response.js";
 /* ===========================================================
    UPDATE BRAND 
 =========================================================== */
- const updateBrand = catchAsync(async (req, res, next) => {
+const updateBrand = catchAsync(async (req, res, next) => {
     const { id } = req.params;
     const { brandName, isListed } = req.body;
 
@@ -137,15 +155,15 @@ import { successResponse, STATUS } from "../../utils/response.js";
 /* ===========================================================
    TOGGLE STATUS
 =========================================================== */
- const toggleBrandStatus = catchAsync(async (req, res, next) => {
+const toggleBrandStatus = catchAsync(async (req, res, next) => {
     const brand = await Brand.findById(req.params.id);
     if (!brand) return next(new AppError("Brand not found", STATUS.NOT_FOUND));
 
     brand.isListed = !brand.isListed;
     await brand.save();
 
-    return successResponse(res, STATUS.OK, 
-        brand.isListed ? "Brand listed successfully" : "Brand unlisted successfully", 
+    return successResponse(res, STATUS.OK,
+        brand.isListed ? "Brand listed successfully" : "Brand unlisted successfully",
         brand
     );
 });
