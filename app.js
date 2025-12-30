@@ -58,6 +58,14 @@ app.set("layout", "layout");
 
 app.use(authenticateUser);
 
+app.use((req, res, next) => {
+    // res.locals makes these variables available in ALL EJS templates automatically
+    res.locals.user = req.user || null; 
+    res.locals.cartCount = req.session?.cartCount || 0; // Or fetch from your database if you have that logic
+    res.locals.searchQuery = req.query.search || '';
+    next();
+});
+
 app.use('/auth', authRouter);
 app.use('/user', userRouter);
 app.use('/admin',authenticateUser,adminRouter);

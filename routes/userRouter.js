@@ -2,6 +2,7 @@ import express from 'express';
 const router = express.Router();
 import userController from '../controllers/user/userController.js';
 import authController from '../controllers/user/authController.js';
+import productController from '../controllers/user/productController.js'
 import { authenticateUser, requireUser, requireAdmin } from '../middlewares/authMiddleware.js';
 
 
@@ -29,6 +30,15 @@ router.get('/fp-verify-otp', authController.loadFpVerifyOTP);
 router.post('/fp-verify-otp', authController.verifyFpOTP);
 router.get('/fp-reset-password', authController.loadResetPassword);
 router.post('/fp-reset-password', authController.resetPassword);
+
+
+
+//Product Listing
+router.get('/products', productController.getProductListing)
+
+
+//product detail page
+router.get('/products/:slug' , productController.getProductDetails)
 
 
 export default router;

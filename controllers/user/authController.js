@@ -237,7 +237,6 @@ const login = async (req, res) => {
       }
     }
 
-
     // Validate password
     if (!password || password.trim() === "") {
       errors.password = "Password is required.";

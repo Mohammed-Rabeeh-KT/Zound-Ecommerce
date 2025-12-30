@@ -1,4 +1,6 @@
 import mongoose from 'mongoose';
+import slugify from 'slugify';
+
 const {Schema} = mongoose;
 
 const categorySchema = new mongoose.Schema({
@@ -7,6 +9,12 @@ const categorySchema = new mongoose.Schema({
         required : true ,
         unique : true,
         trim : true
+    },
+    slug: { 
+        type: String, 
+        unique: true, 
+        lowercase: true, 
+        trim: true 
     },
     description : {
         type : String,
@@ -28,6 +36,16 @@ const categorySchema = new mongoose.Schema({
     
 },{timestamps : true})
 
+categorySchema.pre('save', function(next) {
+    if (this.isModified('name')) {
+        this.slug = slugify(this.name, { 
+            lower: true,   
+            strict: true,  // strip special characters except replacement
+            trim: true     
+        });
+    }
+    next();
+});
 
 const Category = mongoose.model('Category',categorySchema)
 

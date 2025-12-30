@@ -116,8 +116,8 @@
     </div>
 
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-      <% topProducts.forEach(p => { %>
-        <%- include('../partials/user/product-card', p) %>
+      <% topProducts.forEach(product => { %>
+        <%- include('../partials/user/product-card', { product } ) %>
       <% }) %>
     </div>
   </section>
@@ -150,8 +150,8 @@
     </div>
 
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3">
-      <% specialOffers.forEach(p => { %>
-        <%- include('../partials/user/product-card', p) %>
+      <% specialOffers.forEach(product => { %>
+        <%- include('../partials/user/product-card', {product}) %>
       <% }) %>
     </div>
   </section>

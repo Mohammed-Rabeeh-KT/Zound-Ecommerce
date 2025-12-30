@@ -1,0 +1,250 @@
+<link rel="stylesheet" href="/styles/user/productListing.css">
+<!-- Main Content -->
+<main class="main-content">
+    <!-- Breadcrumbs -->
+    <div class="container">
+        <div class="breadcrumbs">
+            <a href="/">Home</a>
+            <span>/</span>
+            <span>
+                <%= searchQuery ? 'Search Results' : 'All Products' %>
+            </span>
+        </div>
+    </div>
+
+    <!-- Page Title -->
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h1>
+                    <%= pageTitle %>
+                </h1>
+                <p class="page-subtitle">
+                    <%= pageDescription %>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="content-grid">
+            <!-- Sidebar Filters -->
+            <aside class="sidebar">
+                <div class="filter-header">
+                    <h3>Filters</h3>
+                    <!-- Always render Clear All so client can reset filters at any time -->
+                    <button class="clear-filters" id="clearFilters">Clear All</button>
+                </div>
+
+                <!-- Price Range Filter -->
+                <div class="filter-section">
+                    <button class="filter-toggle" data-filter="price">
+                        <span>Price Range</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="filter-content" data-content="price">
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="price-preset" data-min="0" data-max="5000">
+                            <span>Under ₹5,000</span>
+                        </label>
+
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="price-preset" data-min="5000" data-max="10000">
+                            <span>₹5,000 - ₹10,000</span>
+                        </label>
+
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="price-preset" data-min="10000" data-max="15000">
+                            <span>₹10,000 - ₹15,000</span>
+                        </label>
+
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="price-preset" data-min="15000" data-max="229999">
+                            <span>Above ₹15,000</span>
+                        </label>
+
+                        <!-- Range Slider -->
+                        <div class="price-slider">
+                            <input type="range" id="priceMinRange" min="0" max="229999" step="500">
+                            <input type="range" id="priceMaxRange" min="0" max="229999" step="500">
+                        </div>
+
+                        <!-- Min Max Inputs -->
+                        <div class="price-inputs">
+                            <div>
+                                <span>₹</span>
+                                <input type="number" id="priceMinInput" value="0">
+                            </div>
+                            <span>to</span>
+                            <div>
+                                <span>₹</span>
+                                <input type="number" id="priceMaxInput" value="229999">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- Category Filter -->
+                <div class="filter-section">
+                    <button class="filter-toggle active" data-filter="category">
+                        <span>Category</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="filter-content open" data-content="category">
+                        <% if (allCategories && allCategories.length> 0) { %>
+                            <% allCategories.forEach(cat=> { %>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="category" value="<%= cat.slug %>"
+                                        data-name="<%= cat.name %>" data-description="<%= cat.description || '' %>"
+                                        <%=selectedFilters?.category?.includes(cat.slug) ? 'checked' : '' %>
+                                    >
+                                    <span>
+                                        <%= cat.name %>
+                                    </span>
+                                </label>
+                                <% }) %>
+                                    <% } else { %>
+                                        <p class="text-xs text-gray-400">No categories found</p>
+                                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Brand Filter -->
+
+
+                <div class="filter-section">
+                    <button class="filter-toggle active" data-filter="brand">
+                        <span>Brand</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="filter-content open" data-content="brand">
+                        <% if (allBrands && allBrands.length> 0) { %>
+                            <% allBrands.forEach(brand=> { %>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="brand" value="<%= brand._id %>"
+                                        <%=selectedFilters?.brand?.includes(brand._id.toString()) ? 'checked' : '' %>>
+                                    <span>
+                                        <%= brand.brandName %>
+                                    </span>
+                                </label>
+                                <% }) %>
+                                    <% } else { %>
+                                        <p class="text-xs text-gray-400">No brands found</p>
+                                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Connection Filter -->
+                <div class="filter-section">
+                    <button class="filter-toggle" data-filter="connection">
+                        <span>Connection</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="filter-content" data-content="connection">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="connection" value="Wired"
+                                <%=selectedFilters?.connection?.includes('Wired') ? 'checked' : '' %>>
+                            <span>Wired</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="connection" value="Wireless"
+                                <%=selectedFilters?.connection?.includes('Wireless') ? 'checked' : '' %>>
+                            <span>Wireless</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button class="apply-filters-btn" id="applyFilters">Apply Filters</button>
+            </aside>
+
+            <!-- Products Grid -->
+            <div class="products-container">
+                <!-- Toolbar -->
+                <div class="toolbar">
+                    <div class="results-count">
+                        <%= products.filter(p=> p.status === 'Active' && !p.isBlocked).length %> Products
+                    </div>
+                    <div class="sort-container">
+                        <label for="sortBy">Sort by:</label>
+                        <select id="sortBy" class="sort-select">
+                            <option value="newest" <%=sortBy==='newest' ? 'selected' : '' %>>Newest</option>
+                            <option value="price-low" <%=sortBy==='price-low' ? 'selected' : '' %>>Price: Low to
+                                High</option>
+                            <option value="price-high" <%=sortBy==='price-high' ? 'selected' : '' %>>Price: High to
+                                Low</option>
+                            <option value="name-asc" <%=sortBy==='name-asc' ? 'selected' : '' %>>Name: A-Z</option>
+                            <option value="name-desc" <%=sortBy==='name-desc' ? 'selected' : '' %>>Name: Z-A
+                            </option>
+                            <option value="popularity" <%=sortBy==='popularity' ? 'selected' : '' %>>Popularity
+                            </option>
+                            <option value="featured" <%=sortBy==='featured' ? 'selected' : '' %>>Featured</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Active Filters Bar -->
+                <div class="active-filters" id="activeFilters">
+                    <!-- JS will inject filter chips here -->
+                </div>
+
+                <!-- Products Grid -->
+                <div class="products-grid">
+                    <% const visibleProducts=products.filter(product=> product.status === 'Active' &&
+                        !product.isBlocked);
+
+                        if (visibleProducts.length === 0) { %>
+                        <div class="no-products">
+                            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.5">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            <h3>No products found</h3>
+                            <p>Try adjusting your filters or search query</p>
+                        </div>
+                        <% } else { %>
+                            <% visibleProducts.forEach(product=> { %>
+                                <%- include('../partials/user/product-card',{ product }) %>
+                                    <% }); %>
+                                        <% } %>
+                </div>
+
+                <!-- Pagination -->
+
+                <% if (totalPages> 1) { %>
+                    <div class="pagination" id="pagination">
+                        <% if (currentPage> 1) { %>
+                            <button class="page-btn" data-page="<%= currentPage - 1 %>">←</button>
+                            <% } %>
+
+                                <% for (let i=1; i <=totalPages; i++) { %>
+                                    <button class="page-btn <%= i === currentPage ? 'active' : '' %>"
+                                        data-page="<%= i %>">
+                                        <%= i %>
+                                    </button>
+                                    <% } %>
+
+                                        <% if (currentPage < totalPages) { %>
+                                            <button class="page-btn" data-page="<%= currentPage + 1 %>">→</button>
+                                            <% } %>
+                    </div>
+                    <% } %>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="/js/user/productListing.js"></script>

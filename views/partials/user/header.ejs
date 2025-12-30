@@ -8,7 +8,7 @@
 
     <!-- Primary Nav Links -->
     <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-neutral-700">
-      <a href="/products" class="hover:text-black">Products</a>
+      <a href="/user/products" class="hover:text-black">Products</a>
       <a href="/brands" class="hover:text-black">Brands</a>
       <a href="/deals" class="hover:text-black">Deals</a>
       <a href="/support" class="hover:text-black">Support</a>
@@ -18,10 +18,16 @@
     <div class="flex items-center gap-4">
 
       <!-- Search -->
-      <div class="hidden md:flex items-center border rounded-full px-3 py-2 bg-neutral-50 w-52">
-        <input class="flex-1 bg-transparent text-sm outline-none" placeholder="Search products..." />
-        <span class="material-icons text-neutral-600 text-[18px]">search</span>
-      </div>
+      <form id="globalSearchForm" class="hidden md:flex items-center border rounded-full px-3 py-2 bg-neutral-50 w-52">
+
+        <input id="searchInput" name="search" class="flex-1 bg-transparent text-sm outline-none"
+          placeholder="Search products..." autocomplete="off" value="<%= searchQuery || '' %>" />
+
+        <button type="submit">
+          <span class="material-icons text-neutral-600 text-[18px]">search</span>
+        </button>
+
+      </form>
 
       <% if (user) { %>
         <!-- Logged-in view -->
@@ -138,8 +144,8 @@
 
 
   function Logout() {
-   
-     Swal.fire({
+
+    Swal.fire({
       title: "Are you sure?",
       text: "You will be logged out of your account.",
       icon: "warning",
