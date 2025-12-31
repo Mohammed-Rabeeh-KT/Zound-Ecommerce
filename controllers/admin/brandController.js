@@ -24,6 +24,8 @@ import { successResponse, STATUS } from "../../utils/response.js";
  const getBrandsData = catchAsync(async (req, res) => {
     const page = Number(req.query.page) || 1;
     const limit = 10;
+    const skip = (page - 1) * limit;
+
     const search = req.query.search?.trim() || "";
     const status = req.query.status || "";
 
@@ -35,24 +37,40 @@ import { successResponse, STATUS } from "../../utils/response.js";
     const totalBrands = await Brand.countDocuments(filter);
     const totalPages = Math.ceil(totalBrands / limit) || 1;
 
-    const brands = await Brand.find(filter)
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean();
+    const brands = await Brand.aggregate([
+        { $match: filter },
+        {
+            $lookup: {
+                from: "products",
+                let: { brandId: "$_id" },
+                pipeline: [{
+                    $match: {
+                        $expr: {
+                            $and: [
+                                { $eq: ["$brand", "$$brandId"] },
+                                { $eq: ["$isDeleted", false] }
+                            ]
+                        }
+                    }
+                }],
+                as: "products"
+            }
+        },
 
-    // Aggregate Product Counts
-    const brandIds = brands.map(b => b._id);
-    const productCounts = await Product.aggregate([
-        { $match: { brand_id: { $in: brandIds }, isDeleted: false } },
-        { $group: { _id: "$brand_id", count: { $sum: 1 } } }
+        {
+            $addFields: {
+                productCount: {
+                    $size: "$products"
+                }
+            }
+        },
+
+        { $project: { products: 0 } }, // remove heavy array
+        { $sort: { createdAt: -1 } },
+        { $skip: skip },
+        { $limit: limit }
     ]);
-    const countMap = {};
-    productCounts.forEach(p => { countMap[p._id.toString()] = p.count; });
 
-    brands.forEach(b => {
-        b.productCount = countMap[b._id.toString()] || 0;
-    });
 
     return successResponse(res, STATUS.OK, "Brands fetched", {
         brands,
