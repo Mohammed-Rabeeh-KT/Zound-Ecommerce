@@ -193,9 +193,8 @@ document.querySelectorAll(
 function hasActiveFilters() {
     const hasCategory = document.querySelectorAll('input[name="category"]:checked').length > 0;
     const hasBrand = document.querySelectorAll('input[name="brand"]:checked').length > 0;
-    const hasPresetPrice = document.querySelectorAll('input[name="priceRange"]:checked')
-        .length > 0 &&
-        !document.querySelector('input[name="priceRange"][value="all"]')?.checked;
+    const hasPresetPrice =    document.querySelectorAll('.price-preset:checked').length > 0;
+
 
     const hasPriceRange =
         Number(minInput.value) > MIN_PRICE ||
@@ -556,6 +555,7 @@ document.querySelectorAll('.price-preset').forEach(cb => {
             minRange.value = minInput.value = cb.dataset.min;
             maxRange.value = maxInput.value = cb.dataset.max;
             updateSliderFill();
+            updateFilterActionsUI();
 
         }
     });

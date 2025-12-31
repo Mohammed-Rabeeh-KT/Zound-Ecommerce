@@ -1,28 +1,35 @@
 import mongoose from 'mongoose';
-const {Schema} = mongoose ; 
+const { Schema } = mongoose;
 
 
 const brandSchema = new Schema({
-    brandName : {
-        type : String,
-        required : true,
-        trim : true,
-        unique:true
+    brandName: {
+        type: String,
+        required: true,
+        trim: true,
+        unique: true
     },
-    logo : {
-        type : String,
-        required : true
+    slug: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true,
+        trim: true
     },
-    isListed : {
-        type : Boolean,
-        default : true
+    logo: {
+        type: String,
+        required: true
     },
-    
-},{timestamps : true})
+    isListed: {
+        type: Boolean,
+        default: true
+    },
+
+}, { timestamps: true })
 
 
 
-const Brand = mongoose.model('Brand',brandSchema);
+const Brand = mongoose.model('Brand', brandSchema);
 export default Brand;
 
 

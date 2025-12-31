@@ -44,7 +44,7 @@ categorySchema.pre('save', function(next) {
             trim: true     
         });
     }
-    next();
+    // next();
 });
 
 const Category = mongoose.model('Category',categorySchema)

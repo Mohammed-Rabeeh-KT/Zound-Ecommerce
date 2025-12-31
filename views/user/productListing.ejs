@@ -4,7 +4,7 @@
     <!-- Breadcrumbs -->
     <div class="container">
         <div class="breadcrumbs">
-            <a href="/">Home</a>
+            <a href="/user/home">Home</a>
             <span>/</span>
             <span>
                 <%= searchQuery ? 'Search Results' : 'All Products' %>
@@ -131,8 +131,8 @@
                         <% if (allBrands && allBrands.length> 0) { %>
                             <% allBrands.forEach(brand=> { %>
                                 <label class="checkbox-label">
-                                    <input type="checkbox" name="brand" value="<%= brand._id %>"
-                                        <%=selectedFilters?.brand?.includes(brand._id.toString()) ? 'checked' : '' %>>
+                                    <input type="checkbox" name="brand" value="<%= brand.slug %>"
+                                        <%=selectedFilters?.brand?.includes(brand.slug) ? 'checked' : '' %>>
                                     <span>
                                         <%= brand.brandName %>
                                     </span>
@@ -144,7 +144,7 @@
                     </div>
                 </div>
 
-                <!-- Connection Filter -->
+                <!-- Connection Filter
                 <div class="filter-section">
                     <button class="filter-toggle" data-filter="connection">
                         <span>Connection</span>
@@ -165,7 +165,7 @@
                             <span>Wireless</span>
                         </label>
                     </div>
-                </div>
+                </div> -->
 
                 <button class="apply-filters-btn" id="applyFilters">Apply Filters</button>
             </aside>
@@ -175,7 +175,7 @@
                 <!-- Toolbar -->
                 <div class="toolbar">
                     <div class="results-count">
-                        <%= products.filter(p=> p.status === 'Active' && !p.isBlocked).length %> Products
+                        <%= totalProducts %> Products
                     </div>
                     <div class="sort-container">
                         <label for="sortBy">Sort by:</label>

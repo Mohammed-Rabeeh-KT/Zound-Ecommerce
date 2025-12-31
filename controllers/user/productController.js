@@ -15,7 +15,6 @@ const getProductListing = catchAsync(async (req, res, next) => {
         search,
         brand,
         category,
-        priceRange,
         minPrice,
         maxPrice,
         sort = "newest"
@@ -41,13 +40,22 @@ const getProductListing = catchAsync(async (req, res, next) => {
         }
     };
 
-
     if (search) {
         filter.productName = { $regex: search, $options: 'i' };
     }
 
     if (brand) {
-        filter.brand = { $in: brand.split(',') }
+
+        const brandSlugs = brand.split(',');
+
+        const matchedBrands = await Brand.find({
+            slug: { $in: brandSlugs },
+            isListed: true
+        }).select('_id slug')
+
+        const brandIds = matchedBrands.map(b => b._id);
+
+        filter.brand = { $in: brandIds };
     }
 
     if (category) {
@@ -143,6 +151,7 @@ const getProductListing = catchAsync(async (req, res, next) => {
         pageTitle,
         pageDescription,
         products: processedProducts,
+        totalProducts,
         searchQuery: search || '',
         sortBy: sort || 'newest',
         selectedFilters: req.query,
@@ -203,7 +212,6 @@ const getProductDetails = catchAsync(async (req, res, next) => {
                 activeVariant?.images?.[0] ||
                 prod.productImages?.[0] ||
                 '/images/placeholder.png',
-
             primaryVariant: activeVariant
         };
     });
