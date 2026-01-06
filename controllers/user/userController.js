@@ -2,6 +2,7 @@ import User from "../../models/userSchema.js";
 import Product from "../../models/productSchema.js";
 import Category from "../../models/categorySchema.js";
 import Brand from "../../models/brandSchema.js";
+import Address from "../../models/addressSchema.js";
 import { catchAsync } from "../../utils/catchAsync.js";
 import AppError from "../../utils/AppError.js";
 import { STATUS, MESSAGE } from "../../utils/response.js";
@@ -333,6 +334,139 @@ const uploadProfilePicture = catchAsync(async (req, res, next) => {
   });
 });
 
+const loadAddresses = catchAsync(async (req, res, next) => {
+  const userId = req.user._id;
+
+  const addresses = await Address.find({ userId }).sort({ isDefault: -1, createdAt: -1 });
+
+  res.render('user/addresses', {
+    user: req.user,
+    addresses: addresses
+  });
+})
+
+
+const addAddress = catchAsync(async (req, res, next) => {
+  const userId = req.user._id;
+  const { label, fullName, addressLine1, addressLine2, phone, altPhone, city, state, pincode } = req.body;
+
+  // Validate required fields
+  if (!label || !fullName || !addressLine1 || !phone || !city || !state || !pincode) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please fill all required fields'
+    });
+  }
+
+  // Check if this is the first address (make it default)
+  const existingCount = await Address.countDocuments({ userId });
+  const isDefault = existingCount === 0;
+
+  const newAddress = new Address({
+    userId,
+    label,
+    fullName,
+    addressLine1,
+    addressLine2: addressLine2 || '',
+    phone,
+    altPhone: altPhone || '',
+    city,
+    state,
+    pincode,
+    isDefault
+  });
+
+  await newAddress.save();
+
+  res.json({
+    success: true,
+    message: 'Address added successfully',
+    address: newAddress
+  });
+});
+
+const updateAddress = catchAsync(async (req, res) => {
+  const userId = req.user._id;
+  const addressId = req.params.id;
+  const updatedAddress = req.body;
+
+  const address = await Address.findOne({ _id: addressId, userId });
+
+  if (!address) {
+    return res.status(404).json({
+      success: false,
+      message: 'Address not found'
+    });
+  }
+
+  Object.assign(address, updatedAddress);
+
+  await address.save();
+
+  res.json({
+    success: true,
+    message: 'Address updated successfully',
+    address: address
+  });
+});
+
+
+const setDefaultAddress = catchAsync(async (req, res) => {
+  const userId = req.user._id;
+  const addressId = req.params.id;
+
+  // First, unset all existing defaults for this user
+  await Address.updateMany({ userId }, { isDefault: false });
+
+  // Set the new default
+  const address = await Address.findOneAndUpdate(
+    { _id: addressId, userId },
+    { isDefault: true },
+    { new: true }
+  );
+
+  if (!address) {
+    return res.status(404).json({
+      success: false,
+      message: 'Address not found'
+    });
+  }
+
+  res.json({
+    success: true,
+    message: 'Default address updated',
+    address
+  });
+});
+
+// Delete Address
+const deleteAddress = catchAsync(async (req, res) => {
+  const userId = req.user._id;
+  const addressId = req.params.id;
+
+  const address = await Address.findOneAndDelete({ _id: addressId, userId });
+
+  if (!address) {
+    return res.status(404).json({
+      success: false,
+      message: 'Address not found'
+    });
+  }
+
+  // If deleted address was default, set another as default
+  if (address.isDefault) {
+    const anyAddress = await Address.findOne({ userId });
+    if (anyAddress) {
+      anyAddress.isDefault = true;
+      await anyAddress.save();
+    }
+  }
+
+  res.json({
+    success: true,
+    message: 'Address deleted successfully'
+  });
+});
 
 export default {
   loadHomepage,
@@ -343,5 +477,10 @@ export default {
   verifyEmailOtp,
   updateProfile,
   changePassword,
-  uploadProfilePicture
+  uploadProfilePicture,
+  loadAddresses,
+  addAddress,
+  updateAddress,
+  setDefaultAddress,
+  deleteAddress
 };

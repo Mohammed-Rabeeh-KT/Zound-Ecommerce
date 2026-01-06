@@ -59,7 +59,11 @@ router.post('/change-password', userController.changePassword);
 // Profile Picture Upload Route
 router.post('/upload-profile-picture', uploadProfilePicture.single('profileImage'), userController.uploadProfilePicture);
 
-
-
+// Address Routes
+router.get('/profile/addresses', userController.loadAddresses);
+router.post('/addresses', userController.addAddress);
+router.put('/addresses/:id', userController.updateAddress);
+router.put('/addresses/:id/default', userController.setDefaultAddress);
+router.delete('/addresses/:id', userController.deleteAddress);
 
 export default router;
