@@ -1,4 +1,6 @@
 import mongoose from 'mongoose';
+import slugify from 'slugify';
+
 const { Schema } = mongoose;
 
 
@@ -33,3 +35,13 @@ const Brand = mongoose.model('Brand', brandSchema);
 export default Brand;
 
 
+brandSchema.pre('save', function(next) {
+    if (this.isModified('name')) {
+        this.slug = slugify(this.name, { 
+            lower: true,   
+            strict: true,  // strip special characters except replacement
+            trim: true     
+        });
+    }
+    next();
+});

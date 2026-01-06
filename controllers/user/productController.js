@@ -58,17 +58,27 @@ const getProductListing = catchAsync(async (req, res, next) => {
         filter.brand = { $in: brandIds };
     }
 
+    let invalidCategoryFilter = false;
+
     if (category) {
         const categorySlugs = category.split(',');
 
         const matchedCategories = await Category.find({
             slug: { $in: categorySlugs },
             isListed: true
-        }).select('_id slug');
+        }).select('_id slug isListed');
 
-        const categoryIds = matchedCategories.map(c => c._id);
+        const activeCategories = matchedCategories.filter(c => c.isListed);
 
-        filter.category = { $in: categoryIds };
+        if (activeCategories.length === 0) {
+            invalidCategoryFilter = true;
+        } else {
+            filter.category = { $in: activeCategories.map(c => c._id) };
+        }
+    }
+
+    if (invalidCategoryFilter) {
+        return res.redirect('/user/products');
     }
 
     // Dynamic Heading Logic
@@ -171,18 +181,27 @@ const getProductDetails = catchAsync(async (req, res, next) => {
         .populate('brand')
         .populate('category');
 
-    if (!product) {
-        return next(new AppError('Product not found', 404));
+    if (
+        !product ||
+        product.isDeleted ||
+        product.status !== 'Active' ||
+        !product.category ||
+        !product.category.isListed
+    ) {
+        return res.status(404).render("user/productUnavailable", {
+            title: "Product Unavailable",
+            message: "This item is no longer available."
+        });
     }
 
-    if (product.isDeleted || product.status !== 'Active') {
-        return res.redirect('/user/products');
-    }
 
     const activeVariants = product.variants.filter(v => v.status === 'Active' && v.stock > 0);
 
     if (activeVariants.length === 0) {
-        return res.redirect('/user/products');
+        return res.status(404).render("user/productUnavailable", {
+            title: "Out of Stock",
+            message: "This product is currently out of stock."
+        });
     }
 
     const relatedProductsRaw = await Product.find({

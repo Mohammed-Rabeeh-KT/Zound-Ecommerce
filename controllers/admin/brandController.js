@@ -1,5 +1,6 @@
 import Brand from "../../models/brandSchema.js";
 import Product from "../../models/productSchema.js";
+import slugify from "slugify";
 import { catchAsync } from "../../utils/catchAsync.js";
 import AppError from "../../utils/AppError.js";
 import { successResponse, STATUS } from "../../utils/response.js";
@@ -8,7 +9,7 @@ import { successResponse, STATUS } from "../../utils/response.js";
 /* ===========================================================
    LOAD BRAND PAGE (EJS)
 =========================================================== */
- const getBrandPage = catchAsync(async (req, res) => {
+const getBrandPage = catchAsync(async (req, res) => {
     const { search = "", status = "" } = req.query;
     res.render("admin/brandManagement", {
         currentPage: "brands",
@@ -21,7 +22,7 @@ import { successResponse, STATUS } from "../../utils/response.js";
 /* ===========================================================
    FETCH BRANDS (AJAX)
 =========================================================== */
- const getBrandsData = catchAsync(async (req, res) => {
+const getBrandsData = catchAsync(async (req, res) => {
     const page = Number(req.query.page) || 1;
     const limit = 10;
     const skip = (page - 1) * limit;
@@ -81,15 +82,15 @@ import { successResponse, STATUS } from "../../utils/response.js";
 /* ===========================================================
    ADD NEW BRAND
 =========================================================== */
- const addBrand = catchAsync(async (req, res, next) => {
+const addBrand = catchAsync(async (req, res, next) => {
     const { brandName, isListed } = req.body;
 
     if (!brandName?.trim()) {
         return next(new AppError("Brand name is required", STATUS.BAD_REQUEST));
     }
 
-    const existing = await Brand.findOne({ 
-        brandName: { $regex: new RegExp(`^${brandName.trim()}$`, "i") } 
+    const existing = await Brand.findOne({
+        brandName: { $regex: new RegExp(`^${brandName.trim()}$`, "i") }
     });
 
     if (existing) {
@@ -106,7 +107,8 @@ import { successResponse, STATUS } from "../../utils/response.js";
     // 2. Save directly as string 
     const brand = await Brand.create({
         brandName: brandName.trim(),
-        logo: logoPath,  
+        slug: slugify(brandName, { lower: true, strict: true, trim: true }),
+        logo: logoPath,
         isListed: isListed === "on"
     });
 
@@ -116,7 +118,7 @@ import { successResponse, STATUS } from "../../utils/response.js";
 /* ===========================================================
    GET BRAND BY ID
 =========================================================== */
- const getBrandById = catchAsync(async (req, res, next) => {
+const getBrandById = catchAsync(async (req, res, next) => {
     const brand = await Brand.findById(req.params.id);
     if (!brand) return next(new AppError("Brand not found", STATUS.NOT_FOUND));
     return successResponse(res, STATUS.OK, "Brand fetched", brand);
@@ -125,7 +127,7 @@ import { successResponse, STATUS } from "../../utils/response.js";
 /* ===========================================================
    UPDATE BRAND 
 =========================================================== */
- const updateBrand = catchAsync(async (req, res, next) => {
+const updateBrand = catchAsync(async (req, res, next) => {
     const { id } = req.params;
     const { brandName, isListed } = req.body;
 
@@ -155,15 +157,15 @@ import { successResponse, STATUS } from "../../utils/response.js";
 /* ===========================================================
    TOGGLE STATUS
 =========================================================== */
- const toggleBrandStatus = catchAsync(async (req, res, next) => {
+const toggleBrandStatus = catchAsync(async (req, res, next) => {
     const brand = await Brand.findById(req.params.id);
     if (!brand) return next(new AppError("Brand not found", STATUS.NOT_FOUND));
 
     brand.isListed = !brand.isListed;
     await brand.save();
 
-    return successResponse(res, STATUS.OK, 
-        brand.isListed ? "Brand listed successfully" : "Brand unlisted successfully", 
+    return successResponse(res, STATUS.OK,
+        brand.isListed ? "Brand listed successfully" : "Brand unlisted successfully",
         brand
     );
 });

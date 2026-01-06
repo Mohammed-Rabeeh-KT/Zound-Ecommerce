@@ -5,6 +5,7 @@ import { catchAsync } from "../../utils/catchAsync.js";
 import AppError from "../../utils/AppError.js";
 import { successResponse, STATUS } from "../../utils/response.js";
 
+const escapeRegExp = (str = "") => String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // RENDER PAGES
 const getProductPage = catchAsync(async (req, res) => {
@@ -92,15 +93,34 @@ const addProduct = catchAsync(async (req, res, next) => {
   }
 
   // Use 'name' if available, otherwise fall back to 'productName'
-  const finalProductName = name || productName;
+  const finalProductName = (name || productName || "").trim();
   if (!finalProductName) {
     return next(new AppError("Product name is required", 400));
   }
 
-  const mainImages = req.files.filter(f => f.fieldname === 'images');
-  const variantFiles = req.files.filter(f => f.fieldname.startsWith('variantImage_'));
+  const duplicateProduct = await Product.findOne({
+    productName: { $regex: new RegExp(`^${escapeRegExp(finalProductName)}$`, "i") },
+    isDeleted: false
+  });
+  if (duplicateProduct) {
+    return next(new AppError("Product already exists", STATUS.CONFLICT));
+  }
+
+  const [brandExists, categoryExists] = await Promise.all([
+    Brand.exists({ _id: brand }),
+    Category.exists({ _id: category })
+  ]);
+  if (!brandExists) return next(new AppError("Brand not found", STATUS.BAD_REQUEST));
+  if (!categoryExists) return next(new AppError("Category not found", STATUS.BAD_REQUEST));
+
+  const mainImages = (req.files || []).filter(f => f.fieldname === 'images');
+  const variantFiles = (req.files || []).filter(f => f.fieldname.startsWith('variantImage_'));
 
   const imagePaths = mainImages.map(file => `/uploads/products/${file.filename}`);
+
+  if (imagePaths.length < 1) {
+    return next(new AppError("Please upload at least one product image", STATUS.BAD_REQUEST));
+  }
 
   // 2. Parse Features - handle both array and JSON string
   let parsedFeatures = [];
@@ -127,6 +147,27 @@ const addProduct = catchAsync(async (req, res, next) => {
         : req.body.variants;
     }
 
+    if (!Array.isArray(parsedVariants) || parsedVariants.length === 0) {
+      return next(new AppError("Please add at least one variant", STATUS.BAD_REQUEST));
+    }
+
+    parsedVariants = parsedVariants.map(v => {
+      const basePrice = Number(v.basePrice);
+      const salePriceRaw = v.salePrice;
+      const salePrice = (salePriceRaw === undefined || salePriceRaw === null || String(salePriceRaw).trim() === '')
+        ? basePrice
+        : Number(salePriceRaw);
+
+      const images = Array.isArray(v.images) ? v.images : [];
+
+      return {
+        ...v,
+        basePrice,
+        salePrice,
+        images
+      };
+    });
+
     // Map Variant Images
     variantFiles.forEach(file => {
       const index = parseInt(file.fieldname.split('_')[1]);
@@ -140,9 +181,27 @@ const addProduct = catchAsync(async (req, res, next) => {
     return next(new AppError("Invalid variants format", 400));
   }
 
-  // 4. Validation: Product must have images
-  if (imagePaths.length === 0 && parsedVariants.every(v => !v.images || v.images.length === 0)) {
-    return next(new AppError("Product must have at least one image (common or variant-specific)", 400));
+  if (parsedFeatures.filter(f => String(f).trim()).length === 0) {
+    return next(new AppError("Please add at least one feature", STATUS.BAD_REQUEST));
+  }
+
+  for (let i = 0; i < parsedVariants.length; i++) {
+    const v = parsedVariants[i];
+
+    if (!Number.isFinite(v.basePrice) || v.basePrice <= 0) {
+      return next(new AppError(`Variant #${i + 1}: Base price is required and must be greater than 0`, STATUS.BAD_REQUEST));
+    }
+    if (!Number.isFinite(v.salePrice) || v.salePrice < 0) {
+      return next(new AppError(`Variant #${i + 1}: Selling price must be a valid number`, STATUS.BAD_REQUEST));
+    }
+    if (v.salePrice > v.basePrice) {
+      return next(new AppError(`Variant #${i + 1}: Selling price cannot be greater than base price`, STATUS.BAD_REQUEST));
+    }
+
+    const imgCount = Array.isArray(v.images) ? v.images.length : 0;
+    if (imgCount < 3) {
+      return next(new AppError(`Variant #${i + 1}: Please upload at least 3 images`, STATUS.BAD_REQUEST));
+    }
   }
 
   // 5. Create Product
@@ -151,22 +210,19 @@ const addProduct = catchAsync(async (req, res, next) => {
     brand,
     category,
     description,
-    productImages: imagePaths,
     features: parsedFeatures,
     variants: parsedVariants,
-    status: status || "Active"
+    status: status || 'Active', // Default to Active if status is not provided
+    productImages: imagePaths
   });
 
   await newProduct.save();
-
   return successResponse(res, STATUS.CREATED, "Product created successfully", newProduct);
-
-})
+});
 
 const getProductById = catchAsync(async (req, res, next) => {
   const product = await Product.findById(req.params.id).populate('category').populate('brand');
-  if (!product)
-    return next(new AppError("Product not found", 404));
+  if (!product) return next(new AppError("Product not found", 404));
 
   return successResponse(res, STATUS.OK, "Product details", product);
 });
@@ -181,16 +237,30 @@ const updateProduct = catchAsync(async (req, res, next) => {
     description,
     features,
     variants,
-    status, // Extract status
-    existingImages // info about kept images
+    status,
+    existingImages
   } = req.body;
 
   const product = await Product.findById(id);
-  if (!product)
-    return next(new AppError("Product not found", 404));
+  if (!product) return next(new AppError("Product not found", 404));
 
-  // Handle Images & Variants
-  // 1. Separate Files
+  const originalProductImages = Array.isArray(product.productImages) ? [...product.productImages] : [];
+
+  const normalizedName = (productName ?? product.productName ?? "").trim();
+  if (!normalizedName) {
+    return next(new AppError("Product name is required", STATUS.BAD_REQUEST));
+  }
+
+  const duplicate = await Product.findOne({
+    productName: { $regex: new RegExp(`^${escapeRegExp(normalizedName)}$`, "i") },
+    isDeleted: false,
+    _id: { $ne: id }
+  });
+  if (duplicate) {
+    return next(new AppError("Product name already taken", STATUS.CONFLICT));
+  }
+
+  // Separate files
   let mainImages = [];
   let variantFiles = [];
   if (req.files && req.files.length > 0) {
@@ -198,111 +268,183 @@ const updateProduct = catchAsync(async (req, res, next) => {
     variantFiles = req.files.filter(f => f.fieldname.startsWith('variantImage_'));
   }
 
-  // 2. Handle Common Product Images
+  // Keep existing common images if not explicitly provided (variant-only update)
   let keptImages = [];
-  if (existingImages) {
+  if (existingImages !== undefined) {
     keptImages = Array.isArray(existingImages) ? existingImages : [existingImages];
-  }
-
-  let newImagePaths = [];
-  if (mainImages.length > 0) {
-    newImagePaths = mainImages.map(file => `/uploads/products/${file.filename}`);
-  }
-
-  // Combine kept images + new images
-  product.productImages = [...keptImages, ...newImagePaths];
-
-  // 3. Handle Variants & Variant Images
-  // We need to base upgrades on provided 'variants' JSON or fallback to existing
-  let parsedVariants = [];
-
-  if (variants) {
-    try {
-      parsedVariants = JSON.parse(variants);
-    } catch (e) {
-      return next(new AppError("Invalid variants format", 400));
-    }
   } else {
-    parsedVariants = product.variants || [];
+    keptImages = originalProductImages;
   }
+
+  const newImagePaths = mainImages.map(file => `/uploads/products/${file.filename}`);
+  const nextProductImages = [...keptImages, ...newImagePaths];
+  if (nextProductImages.length < 1) {
+    return next(new AppError("Please keep/upload at least one product image", STATUS.BAD_REQUEST));
+  }
+
+  // Parse variants
+  let parsedVariants = [];
+  try {
+    parsedVariants = variants ? JSON.parse(variants) : (product.variants || []);
+  } catch (e) {
+    return next(new AppError("Invalid variants format", STATUS.BAD_REQUEST));
+  }
+
+  if (!Array.isArray(parsedVariants) || parsedVariants.length === 0) {
+    return next(new AppError("Please add at least one variant", STATUS.BAD_REQUEST));
+  }
+
+  parsedVariants = parsedVariants.map(v => {
+    const basePrice = Number(v.basePrice);
+    const salePriceRaw = v.salePrice;
+    const salePrice = (salePriceRaw === undefined || salePriceRaw === null || String(salePriceRaw).trim() === '')
+      ? basePrice
+      : Number(salePriceRaw);
+    const images = Array.isArray(v.images) ? v.images : [];
+
+    return {
+      ...v,
+      basePrice,
+      salePrice,
+      images
+    };
+  });
 
   // Apply new variant images
   variantFiles.forEach(file => {
     const index = parseInt(file.fieldname.split('_')[1]);
     if (parsedVariants[index]) {
-      if (!parsedVariants[index].images)
-        parsedVariants[index].images = [];
+      if (!parsedVariants[index].images) parsedVariants[index].images = [];
       parsedVariants[index].images.push(`/uploads/products/${file.filename}`);
     }
   });
 
-  product.variants = parsedVariants;
-
-  // Update other fields
-  if (productName)
-    product.productName = productName;
-  if (brand)
-    product.brand = brand;
-  if (category)
-    product.category = category;
-  if (description)
-    product.description = description;
-  if (status)
-    product.status = status;
-
-  if (features) {
-    try {
-      product.features = JSON.parse(features);
-    } catch (e) {
-      return next(new AppError("Invalid features format", 400));
+  for (let i = 0; i < parsedVariants.length; i++) {
+    const v = parsedVariants[i];
+    if (!Number.isFinite(v.basePrice) || v.basePrice <= 0) {
+      return next(new AppError(`Variant #${i + 1}: Base price is required and must be greater than 0`, STATUS.BAD_REQUEST));
+    }
+    if (!Number.isFinite(v.salePrice) || v.salePrice < 0) {
+      return next(new AppError(`Variant #${i + 1}: Selling price must be a valid number`, STATUS.BAD_REQUEST));
+    }
+    if (v.salePrice > v.basePrice) {
+      return next(new AppError(`Variant #${i + 1}: Selling price cannot be greater than base price`, STATUS.BAD_REQUEST));
+    }
+    const imgCount = Array.isArray(v.images) ? v.images.length : 0;
+    if (imgCount < 3) {
+      return next(new AppError(`Variant #${i + 1}: Please keep/upload at least 3 images`, STATUS.BAD_REQUEST));
     }
   }
 
+  // Parse features if provided
+  let parsedIncomingFeatures = null;
+  if (features !== undefined) {
+    try {
+      parsedIncomingFeatures = JSON.parse(features);
+    } catch (e) {
+      return next(new AppError("Invalid features format", STATUS.BAD_REQUEST));
+    }
+  }
+
+  // Server-side no-change detection
+  const compareVariants = (arr) => (arr || []).map(v => ({
+    type: (v.type || '').trim(),
+    value: (v.value || '').trim(),
+    basePrice: Number(v.basePrice),
+    salePrice: Number(v.salePrice),
+    stock: Number(v.stock),
+    images: Array.isArray(v.images) ? [...v.images].sort() : []
+  }));
+
+  const hasNewMainImages = mainImages.length > 0;
+  const hasNewVariantImages = variantFiles.length > 0;
+  const nextImagesKey = nextProductImages.join('|');
+  const baselineImagesKey = originalProductImages.join('|');
+
+  const baselineFeatures = Array.isArray(product.features) ? product.features : [];
+  const baselineVariants = Array.isArray(product.variants) ? product.variants : [];
+
+  const noChangesDetected =
+    !hasNewMainImages &&
+    !hasNewVariantImages &&
+    normalizedName === (product.productName || '').trim() &&
+    (description === undefined || description === product.description) &&
+    (status === undefined || status === product.status) &&
+    (brand === undefined || String(brand) === String(product.brand)) &&
+    (category === undefined || String(category) === String(product.category)) &&
+    (parsedIncomingFeatures === null || JSON.stringify(parsedIncomingFeatures) === JSON.stringify(baselineFeatures)) &&
+    JSON.stringify(compareVariants(parsedVariants)) === JSON.stringify(compareVariants(baselineVariants)) &&
+    nextImagesKey === baselineImagesKey;
+
+  if (noChangesDetected) {
+    return next(new AppError("No changes made", STATUS.BAD_REQUEST));
+  }
+
+  // Apply updates
+  product.productImages = nextProductImages;
+  product.variants = parsedVariants;
+  product.productName = normalizedName;
+
+  if (brand !== undefined) {
+    const brandExists = await Brand.exists({ _id: brand });
+    if (!brandExists) return next(new AppError("Brand not found", STATUS.BAD_REQUEST));
+    product.brand = brand;
+  }
+  if (category !== undefined) {
+    const categoryExists = await Category.exists({ _id: category });
+    if (!categoryExists) return next(new AppError("Category not found", STATUS.BAD_REQUEST));
+    product.category = category;
+  }
+  if (description !== undefined) product.description = description;
+  if (status !== undefined) product.status = status;
+  if (parsedIncomingFeatures !== null) product.features = parsedIncomingFeatures;
+
+  if (!product.features || product.features.filter(f => String(f).trim()).length === 0) {
+    return next(new AppError("Please add at least one feature", STATUS.BAD_REQUEST));
+  }
+
   await product.save();
-
   return successResponse(res, STATUS.OK, "Product updated successfully", product);
-
 });
-
 
 const toggleProductStatus = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-
   const product = await Product.findById(id);
-    if (!product) return next(new AppError("Product not found", 404));
+  
+  if (!product) {
+    return next(new AppError('Product not found', 404));
+  }
 
-  const newStatus = product.status === 'Active' ? 'Inactive' : 'Active';
+  product.status = product.status === 'Active' ? 'Inactive' : 'Active';
+  await product.save();
 
-    await Product.findByIdAndUpdate(id, { status: newStatus });
-
-    return successResponse(res, STATUS.OK, `Product ${newStatus}`, { status: newStatus });
-})
-
+  return successResponse(res, 200, `Product ${product.status} successfully`, { status: product.status });
+});
 
 const softDeleteProduct = catchAsync(async (req, res, next) => {
-    const { id } = req.params;
-    const product = await Product.findById(id);
-    if (!product) return next(new AppError("Product not found", 404));
+  const { id } = req.params;
+  const product = await Product.findById(id);
+  if (!product) return next(new AppError("Product not found", 404));
 
-    await Product.findByIdAndUpdate(id, { isDeleted: true });
+  await Product.findByIdAndUpdate(id, { isDeleted: true });
 
-    return successResponse(res, STATUS.OK, "Product deleted");
+  return successResponse(res, STATUS.OK, "Product deleted");
 });
 
 const deleteVariant = catchAsync(async (req, res, next) => {
-    const { productId, variantId } = req.body;
-    await Product.updateOne({ _id: productId }, { $pull: { variants: { _id: variantId } } });
-    return successResponse(res, STATUS.OK, "Variant deleted successfully");
+  const { productId, variantId } = req.body;
+  await Product.updateOne({ _id: productId }, { $pull: { variants: { _id: variantId } } });
+  return successResponse(res, STATUS.OK, "Variant deleted successfully");
 });
 
 const toggleVariantStatus = catchAsync(async (req, res, next) => {
-    const { productId, variantId, status } = req.body;
-    // status should be 'Active' or 'Inactive'
-    await Product.updateOne(
-        { _id: productId, "variants._id": variantId },
-        { $set: { "variants.$.status": status } }
-    );
-    return successResponse(res, STATUS.OK, "Variant status updated");
+  const { productId, variantId, status } = req.body;
+  // status should be 'Active' or 'Inactive'
+  await Product.updateOne(
+    { _id: productId, "variants._id": variantId },
+    { $set: { "variants.$.status": status } }
+  );
+  return successResponse(res, STATUS.OK, "Variant status updated");
 });
 
 export default {

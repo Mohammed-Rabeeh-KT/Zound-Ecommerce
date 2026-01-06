@@ -71,9 +71,22 @@ app.use('/user', userRouter);
 app.use('/admin',authenticateUser,adminRouter);
 
 
-app.use((req, res, next) => {
-    next(new AppError(`Page not found`, 404));
-});
+const notFoundHandler = (req, res, next) => {
+  console.warn('404 for', req.method, req.originalUrl);
+  const err = new AppError(`Page not found: ${req.originalUrl}`, 404);
+
+  if (req.accepts && req.accepts('html')) {
+    return res.status(404).render('404', { url: req.originalUrl, layout: 'layout' });
+  }
+
+  if (req.accepts && req.accepts('json')) {
+    return next(err); // let global error handler send JSON
+  }
+
+  return res.status(404).type('txt').send('404 - Page not found');
+};
+
+app.use(notFoundHandler);
 
 
 app.use(globalErrorHandler);

@@ -260,8 +260,20 @@ const login = async (req, res) => {
     //find user by email
     const user = await User.findOne({ email: sanitizedEmail });
 
+    
+
     if (!user) {
       return res.render('user/login', { layout: "layout", message: "Invalid email or user doesn't exist.", errors: {}, user: req.user || null, cartCount: req.session?.cart?.length || 0 })
+    }
+
+    if(user.role !== 'user'){
+      return res.render('user/login', {
+        layout: "layout",
+        message: "Invalid email or password",
+        errors: {},
+        user: null,
+        cartCount: req.session?.cart?.length || 0
+      })
     }
 
     if (user.isBlocked) {
@@ -436,12 +448,22 @@ const forgotPassword = async (req, res) => {
     if (!user) {
         return res.render('user/forgot-password', {
             layout: "layout",
-            message: "If that email is registered, we have sent an OTP ",
+            message: "The otp has shared to your email account",
             user: req.user || null,
             cartCount: req.session?.cart?.length || 0,
             errors: { email: "User not found" }
         });
     }
+
+    if (user.isBlocked) {
+        return res.render('user/forgot-password', {
+            layout: "layout",
+            message: "This account has been blocked. Please contact support.",
+            user: req.user || null,
+            cartCount: req.session?.cart?.length || 0
+        });
+    }
+
     // Generate and send OTP
     const otp = generateOTP();
     const emailSent = await sendOTPEmail(email, otp);
