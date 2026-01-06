@@ -1,0 +1,220 @@
+:root {
+    /* Brand Colors */
+    --royal-blue: #002366;
+    --royal-blue-hover: #001845;
+    --royal-light: #f0f4ff;
+
+    /* Neutrals */
+    --bg-page: #f9fafb;
+    --bg-card: #ffffff;
+    --text-primary: #111827;
+    /* Near Black */
+    --text-secondary: #6b7280;
+    /* Muted Grey */
+    --border-color: #f3f4f6;
+
+    /* Decoration */
+    --radius: 12px;
+    --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+    --shadow-hover: 0 10px 25px -5px rgba(0, 0, 0, 0.06);
+    --transition: all 0.2s ease;
+}
+
+body {
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+button {
+    font-family: inherit;
+    cursor: pointer;
+}
+
+/* --- Page Layout --- */
+.page-container {
+    max-width: 1400px;
+    margin: 40px auto;
+    padding: 0 40px;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    /* Fixed Sidebar, Flexible Content */
+    gap: 60px;
+    align-items: start;
+    min-height: 80vh;
+}
+
+
+
+/* --- Main Content Area --- */
+.page-header {
+    margin-bottom: 32px;
+}
+
+.headline {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+/* Card Styling */
+.premium-card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 32px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-soft);
+}
+
+/* Info Card Specifics */
+.info-card {
+    margin-bottom: 32px;
+}
+
+.card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.edit-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--royal-blue);
+    background: transparent;
+    border: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: var(--transition);
+}
+
+.edit-btn:hover {
+    color: var(--royal-blue-hover);
+    text-decoration: underline;
+}
+
+/* Info Grid Layout */
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 40px;
+}
+
+.detail-group label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.detail-group .value {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    font-weight: 500;
+    margin: 0;
+}
+
+/* Stats Row */
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+
+.stat-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 140px;
+    transition: var(--transition);
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.stat-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.icon-box {
+    width: 40px;
+    height: 40px;
+    background: #f3f4f6;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+}
+
+.stat-label {
+    flex-grow: 1;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.stat-link {
+    font-size: 0.85rem;
+    color: var(--royal-blue);
+    font-weight: 500;
+}
+
+.stat-bottom {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-top: 24px;
+    color: var(--text-primary);
+}
+
+.stat-bottom .currency {
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+    margin-right: 4px;
+    vertical-align: middle;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 992px) {
+    .page-container {
+        grid-template-columns: 1fr;
+        padding: 0 20px;
+    }
+
+    .premium-sidebar {
+        display: none;
+        /* Or create a mobile drawer */
+    }
+}
+
+@media (max-width: 600px) {
+
+    .details-grid,
+    .stats-container {
+        grid-template-columns: 1fr;
+    }
+
+    .premium-card {
+        padding: 24px;
+    }
+}

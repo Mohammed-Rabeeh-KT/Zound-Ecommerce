@@ -1,6 +1,19 @@
+import User from "../../models/userSchema.js";
 import Product from "../../models/productSchema.js";
 import Category from "../../models/categorySchema.js";
 import Brand from "../../models/brandSchema.js";
+import { catchAsync } from "../../utils/catchAsync.js";
+import AppError from "../../utils/AppError.js";
+import { STATUS, MESSAGE } from "../../utils/response.js";
+import nodemailer from "nodemailer";
+import bcrypt from "bcrypt";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 
 const pageNotFound = async (req, res) => {
   try {
@@ -37,7 +50,7 @@ const loadHomepage = async (req, res) => {
     const categories = categoryData.map(c => ({
       _id: c._id,
       name: c.name,
-      slug : c.slug,
+      slug: c.slug,
       image: getCategoryImage(c.name)
     }));
 
@@ -66,8 +79,8 @@ const loadHomepage = async (req, res) => {
 
 
     // 4. Fetch Brands
-    const brands = await Brand.find({ isListed: true }).limit(10); 
-    
+    const brands = await Brand.find({ isListed: true }).limit(10);
+
     // const specialOffers = latestProducts.slice(0, 8); // Quick mapping for now
 
     const processProduct = (product) => {
@@ -79,7 +92,7 @@ const loadHomepage = async (req, res) => {
         ...product.toObject(),
         listingImage:
           activeVariant?.images?.[0] ||
-          product.productImages?.[0] ||   
+          product.productImages?.[0] ||
           '/images/placeholder.png',
         primaryVariant: activeVariant
       };
@@ -98,7 +111,7 @@ const loadHomepage = async (req, res) => {
       latestProducts: latestProductsProcessed,
       topProducts: topProductsProcessed,
       brands,
-      specialOffers : specialOffersProcessed
+      specialOffers: specialOffersProcessed
     });
 
   } catch (error) {
@@ -107,8 +120,228 @@ const loadHomepage = async (req, res) => {
   }
 }
 
+const loadProfile = catchAsync(async (req, res, next) => {
+  const userId = req.user._id;
+  const userData = await User.findById(userId);
+
+  if (!userData) {
+    throw new AppError(MESSAGE.NOT_FOUND || "User not found", STATUS.NOT_FOUND)
+  }
+
+  res.status(STATUS.OK).render("user/profile", {
+    user: userData.toObject(),
+    currentPage: "profile"
+  });
+})
+
+
+
+const otpStore = {};
+
+const loadEditProfile = catchAsync(async (req, res, next) => {
+  const userId = req.user._id;
+  const user = await User.findById(userId);
+  if (!user)
+    return res.redirect('/user/home')
+
+  res.render('user/editProfile', { user, currentPage: 'profile' });
+})
+
+
+const sendEmailOtp = catchAsync(async (req, res, next) => {
+  const { email } = req.body;
+  const userId = req.user._id;
+
+  const existingUser = await User.findOne({ email });
+  if (existingUser && existingUser._id.toString() !== userId) {
+    return res.status(400).json({ success: false, message: "Email already in use" });
+  }
+
+  const otp = Math.floor(100000 + Math.random() * 900000);
+
+  console.log(`----------------------------`);
+  console.log(`OTP for ${email}: ${otp}`);
+  console.log(`----------------------------`);
+
+  otpStore[email] = {
+    otp,
+    expiresAt: Date.now() + 2 * 60 * 1000
+  }
+
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.NODEMAILER_EMAIL,
+      pass: process.env.NODEMAILER_PASSWORD
+    }
+  });
+
+  await transporter.sendMail({
+    from: '"ZOUND Security" <no-reply@zound.com>',
+    to: email,
+    subject: 'Verify your new email',
+    text: `Your OTP for email change is: ${otp}`
+  })
+  res.json({ success: true, message: "OTP sent" });
+})
+
+const verifyEmailOtp = catchAsync(async (req, res, next) => {
+  const { email, otp } = req.body;
+
+  const record = otpStore[email];
+
+  if (!record || record.expires < Date.now()) {
+    return res.status(400).json({ success: false, message: "OTP expired or invalid" });
+  }
+
+  if (parseInt(otp) !== record.otp) {
+    return res.status(400).json({ success: false, message: "Incorrect OTP" });
+  }
+
+  // OTP Valid
+  delete otpStore[email]; // Clear OTP
+  res.json({ success: true });
+});
+
+const updateProfile = catchAsync(async (req, res, next) => {
+  const userId = req.user.id;
+  const { name, phone, email } = req.body;
+  const updateData = { name, phone };
+
+  // If email is present, we assume it was verified on frontend (Double check logic in production)
+  if (email) {
+    updateData.email = email;
+  }
+
+  await User.findByIdAndUpdate(userId, updateData);
+
+  res.json({ success: true, message: "Profile updated" });
+});
+
+// Change Password
+const changePassword = catchAsync(async (req, res, next) => {
+  const userId = req.user._id;
+  const { currentPassword, newPassword } = req.body;
+
+  // Input validation
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({
+      success: false,
+      message: "Current password and new password are required"
+    });
+  }
+
+  // Get user with password
+  const user = await User.findById(userId).select('+password');
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found"
+    });
+  }
+
+  // Check if user has a password (might be Google OAuth user)
+  if (!user.password) {
+    return res.status(400).json({
+      success: false,
+      message: "Password change not available for social login accounts"
+    });
+  }
+
+  // Verify current password
+  const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+
+  if (!isCurrentPasswordValid) {
+    return res.status(400).json({
+      success: false,
+      message: "Current password is incorrect"
+    });
+  }
+
+  // Validate new password requirements
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+  if (!passwordRegex.test(newPassword)) {
+    return res.status(400).json({
+      success: false,
+      message: "New password must be at least 8 characters with uppercase, lowercase, and number"
+    });
+  }
+
+  // Check if new password is different from current
+  const isSamePassword = await bcrypt.compare(newPassword, user.password);
+  if (isSamePassword) {
+    return res.status(400).json({
+      success: false,
+      message: "New password must be different from current password"
+    });
+  }
+
+  // Hash new password
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  // Update password
+  await User.findByIdAndUpdate(userId, { password: hashedPassword });
+
+  res.json({ success: true, message: "Password changed successfully" });
+});
+
+// Upload Profile Picture
+const uploadProfilePicture = catchAsync(async (req, res, next) => {
+  const userId = req.user._id;
+
+  if (!req.file) {
+    return res.status(400).json({
+      success: false,
+      message: "No image file provided"
+    });
+  }
+
+  // Get current user to check for existing profile picture
+  const user = await User.findById(userId);
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found"
+    });
+  }
+
+  // Delete old profile picture if exists
+  if (user.profile_picture) {
+    const oldImagePath = path.join(__dirname, '../../public', user.profile_picture);
+    if (fs.existsSync(oldImagePath)) {
+      try {
+        fs.unlinkSync(oldImagePath);
+        console.log('Old profile picture deleted:', oldImagePath);
+      } catch (err) {
+        console.error('Error deleting old profile picture:', err);
+      }
+    }
+  }
+
+  // Generate the public URL path for the new image
+  const imageUrl = `/uploads/profile-pictures/${req.file.filename}`;
+
+  // Update user's profile picture
+  await User.findByIdAndUpdate(userId, { profile_picture: imageUrl });
+
+  res.json({
+    success: true,
+    message: "Profile picture updated successfully",
+    imageUrl: imageUrl
+  });
+});
+
 
 export default {
   loadHomepage,
-  pageNotFound
+  pageNotFound,
+  loadProfile,
+  loadEditProfile,
+  sendEmailOtp,
+  verifyEmailOtp,
+  updateProfile,
+  changePassword,
+  uploadProfilePicture
 };
