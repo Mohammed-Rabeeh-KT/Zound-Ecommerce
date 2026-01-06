@@ -4,6 +4,7 @@ import userController from '../controllers/user/userController.js';
 import authController from '../controllers/user/authController.js';
 import productController from '../controllers/user/productController.js'
 import { authenticateUser, requireUser, requireAdmin } from '../middlewares/authMiddleware.js';
+import uploadProfilePicture from '../middlewares/uploadProfilePicture.js';
 
 
 router.get('/pageNotFound', userController.pageNotFound)
@@ -38,7 +39,27 @@ router.get('/products', productController.getProductListing)
 
 
 //product detail page
-router.get('/products/:slug' , productController.getProductDetails)
+router.get('/products/:slug', productController.getProductDetails)
+
+
+//User Profile Routes
+router.get('/profile', userController.loadProfile)
+
+//edit profile
+router.get('/profile/edit', userController.loadEditProfile);
+router.put('/profile/edit', userController.updateProfile)
+
+// OTP Verification Routes (API endpoints)
+router.post('/send-email-otp', userController.sendEmailOtp);
+router.post('/verify-email-otp', userController.verifyEmailOtp);
+
+// Change Password Route
+router.post('/change-password', userController.changePassword);
+
+// Profile Picture Upload Route
+router.post('/upload-profile-picture', uploadProfilePicture.single('profileImage'), userController.uploadProfilePicture);
+
+
 
 
 export default router;
