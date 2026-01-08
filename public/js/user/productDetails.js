@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const zoomLens = document.getElementById('zoomLens');
     const variantButtons = document.querySelectorAll('.variant-btn');
     const thumbnailGallery = document.getElementById('thumbnailGallery');
-    
+
     // UI Elements
     const displayPrice = document.getElementById('currentPrice');
     const displayBasePrice = document.getElementById('originalPrice');
@@ -21,12 +21,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 2. ZOOM HELPER FUNCTIONS ---
     function updateZoomBackground() {
         // Prevent math errors if image isn't rendered yet or width is 0
-        if (!mainImage || !zoomResult || !zoomLens || !mainImage.offsetWidth) return; 
-         
+        if (!mainImage || !zoomResult || !zoomLens || !mainImage.offsetWidth) return;
+
         zoomResult.style.backgroundImage = `url('${mainImage.src}')`;
         const cx = zoomResult.offsetWidth / zoomLens.offsetWidth;
         const cy = zoomResult.offsetHeight / zoomLens.offsetHeight;
-        
+
         // Scale background based on visible image width vs lens ratio
         zoomResult.style.backgroundSize = `${mainImage.offsetWidth * cx}px ${mainImage.offsetHeight * cy}px`;
     }
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // A. Update Text Elements
         if (displayPrice) displayPrice.textContent = `₹${variantData.salePrice.toLocaleString('en-IN')}`;
         if (displaySku) displaySku.textContent = variantData.sku || 'N/A';
-        
+
         if (displayBasePrice) {
             if (variantData.salePrice < variantData.basePrice) {
                 displayBasePrice.textContent = `₹${variantData.basePrice.toLocaleString('en-IN')}`;
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <img src="${img}" alt="View ${index + 1}">
                 </div>
             `).join('');
-            
+
             mainImage.src = interleavedImages[0];
             // Ensure zoom resets when image source changes and finishes loading
             mainImage.onload = () => updateZoomBackground();
@@ -92,13 +92,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Variant Switching
     variantButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             variantButtons.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
 
             const variantData = JSON.parse(this.dataset.variant);
             const variantImages = JSON.parse(this.dataset.images) || [];
-            
+
             updateProductUI(variantData, variantImages);
         });
     });
@@ -111,18 +111,18 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.thumbnail-item').forEach(t => t.classList.remove('active'));
         item.classList.add('active');
         mainImage.src = item.dataset.image;
-        updateZoomBackground(); 
+        updateZoomBackground();
     });
 
     // 5. ZOOM MOVE LOGIC
     mainImage.parentElement.addEventListener('mousemove', (e) => {
         const container = mainImage.parentElement;
         const rect = container.getBoundingClientRect();
-        
+
         // 1. Calculate actual image dimensions inside the container (object-fit: contain)
         const containerRatio = rect.width / rect.height;
         const imageRatio = mainImage.naturalWidth / mainImage.naturalHeight;
-        
+
         let actualImgWidth, actualImgHeight, imgLeft, imgTop;
 
         if (imageRatio > containerRatio) {
@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (x < imgLeft || x > imgLeft + actualImgWidth || y < imgTop || y > imgTop + actualImgHeight) {
             zoomResult.style.display = "none";
             zoomLens.style.display = "none";
-            return; 
+            return;
         } else {
             zoomResult.style.display = "block";
             zoomLens.style.display = "block";
@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
         zoomLens.style.display = "none";
     });
 
-    
+
 
     // --- 6. INITIALIZATION HELPERS ---
     function updateStockUI(stock) {
@@ -208,44 +208,44 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-// --- 7. INITIAL EXECUTION (FIXED FOR SINGLE VARIANT) ---
+    // --- 7. INITIAL EXECUTION (FIXED FOR SINGLE VARIANT) ---
 
-const defaultVariantEl = document.getElementById('defaultVariantData');
-const activeBtn =
-    document.querySelector('.variant-btn.active') ||
-    document.querySelector('.variant-btn');
+    const defaultVariantEl = document.getElementById('defaultVariantData');
+    const activeBtn =
+        document.querySelector('.variant-btn.active') ||
+        document.querySelector('.variant-btn');
 
-let initialVariantData = null;
-let initialImages = [];
+    let initialVariantData = null;
+    let initialImages = [];
 
-// Priority order:
-// 1️. Active variant button
-// 2️. Any variant button
-// 3️. Backend-provided firstVariant (single-variant case)
+    // Priority order:
+    // 1️. Active variant button
+    // 2️. Any variant button
+    // 3️. Backend-provided firstVariant (single-variant case)
 
-if (activeBtn) {
-    try {
-        initialVariantData = JSON.parse(activeBtn.dataset.variant);
-        initialImages = JSON.parse(activeBtn.dataset.images || '[]');
-        activeBtn.classList.add('active');
-    } catch (e) {
-        console.error('Variant button data error:', e);
+    if (activeBtn) {
+        try {
+            initialVariantData = JSON.parse(activeBtn.dataset.variant);
+            initialImages = JSON.parse(activeBtn.dataset.images || '[]');
+            activeBtn.classList.add('active');
+        } catch (e) {
+            console.error('Variant button data error:', e);
+        }
+    } else if (defaultVariantEl) {
+        try {
+            initialVariantData = JSON.parse(defaultVariantEl.dataset.variant);
+            initialImages = JSON.parse(defaultVariantEl.dataset.images || '[]');
+        } catch (e) {
+            console.error('Default variant data error:', e);
+        }
     }
-} else if (defaultVariantEl) {
-    try {
-        initialVariantData = JSON.parse(defaultVariantEl.dataset.variant);
-        initialImages = JSON.parse(defaultVariantEl.dataset.images || '[]');
-    } catch (e) {
-        console.error('Default variant data error:', e);
+
+    if (!initialVariantData) {
+        window.location.href = '/user/products';
+        return;
     }
-}
 
-if (!initialVariantData) {
-    window.location.href = '/user/products';
-    return;
-}
-
-updateProductUI(initialVariantData, initialImages);
+    updateProductUI(initialVariantData, initialImages);
 
     /**
      * FIX: This function ensures the zoom result is ready immediately.
@@ -268,6 +268,101 @@ updateProductUI(initialVariantData, initialImages);
 
     // Ensure ratios stay perfect if the user resizes the browser window
     window.addEventListener('resize', updateZoomBackground);
+
+    // --- 8. ADD TO CART FUNCTIONALITY ---
+    if (addToCartBtn) {
+        addToCartBtn.addEventListener('click', async function () {
+            const productId = this.dataset.productId;
+            const quantity = parseInt(quantityInput?.value) || 1;
+
+            // Get active variant ID if exists
+            const activeVariantBtn = document.querySelector('.variant-btn.active');
+            const variantId = activeVariantBtn?.dataset.variantId || null;
+
+            // Disable button and show loading state
+            const originalText = this.innerHTML;
+            this.disabled = true;
+            this.innerHTML = `
+                <svg class="animate-spin" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" stroke-dasharray="31.4" stroke-dashoffset="10"></circle>
+                </svg>
+                Adding...
+            `;
+
+            try {
+                const response = await axios.post('/user/cart/add', {
+                    productId,
+                    quantity,
+                    variantId
+                });
+
+                if (response.data.success) {
+                    // Show success notification
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Added to Cart!',
+                        text: response.data.message || 'Item added to your cart',
+                        showConfirmButton: true,
+                        confirmButtonText: 'View Cart',
+                        showCancelButton: true,
+                        cancelButtonText: 'Continue Shopping',
+                        confirmButtonColor: '#002366',
+                        timer: 5000,
+                        timerProgressBar: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '/user/cart';
+                        }
+                    });
+
+                    // Update cart count in header if element exists
+                    const cartCountBadge = document.querySelector('.cart-count-badge');
+                    if (cartCountBadge && response.data.data?.cartCount) {
+                        cartCountBadge.textContent = response.data.data.cartCount;
+                        cartCountBadge.style.display = 'flex';
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops!',
+                        text: response.data.message || 'Failed to add item to cart',
+                        confirmButtonColor: '#002366'
+                    });
+                }
+            } catch (error) {
+                console.error('Add to cart error:', error);
+
+                // Check if user is not logged in
+                if (error.response?.status === 401) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Please Login',
+                        text: 'You need to login to add items to cart',
+                        showConfirmButton: true,
+                        confirmButtonText: 'Login Now',
+                        showCancelButton: true,
+                        cancelButtonText: 'Cancel',
+                        confirmButtonColor: '#002366'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '/user/login';
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: error.response?.data?.message || 'Something went wrong. Please try again.',
+                        confirmButtonColor: '#002366'
+                    });
+                }
+            } finally {
+                // Restore button state
+                this.disabled = false;
+                this.innerHTML = originalText;
+            }
+        });
+    }
 });
 
 

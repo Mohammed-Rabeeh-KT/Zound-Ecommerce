@@ -3,6 +3,7 @@ const router = express.Router();
 import userController from '../controllers/user/userController.js';
 import authController from '../controllers/user/authController.js';
 import productController from '../controllers/user/productController.js'
+import cartController from '../controllers/user/cartController.js'
 import { authenticateUser, requireUser, requireAdmin } from '../middlewares/authMiddleware.js';
 import uploadProfilePicture from '../middlewares/uploadProfilePicture.js';
 
@@ -65,5 +66,15 @@ router.post('/addresses', userController.addAddress);
 router.put('/addresses/:id', userController.updateAddress);
 router.put('/addresses/:id/default', userController.setDefaultAddress);
 router.delete('/addresses/:id', userController.deleteAddress);
+
+//Cart Routes
+router.get('/cart', cartController.loadCart);
+router.post('/cart/add', cartController.addToCart);
+router.put('/cart/update', cartController.updateCartItem);
+router.delete('/cart/remove/:productId', cartController.removeFromCart);
+router.delete('/cart/clear', cartController.clearCart);
+router.post('/cart/apply-discount', cartController.applyDiscount);
+router.get('/cart/count', cartController.getCartCount);
+
 
 export default router;
