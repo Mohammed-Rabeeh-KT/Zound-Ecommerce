@@ -69,7 +69,7 @@ if (clearFiltersBtn) {
             checkbox.checked = false;
         });
 
-       /* Reset price slider + inputs */
+        /* Reset price slider + inputs */
         minRange.value = minInput.value = MIN_PRICE;
         maxRange.value = maxInput.value = MAX_PRICE;
 
@@ -83,7 +83,7 @@ if (clearFiltersBtn) {
         // Clear search
         if (searchInput) searchInput.value = '';
 
-         /*Clear active filter chips */
+        /*Clear active filter chips */
         activeFiltersContainer.innerHTML = '';
 
         /* Reset heading instantly */
@@ -183,17 +183,17 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 document.querySelectorAll(
-  'input[type="checkbox"], input[type="range"], input[type="number"], select'
+    'input[type="checkbox"], input[type="range"], input[type="number"], select'
 ).forEach(el => {
-  el.addEventListener('change', updateFilterActionsUI);
-  el.addEventListener('input', updateFilterActionsUI);
+    el.addEventListener('change', updateFilterActionsUI);
+    el.addEventListener('input', updateFilterActionsUI);
 });
 
 
 function hasActiveFilters() {
     const hasCategory = document.querySelectorAll('input[name="category"]:checked').length > 0;
     const hasBrand = document.querySelectorAll('input[name="brand"]:checked').length > 0;
-    const hasPresetPrice =    document.querySelectorAll('.price-preset:checked').length > 0;
+    const hasPresetPrice = document.querySelectorAll('.price-preset:checked').length > 0;
 
 
     const hasPriceRange =
@@ -587,3 +587,80 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = `/user/products?${params.toString()}`;
     });
 });
+
+// =============================================
+// WISHLIST FUNCTIONALITY
+// =============================================
+
+// Toggle wishlist (add/remove) with variant support
+async function toggleWishlist(productId, variantId, btnElement) {
+    const isInWishlist = btnElement.classList.contains('active');
+    const icon = btnElement.querySelector('svg');
+
+    try {
+        if (isInWishlist) {
+            // Remove from wishlist
+            let removeUrl = `/user/wishlist/remove/${productId}`;
+            if (variantId) {
+                removeUrl += `?variantId=${variantId}`;
+            }
+            const response = await axios.delete(removeUrl);
+            if (response.data.success) {
+                btnElement.classList.remove('active');
+                if (icon) icon.style.fill = 'none';
+                showToast('Removed from wishlist', 'success');
+            } else {
+                showToast(response.data.message || 'Failed to remove', 'error');
+            }
+        } else {
+            // Add to wishlist with variant
+            const response = await axios.post('/user/wishlist/add', {
+                productId,
+                variantId: variantId || null
+            });
+            if (response.data.success) {
+                btnElement.classList.add('active');
+                if (icon) icon.style.fill = '#ef4444';
+                showToast('Added to wishlist!', 'success');
+            } else {
+                showToast(response.data.message || 'Failed to add', 'error');
+            }
+        }
+    } catch (error) {
+        console.error('Error toggling wishlist:', error);
+        if (error.response?.status === 401) {
+            showToast('Please login to add to wishlist', 'warning');
+            setTimeout(() => {
+                window.location.href = '/user/login';
+            }, 1500);
+        } else {
+            showToast(error.response?.data?.message || 'Something went wrong', 'error');
+        }
+    }
+}
+
+// Show toast notification
+function showToast(message, type = 'success') {
+    // Check if SweetAlert2 is available
+    if (typeof Swal !== 'undefined') {
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'bottom-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        Toast.fire({
+            icon: type,
+            title: message
+        });
+    } else {
+        // Fallback to simple alert
+        alert(message);
+    }
+}

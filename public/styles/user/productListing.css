@@ -214,8 +214,8 @@ body {
 }
 
 .clear-filters.visible {
-  opacity: 1;
-  pointer-events: auto;
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .filter-section {
@@ -405,10 +405,10 @@ body {
 }
 
 .apply-filters-btn:disabled {
-  background: #c7cbd4;
-  cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
+    background: #c7cbd4;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
 }
 
 .apply-filters-btn:hover {
@@ -640,6 +640,17 @@ body {
 
 .card-btn.secondary:hover svg {
     stroke: #ffffff;
+}
+
+/* Wishlist Active State */
+.card-btn.secondary.active,
+.card-btn.secondary.active:hover {
+    background: #ef4444;
+}
+
+.card-btn.secondary.active svg {
+    stroke: #ffffff;
+    fill: #ffffff;
 }
 
 .product-card {

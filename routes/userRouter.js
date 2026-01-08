@@ -4,6 +4,7 @@ import userController from '../controllers/user/userController.js';
 import authController from '../controllers/user/authController.js';
 import productController from '../controllers/user/productController.js'
 import cartController from '../controllers/user/cartController.js'
+import wishlistController from '../controllers/user/wishlistController.js'
 import { authenticateUser, requireUser, requireAdmin } from '../middlewares/authMiddleware.js';
 import uploadProfilePicture from '../middlewares/uploadProfilePicture.js';
 
@@ -76,5 +77,14 @@ router.delete('/cart/clear', cartController.clearCart);
 router.post('/cart/apply-discount', cartController.applyDiscount);
 router.get('/cart/count', cartController.getCartCount);
 
+// Wishlist Routes
+router.get('/wishlist', wishlistController.loadWishlist);
+router.post('/wishlist/add', wishlistController.addToWishlist);
+router.delete('/wishlist/remove/:productId', wishlistController.removeFromWishlist);
+router.delete('/wishlist/clear', wishlistController.clearWishlist);
+router.get('/wishlist/count', wishlistController.getWishlistCount);
+router.get('/wishlist/check/:productId', wishlistController.checkWishlist);
+
 
 export default router;
+

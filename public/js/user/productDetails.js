@@ -100,6 +100,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const variantImages = JSON.parse(this.dataset.images) || [];
 
             updateProductUI(variantData, variantImages);
+
+            // Update wishlist button with new variant ID
+            if (typeof updateWishlistVariant === 'function') {
+                updateWishlistVariant(variantData._id);
+            }
         });
     });
 
@@ -365,11 +370,113 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// =============================================
+// WISHLIST FUNCTIONALITY (VARIANT AWARE)
+// =============================================
 
+// Toggle wishlist from product detail page (reads active variant from data attribute)
+async function toggleWishlistDetail() {
+    const wishlistBtn = document.getElementById('wishlistBtn');
+    if (!wishlistBtn) return;
 
+    const productId = wishlistBtn.dataset.productId;
+    const variantId = wishlistBtn.dataset.variantId || null;
 
+    const isInWishlist = wishlistBtn.classList.contains('active');
+    const icon = wishlistBtn.querySelector('svg');
+    const textEl = wishlistBtn.querySelector('.wishlist-text');
 
+    try {
+        if (isInWishlist) {
+            // Remove from wishlist
+            let removeUrl = `/user/wishlist/remove/${productId}`;
+            if (variantId) {
+                removeUrl += `?variantId=${variantId}`;
+            }
+            const response = await axios.delete(removeUrl);
+            if (response.data.success) {
+                wishlistBtn.classList.remove('active');
+                if (icon) icon.style.fill = 'none';
+                if (textEl) textEl.textContent = 'Wishlist';
+                showToast('Removed from wishlist', 'success');
+            } else {
+                showToast(response.data.message || 'Failed to remove', 'error');
+            }
+        } else {
+            // Add to wishlist with variant
+            const response = await axios.post('/user/wishlist/add', {
+                productId,
+                variantId
+            });
+            if (response.data.success) {
+                wishlistBtn.classList.add('active');
+                if (icon) icon.style.fill = '#ef4444';
+                if (textEl) textEl.textContent = 'Wishlisted';
+                showToast('Added to wishlist!', 'success');
+            } else {
+                showToast(response.data.message || 'Failed to add', 'error');
+            }
+        }
+    } catch (error) {
+        console.error('Error toggling wishlist:', error);
+        if (error.response?.status === 401) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Login Required',
+                text: 'Please login to add items to your wishlist',
+                showConfirmButton: true,
+                confirmButtonText: 'Login Now',
+                showCancelButton: true,
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#002366'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '/user/login';
+                }
+            });
+        } else {
+            showToast(error.response?.data?.message || 'Something went wrong', 'error');
+        }
+    }
+}
 
+// Update wishlist button's variant when user selects a different variant
+function updateWishlistVariant(variantId) {
+    const wishlistBtn = document.getElementById('wishlistBtn');
+    if (wishlistBtn) {
+        wishlistBtn.dataset.variantId = variantId;
+        // Reset active state when variant changes
+        wishlistBtn.classList.remove('active');
+        const icon = wishlistBtn.querySelector('svg');
+        const textEl = wishlistBtn.querySelector('.wishlist-text');
+        if (icon) icon.style.fill = 'none';
+        if (textEl) textEl.textContent = 'Wishlist';
+    }
+}
+
+// Show toast notification
+function showToast(message, type = 'success') {
+    if (typeof Swal !== 'undefined') {
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'bottom-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        Toast.fire({
+            icon: type,
+            title: message
+        });
+    } else {
+        alert(message);
+    }
+}
 
 
 
