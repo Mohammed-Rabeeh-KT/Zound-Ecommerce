@@ -263,73 +263,62 @@ async function setDefaultAddress(addressId) {
 }
 
 // Edit Address - Opens form with existing data
-function editAddress(addressId) {
-    // Get the address card data
-    const addressCard = document.querySelector(`.address-card[data-id="${addressId}"]`);
-    if (!addressCard) {
-        console.error('Address card not found');
-        return;
-    }
+async function editAddress(addressId) {
+    try {
+        // Fetch address data from API for reliable data
+        const response = await fetch(`/user/addresses/${addressId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
 
-    // Extract data from the card
-    const label = addressCard.querySelector('.address-label')?.textContent?.trim();
-    const fullName = addressCard.querySelector('.address-name')?.textContent?.trim();
-    const addressTexts = addressCard.querySelectorAll('.address-text');
-    const phoneEl = addressCard.querySelector('.address-phone:not(.alt-phone)');
-    const altPhoneEl = addressCard.querySelector('.address-phone.alt-phone');
+        const data = await response.json();
 
-    // Parse address lines and location
-    let addressLine1 = '';
-    let addressLine2 = '';
-    let cityStatePin = '';
+        if (!data.success || !data.data) {
+            throw new Error(data.message || 'Failed to load address');
+        }
 
-    if (addressTexts.length >= 1) addressLine1 = addressTexts[0]?.textContent?.trim() || '';
-    if (addressTexts.length >= 3) {
-        addressLine2 = addressTexts[1]?.textContent?.trim() || '';
-        cityStatePin = addressTexts[2]?.textContent?.trim() || '';
-    } else if (addressTexts.length >= 2) {
-        cityStatePin = addressTexts[1]?.textContent?.trim() || '';
-    }
+        const address = data.data;
 
-    // Parse city, state, pincode from "City, State - Pincode"
-    let city = '', state = '', pincode = '';
-    if (cityStatePin) {
-        const match = cityStatePin.match(/^(.+),\s*(.+)\s*-\s*(\d{6})$/);
-        if (match) {
-            city = match[1].trim();
-            state = match[2].trim();
-            pincode = match[3].trim();
+        // Set editingAddressId
+        editingAddressId = addressId;
+
+        // Close form if open, then open in edit mode
+        const dropdown = document.getElementById('addressFormDropdown');
+        if (dropdown && dropdown.classList.contains('show')) {
+            dropdown.classList.remove('show');
+        }
+
+        // Populate form fields
+        setTimeout(() => {
+            document.getElementById('addressLabel').value = address.label || '';
+            document.getElementById('fullName').value = address.fullName || '';
+            document.getElementById('addressLine1').value = address.addressLine1 || '';
+            document.getElementById('addressLine2').value = address.addressLine2 || '';
+            document.getElementById('phone').value = address.phone || '';
+            document.getElementById('altPhone').value = address.altPhone || '';
+            document.getElementById('city').value = address.city || '';
+            document.getElementById('state').value = address.state || '';
+            document.getElementById('pincode').value = address.pincode || '';
+
+            // Open form in edit mode
+            toggleAddressForm(true);
+        }, 100);
+
+    } catch (error) {
+        console.error('Edit address error:', error);
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Failed to load address. Please try again.',
+                confirmButtonColor: '#002366'
+            });
+        } else {
+            alert(error.message || 'Failed to load address');
         }
     }
-
-    // Get phone numbers
-    let phone = phoneEl?.textContent?.trim() || '';
-    let altPhone = altPhoneEl?.textContent?.replace('(Alt)', '')?.trim() || '';
-
-    // Set editingAddressId
-    editingAddressId = addressId;
-
-    // Close form if open, then open in edit mode
-    const dropdown = document.getElementById('addressFormDropdown');
-    if (dropdown.classList.contains('show')) {
-        dropdown.classList.remove('show');
-    }
-
-    // Populate form fields
-    setTimeout(() => {
-        document.getElementById('addressLabel').value = label || '';
-        document.getElementById('fullName').value = fullName || '';
-        document.getElementById('addressLine1').value = addressLine1 || '';
-        document.getElementById('addressLine2').value = addressLine2 || '';
-        document.getElementById('phone').value = phone || '';
-        document.getElementById('altPhone').value = altPhone || '';
-        document.getElementById('city').value = city || '';
-        document.getElementById('state').value = state || '';
-        document.getElementById('pincode').value = pincode || '';
-
-        // Open form in edit mode
-        toggleAddressForm(true);
-    }, 100);
 }
 
 // Delete Address

@@ -34,12 +34,12 @@
         <!-- Logged-in view -->
 
         <!-- Wishlist -->
-        <a href="/wishlist" class="p-2 rounded-full border bg-white hover:bg-neutral-100">
+        <a href="/user/wishlist" class="p-2 rounded-full border bg-white hover:bg-neutral-100">
           <span class="material-icons text-neutral-700 text-[20px]">favorite_border</span>
         </a>
 
         <!-- Cart -->
-        <a href="/cart" class="relative p-2 rounded-full border bg-white hover:bg-neutral-100">
+        <a href="/user/cart" class="relative p-2 rounded-full border bg-white hover:bg-neutral-100">
           <span class="material-icons text-neutral-700 text-[20px]">shopping_cart</span>
 
           <% if (cartCount && cartCount> 0) { %>
@@ -102,7 +102,7 @@
           <!-- Guest view -->
 
           <!-- Cart -->
-          <a href="/cart" class="relative p-2 rounded-full border bg-white hover:bg-neutral-100">
+          <a href="/user/cart" class="relative p-2 rounded-full border bg-white hover:bg-neutral-100">
             <span class="material-icons text-neutral-700 text-[20px]">shopping_cart</span>
 
             <% if (cartCount && cartCount> 0) { %>

@@ -5,6 +5,7 @@ import authController from '../controllers/user/authController.js';
 import productController from '../controllers/user/productController.js'
 import cartController from '../controllers/user/cartController.js'
 import wishlistController from '../controllers/user/wishlistController.js'
+import checkoutController from '../controllers/user/checkoutController.js';
 import { authenticateUser, requireUser, requireAdmin } from '../middlewares/authMiddleware.js';
 import uploadProfilePicture from '../middlewares/uploadProfilePicture.js';
 
@@ -64,6 +65,7 @@ router.post('/upload-profile-picture', uploadProfilePicture.single('profileImage
 // Address Routes
 router.get('/profile/addresses', userController.loadAddresses);
 router.post('/addresses', userController.addAddress);
+router.get('/addresses/:id', userController.getAddress);
 router.put('/addresses/:id', userController.updateAddress);
 router.put('/addresses/:id/default', userController.setDefaultAddress);
 router.delete('/addresses/:id', userController.deleteAddress);
@@ -77,6 +79,21 @@ router.delete('/cart/clear', cartController.clearCart);
 router.post('/cart/apply-discount', cartController.applyDiscount);
 router.get('/cart/count', cartController.getCartCount);
 
+
+// Checkout Routes
+router.get('/checkout', checkoutController.loadCheckout);
+router.post('/checkout/place-order', checkoutController.placeOrder);
+router.get('/orders/confirmation/:orderId', checkoutController.orderConfirmation);
+
+// Orders Routes
+router.get('/orders', checkoutController.getOrders);
+router.get('/orders/search', checkoutController.searchOrders);
+router.get('/orders/:orderId', checkoutController.getOrderDetails);
+router.post('/orders/cancel-items', checkoutController.cancelOrderItems);
+router.post('/orders/return-items', checkoutController.returnOrderItems);
+router.get('/orders/:orderId/invoice', checkoutController.downloadInvoice);
+
+
 // Wishlist Routes
 router.get('/wishlist', wishlistController.loadWishlist);
 router.post('/wishlist/add', wishlistController.addToWishlist);
@@ -87,4 +104,3 @@ router.get('/wishlist/check/:productId', wishlistController.checkWishlist);
 
 
 export default router;
-

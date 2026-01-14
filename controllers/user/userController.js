@@ -385,6 +385,26 @@ const addAddress = catchAsync(async (req, res, next) => {
   });
 });
 
+// Get single address by ID
+const getAddress = catchAsync(async (req, res) => {
+  const userId = req.user._id;
+  const addressId = req.params.id;
+
+  const address = await Address.findOne({ _id: addressId, userId });
+
+  if (!address) {
+    return res.status(404).json({
+      success: false,
+      message: 'Address not found'
+    });
+  }
+
+  res.json({
+    success: true,
+    data: address
+  });
+});
+
 const updateAddress = catchAsync(async (req, res) => {
   const userId = req.user._id;
   const addressId = req.params.id;
@@ -480,6 +500,7 @@ export default {
   uploadProfilePicture,
   loadAddresses,
   addAddress,
+  getAddress,
   updateAddress,
   setDefaultAddress,
   deleteAddress
