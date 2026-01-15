@@ -1,5 +1,6 @@
 import Brand from "../../models/brandSchema.js";
 import Product from "../../models/productSchema.js";
+import slugify from "slugify";
 import { catchAsync } from "../../utils/catchAsync.js";
 import AppError from "../../utils/AppError.js";
 import { successResponse, STATUS } from "../../utils/response.js";
@@ -106,6 +107,7 @@ const addBrand = catchAsync(async (req, res, next) => {
     // 2. Save directly as string 
     const brand = await Brand.create({
         brandName: brandName.trim(),
+        slug: slugify(brandName, { lower: true, strict: true, trim: true }),
         logo: logoPath,
         isListed: isListed === "on"
     });

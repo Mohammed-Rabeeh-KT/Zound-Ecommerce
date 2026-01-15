@@ -21,9 +21,18 @@ let brandSelect, categorySelect;
 // 1. Filter Logic
 function applyFilter(key, value) {
     const url = new URL(window.location.href);
-    if (value) url.searchParams.set(key, value);
-    else url.searchParams.delete(key);
-    url.searchParams.set('page', 1); // Reset page to 1 on new filter
+    
+    // Only reset page to 1 if it's not a page change
+    if (key !== 'page') {
+        url.searchParams.set('page', 1);
+    }
+    
+    if (value) {
+        url.searchParams.set(key, value);
+    } else {
+        url.searchParams.delete(key);
+    }
+    
     window.location.href = url.toString();
 }
 
@@ -203,7 +212,7 @@ function openVariantModal(index = null) {
 
         document.getElementById('discountAmount').innerText = '₹0.00';
         document.getElementById('discountContainer').style.display = 'none';
-        document.getElementById('variantStatus').checked = true;
+        document.getElementById('variantStatus').value = 'Active';
     }
 
     modal.classList.add('show');
@@ -221,22 +230,24 @@ function calculateFromPrice() {
 
 function calculateDiscount() {
     const base = parseFloat(document.querySelector('input[name="v_basePrice"]').value) || 0;
-    const sale = parseFloat(document.querySelector('input[name="v_salePrice"]').value) || 0;
+    const saleInput = document.querySelector('input[name="v_salePrice"]').value;
+    const sale = parseFloat(saleInput);
 
     const offerField = document.querySelector('input[name="v_offer"]');
     const discountLabel = document.getElementById('discountAmount');
     const discountContainer = document.getElementById('discountContainer');
 
-    if (document.querySelector('input[name="v_salePrice"]').value.trim() !== '') {
+    if (saleInput.trim() !== '') {
         discountContainer.style.display = 'flex';
     } else {
         discountContainer.style.display = 'none';
     }
 
-    if (base > 0 && sale >= 0) {
+    if (base > 0 && !Number.isNaN(sale) && sale >= 0) {
         if (sale > base) {
             discountLabel.innerText = "Sale > Base";
             discountLabel.style.color = "red";
+            offerField.value = 0;
             return;
         }
 
@@ -246,10 +257,12 @@ function calculateDiscount() {
         offerField.value = offer > 0 ? offer : 0;
         discountLabel.innerText = `₹${discount.toFixed(2)}`;
         discountLabel.style.color = '#002366';
-    } else {
-        offerField.value = 0;
-        discountLabel.innerText = '₹0.00';
+        return;
     }
+
+    offerField.value = 0;
+    discountLabel.innerText = '₹0.00';
+    discountLabel.style.color = '#002366';
 }
 
 function calculateFromDiscount() {
@@ -281,10 +294,30 @@ function saveVariant() {
         const type = form.v_type.value;
         const value = form.v_value.value;
         const basePrice = parseFloat(form.v_basePrice.value);
-        const salePrice = parseFloat(form.v_salePrice.value);
+        const salePriceRaw = form.v_salePrice.value;
+        const salePrice = salePriceRaw.trim() === '' ? basePrice : parseFloat(salePriceRaw);
         const stock = parseInt(form.v_stock.value);
         const index = parseInt(document.getElementById('variantIndex').value);
         const status = document.getElementById('variantStatus').value || 'Active';
+
+        if (!Number.isFinite(basePrice) || basePrice <= 0) {
+            Swal.fire('Error', 'Base price is required and must be greater than 0', 'error');
+            return;
+        }
+        if (!Number.isFinite(salePrice) || salePrice < 0) {
+            Swal.fire('Error', 'Selling price must be a valid number', 'error');
+            return;
+        }
+        if (salePrice > basePrice) {
+            Swal.fire('Error', 'Selling price cannot be greater than base price', 'error');
+            return;
+        }
+
+        const variantTotalImages = (currentVariantExistingImages?.length || 0) + (currentVariantFiles?.length || 0);
+        if (variantTotalImages < 3) {
+            Swal.fire('Error', 'Please upload at least 3 images for this variant', 'error');
+            return;
+        }
 
         const variantObj = {
             type: type,
@@ -350,10 +383,21 @@ async function persistVariantChanges() {
         });
         const res = await fetch(`/admin/products/${editingId}`, {
             method: 'PUT',
-            body: formData
+            body: formData,
+            headers: {
+                'Accept': 'application/json'
+            }
         });
 
-        const json = await res.json();
+        let json;
+        try {
+            json = await res.json();
+        } catch (err) {
+            const text = await res.text().catch(() => '');
+            console.error('Non-JSON response from server:', text);
+            Swal.fire('Error', 'Server returned an invalid response. Please check server logs.', 'error');
+            return;
+        }
 
         if (json.success) {
             Swal.fire({
@@ -742,17 +786,72 @@ async function submitProduct(e) {
         return;
     }
 
-    if (selectedImages.length === 0 && existingImages.length === 0) {
-        const variantsWithoutImages = variants.filter(v =>
-            (!v.imageFiles || v.imageFiles.length === 0) &&
-            (!v.images || v.images.length === 0)
-        );
-        if (variantsWithoutImages.length > 0) {
-            Swal.fire({
-                title: 'Missing Images',
-                text: `${variantsWithoutImages.length} variant(s) don't have images.`,
-                icon: 'error'
-            });
+    const variantsWithIssues = variants
+        .map((v, idx) => {
+            const imgCount = (v.images?.length || 0) + (v.imageFiles?.length || 0);
+            return { idx, imgCount, basePrice: v.basePrice, salePrice: v.salePrice, type: v.type, value: v.value };
+        })
+        .filter(v => {
+            if (!Number.isFinite(v.basePrice) || v.basePrice <= 0) return true;
+            if (!Number.isFinite(v.salePrice) || v.salePrice < 0) return true;
+            if (v.salePrice > v.basePrice) return true;
+            if (v.imgCount < 3) return true;
+            return false;
+        });
+
+    if (variantsWithIssues.length > 0) {
+        const first = variantsWithIssues[0];
+        Swal.fire({
+            title: 'Variant validation failed',
+            text: `Fix variant #${first.idx + 1} (${first.type || 'Variant'}: ${first.value || ''}). Ensure base price > 0, selling price <= base price, and at least 3 images.`,
+            icon: 'error'
+        });
+        return;
+    }
+
+    if (isEditMode) {
+        const currentPayload = {
+            productName: form.productName?.value?.trim() || '',
+            description: form.description?.value?.trim() || '',
+            category: form.category?.value || '',
+            brand: form.brand?.value || '',
+            status: form.status?.type === 'checkbox' ? (form.status.checked ? 'Active' : 'Inactive') : (form.status?.value || 'Active'),
+            features: productFeatures.filter(f => f.trim()),
+            variants: variants.map(v => ({
+                type: (v.type || '').trim(),
+                value: (v.value || '').trim(),
+                basePrice: Number(v.basePrice),
+                salePrice: Number(v.salePrice),
+                stock: Number(v.stock),
+                images: (v.images || []).slice().sort()
+            }))
+        };
+
+        const baselinePayload = {
+            productName: (form.dataset.originalProductName || '').trim(),
+            description: (form.dataset.originalDescription || '').trim(),
+            category: form.dataset.originalCategory || '',
+            brand: form.dataset.originalBrand || '',
+            status: form.dataset.originalStatus || 'Active',
+            features: (() => {
+                try { return JSON.parse(form.dataset.originalFeatures || '[]'); } catch { return []; }
+            })(),
+            variants: (() => {
+                try { return JSON.parse(form.dataset.originalVariants || '[]'); } catch { return []; }
+            })().map(v => ({
+                type: (v.type || '').trim(),
+                value: (v.value || '').trim(),
+                basePrice: Number(v.basePrice),
+                salePrice: Number(v.salePrice),
+                stock: Number(v.stock),
+                images: (v.images || []).slice().sort()
+            }))
+        };
+
+        const imagesChanged = (selectedImages.length > 0) || ((existingImages || []).join('|') !== (form.dataset.originalImages || ''));
+        const changed = imagesChanged || JSON.stringify(currentPayload) !== JSON.stringify(baselinePayload);
+        if (!changed) {
+            Swal.fire('No changes made', 'Please update at least one field before saving.', 'error');
             return;
         }
     }
@@ -800,8 +899,23 @@ async function submitProduct(e) {
         const url = isEditMode ? `/admin/products/${editingId}` : '/admin/products';
         const method = isEditMode ? 'PUT' : 'POST';
 
-        const res = await fetch(url, { method, body: formData });
-        const json = await res.json();
+        const res = await fetch(url, {
+            method,
+            body: formData,
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        let json;
+        try {
+            json = await res.json();
+        } catch (err) {
+            const text = await res.text().catch(() => '');
+            console.error('Non-JSON response from server:', text);
+            Swal.fire('Error', 'Server returned an invalid response. Please check server logs.', 'error');
+            return;
+        }
 
         if (json.success) {
             Swal.fire('Success', json.message, 'success');
@@ -849,6 +963,24 @@ async function fetchProductData(id, openModal = true) {
 
             productFeatures = product.features || [];
             variants = product.variants || [];
+
+            if (form) {
+                form.dataset.originalProductName = product.productName || '';
+                form.dataset.originalDescription = product.description || '';
+                form.dataset.originalCategory = product.category?._id || product.category || '';
+                form.dataset.originalBrand = product.brand?._id || product.brand || '';
+                form.dataset.originalStatus = product.status || 'Active';
+                form.dataset.originalFeatures = JSON.stringify(productFeatures || []);
+                form.dataset.originalVariants = JSON.stringify((variants || []).map(v => ({
+                    type: v.type,
+                    value: v.value,
+                    basePrice: v.basePrice,
+                    salePrice: v.salePrice,
+                    stock: v.stock,
+                    images: v.images || []
+                })));
+                form.dataset.originalImages = (product.productImages || []).join('|');
+            }
 
             renderFeatures();
             renderVariants();

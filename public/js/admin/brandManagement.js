@@ -59,13 +59,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (closeBtn) {
             const modalId = closeBtn.getAttribute("data-close");
             document.getElementById(modalId)?.classList.remove("active");
-            
+
             // If closing cropper, destroy instance
             if (modalId === 'cropperModal' && cropper) {
                 cropper.destroy();
                 cropper = null;
                 // Clear input if cancelled so user can re-select same file
-                if (currentInput) currentInput.value = ""; 
+                if (currentInput) currentInput.value = "";
             }
             return;
         }
@@ -180,11 +180,11 @@ function renderPagination(total, page, limit) {
         return;
     }
     container.style.display = "flex";
-    
+
     // Simple pagination logic
-    if(page > 1) container.innerHTML += `<button class="page-btn" data-page="${page-1}">Prev</button>`;
-    for(let i=1; i<=totalPages; i++) container.innerHTML += `<button class="page-btn ${i===page?'active':''}" data-page="${i}">${i}</button>`;
-    if(page < totalPages) container.innerHTML += `<button class="page-btn" data-page="${page+1}">Next</button>`;
+    if (page > 1) container.innerHTML += `<button class="page-btn" data-page="${page - 1}">Prev</button>`;
+    for (let i = 1; i <= totalPages; i++) container.innerHTML += `<button class="page-btn ${i === page ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    if (page < totalPages) container.innerHTML += `<button class="page-btn" data-page="${page + 1}">Next</button>`;
 }
 
 /* ============================
@@ -196,7 +196,13 @@ async function submitAddBrand(e) {
     const statusEl = e.target.querySelector("input[name='isListed']");
     formData.set("isListed", statusEl && statusEl.checked ? "on" : "off");
 
-    const res = await fetch("/admin/brands", { method: "POST", body: formData });
+    const res = await fetch("/admin/brands", {
+        method: "POST",
+        body: formData,
+        headers: {
+            "Accept": "application/json"
+        }
+    });
     const json = await res.json();
 
     if (!json.success) return showError(json.message);
@@ -213,9 +219,9 @@ async function openEditModal(id) {
     const brand = json.data;
     document.getElementById("editBrandId").value = brand._id;
     document.getElementById("editBrandName").value = brand.brandName;
-    
+
     const statusEl = document.getElementById("editBrandStatus");
-    if(statusEl) statusEl.checked = brand.isListed;
+    if (statusEl) statusEl.checked = brand.isListed;
 
     const dropZone = document.querySelector("#editBrandDropZone");
     const thumb = dropZone.querySelector(".drop-zone-thumb");
@@ -270,7 +276,7 @@ function setupDropZone(zoneSelector, inputSelector) {
         e.preventDefault();
         dropZone.classList.add("drop-zone--over");
     });
-    
+
     ["dragleave", "dragend"].forEach(type => {
         dropZone.addEventListener(type, () => dropZone.classList.remove("drop-zone--over"));
     });
@@ -300,12 +306,12 @@ function handleFileSelect(file, zoneSelector, inputElement) {
     reader.onload = (e) => {
         const image = document.getElementById('imageToCrop');
         image.src = e.target.result;
-        
+
         // Open Cropper Modal
         document.getElementById("cropperModal").classList.add("active");
 
         // Initialize Cropper
-        if(cropper) cropper.destroy();
+        if (cropper) cropper.destroy();
         cropper = new Cropper(image, {
             aspectRatio: 1, // Force square for logos (optional)
             viewMode: 1,
@@ -371,7 +377,7 @@ function openToggleModal(btn) {
     currentToggleId = btn.dataset.id;
     const isListed = btn.dataset.status === "true";
     document.getElementById("toggleBrandName").innerText = btn.dataset.name;
-    
+
     const titleEl = document.getElementById("toggleModalTitle");
     const confirmBtn = document.getElementById("confirmToggleBtn");
     const iconEl = document.getElementById("toggleModalIcon");
@@ -391,11 +397,11 @@ function openToggleModal(btn) {
 }
 
 async function toggleStatusConfirm() {
-    if(!currentToggleId) return;
+    if (!currentToggleId) return;
     const res = await fetch(`/admin/brands/${currentToggleId}/toggle`, { method: "PATCH" });
     const json = await res.json();
     document.getElementById("toggleModal").classList.remove("active");
-    if(!json.success) return showError("Action failed");
+    if (!json.success) return showError("Action failed");
     showSuccess(json.message);
     safeCall(loadBrands, 1);
 }

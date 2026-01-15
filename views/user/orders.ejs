@@ -1,0 +1,358 @@
+<link rel="stylesheet" href="/styles/user/orders.css">
+
+<div class="page-container">
+    <!-- Sidebar -->
+    <%- include('../partials/user/user-sidebar') %>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="headline">My Orders</h1>
+
+                <!-- Search Bar -->
+                <div class="search-container">
+                    <form class="search-form" onsubmit="searchOrders(event)">
+                        <div class="search-input-wrapper">
+                            <span class="material-icons search-icon">search</span>
+                            <input type="text" id="orderSearchInput" class="search-input"
+                                placeholder="Search by Order ID or Product Name..."
+                                value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>">
+                            <button type="button" class="clear-search-btn" onclick="clearSearch()"
+                                style="display: none;">
+                                <span class="material-icons">close</span>
+                            </button>
+                        </div>
+                        <button type="submit" class="search-btn">Search</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Status Filter Tabs -->
+            <div class="status-tabs">
+                <button class="tab-btn active" data-status="all">All</button>
+                <button class="tab-btn" data-status="Pending">Pending</button>
+                <button class="tab-btn" data-status="Processing">Processing</button>
+                <button class="tab-btn" data-status="Shipped">Shipped</button>
+                <button class="tab-btn" data-status="Delivered">Delivered</button>
+                <button class="tab-btn" data-status="Cancelled">Cancelled</button>
+                <button class="tab-btn" data-status="Return Request">Returns</button>
+            </div>
+
+            <% if (typeof searchQuery !=='undefined' && searchQuery) { %>
+                <!-- Search Results Header -->
+                <div class="search-results-header">
+                    <div class="search-results-info">
+                        <span class="material-icons">search</span>
+                        <span>Showing results for "<strong>
+                                <%= searchQuery %>
+                            </strong>"</span>
+                        <% if (orders && orders.length> 0) { %>
+                            <span class="results-count">(<%= pagination.totalOrders %> order<%= pagination.totalOrders
+                                        !==1 ? 's' : '' %> found)</span>
+                            <% } %>
+                    </div>
+                    <a href="/user/orders" class="clear-search-link">
+                        <span class="material-icons">close</span>
+                        Clear Search
+                    </a>
+                </div>
+                <% } %>
+
+                    <% if (orders && orders.length> 0) { %>
+                        <!-- Orders List -->
+                        <div class="orders-list">
+                            <% for (let o=0; o < orders.length; o++) { const order=orders[o]; let productName='Product'
+                                ; let productImage='/images/placeholder.png' ; let variantInfo='' ; if
+                                (order.orderdItems.length> 0 &&
+                                order.orderdItems[0].product) {
+                                const firstItem = order.orderdItems[0];
+                                const product = firstItem.product;
+                                productName = product.productName;
+
+                                if (product.variants && product.variants.length > 0) {
+                                let variant = product.variants[0];
+                                if (firstItem.variantId) {
+                                const foundVariant = product.variants.find(v => v._id.toString() ===
+                                firstItem.variantId.toString());
+                                if (foundVariant) variant = foundVariant;
+                                }
+                                if (variant.images && variant.images.length > 0) {
+                                productImage = variant.images[0];
+                                }
+                                if (variant.value) {
+                                variantInfo = variant.value;
+                                }
+                                } else if (product.productImages && product.productImages.length > 0) {
+                                productImage = product.productImages[0];
+                                }
+                                }
+
+                                let statusClass = 'pending';
+                                if (order.status === 'Delivered') statusClass = 'delivered';
+                                else if (order.status === 'Processing') statusClass = 'processing';
+                                else if (order.status === 'Shipped') statusClass = 'shipped';
+                                else if (order.status === 'Cancelled') statusClass = 'cancelled';
+                                else if (order.status === 'Returned' || order.status === 'Return Request') statusClass =
+                                'returned';
+
+                                let itemsText = '';
+                                if (order.orderdItems.length > 1) {
+                                itemsText = ' + ' + (order.orderdItems.length - 1) + ' more item' +
+                                (order.orderdItems.length >
+                                2 ? 's' : '');
+                                }
+                                %>
+                                <a href="/user/orders/<%= order.orderId %>" class="order-card"
+                                    data-order-status="<%= order.status %>">
+                                    <div class="product-image">
+                                        <img src="<%= productImage %>" alt="<%= productName %>">
+                                    </div>
+
+                                    <div class="order-details">
+                                        <span class="order-id">ORDER #<%= order.orderId %></span>
+                                        <h3 class="product-name">
+                                            <%= productName %>
+                                                <% if (variantInfo) { %> - <%= variantInfo %>
+                                                        <% } %>
+                                                            <%= itemsText %>
+                                        </h3>
+                                        <span class="order-date">Purchased on <%= new
+                                                Date(order.createdOn).toLocaleDateString('en-IN', { day: 'numeric' ,
+                                                month: 'short' , year: 'numeric' }) %></span>
+                                        <span class="order-price">₹<%= Number(order.finalAmount).toFixed(2) %></span>
+                                    </div>
+
+                                    <div class="order-status">
+                                        <span class="status-badge <%= statusClass %>">
+                                            <%= order.status %>
+                                        </span>
+                                    </div>
+
+                                    <div class="order-arrow">
+                                        <span class="material-icons">arrow_forward</span>
+                                    </div>
+                                </a>
+                                <% } %>
+                        </div>
+
+                        <!-- No Results Message -->
+                        <div class="no-filter-results" style="display: none;">
+                            <div class="empty-icon">
+                                <span class="material-icons">filter_list_off</span>
+                            </div>
+                            <h2>No orders found</h2>
+                            <p>No orders with the selected status.</p>
+                            <button class="btn-secondary" onclick="resetFilter()">View All Orders</button>
+                        </div>
+
+                        <!-- Pagination -->
+                        <% if (pagination.totalPages> 1) {
+                            // Build base URL with preserved parameters
+                            let baseUrl = typeof searchQuery !== 'undefined' && searchQuery ? '/user/orders/search' :
+                            '/user/orders';
+                            let params = [];
+                            if (typeof searchQuery !== 'undefined' && searchQuery) params.push('query=' +
+                            encodeURIComponent(searchQuery));
+                            if (typeof status !== 'undefined' && status && status !== 'all') params.push('status=' +
+                            encodeURIComponent(status));
+
+                            function buildPaginationUrl(page) {
+                            let allParams = [...params, 'page=' + page];
+                            return baseUrl + '?' + allParams.join('&');
+                            }
+                            %>
+                            <div class="pagination">
+                                <% if (pagination.hasPrevPage) { %>
+                                    <a href="<%= buildPaginationUrl(pagination.currentPage - 1) %>" class="page-btn">
+                                        <span class="material-icons">chevron_left</span>
+                                    </a>
+                                    <% } else { %>
+                                        <span class="page-btn disabled">
+                                            <span class="material-icons">chevron_left</span>
+                                        </span>
+                                        <% } %>
+
+                                            <div class="page-numbers">
+                                                <% for (let i=1; i <=pagination.totalPages; i++) { %>
+                                                    <a href="<%= buildPaginationUrl(i) %>"
+                                                        class="page-num <%= i === pagination.currentPage ? 'active' : '' %>">
+                                                        <%= i %>
+                                                    </a>
+                                                    <% } %>
+                                            </div>
+
+                                            <% if (pagination.hasNextPage) { %>
+                                                <a href="<%= buildPaginationUrl(pagination.currentPage + 1) %>"
+                                                    class="page-btn">
+                                                    <span class="material-icons">chevron_right</span>
+                                                </a>
+                                                <% } else { %>
+                                                    <span class="page-btn disabled">
+                                                        <span class="material-icons">chevron_right</span>
+                                                    </span>
+                                                    <% } %>
+                            </div>
+                            <% } %>
+
+                                <% } else { %>
+                                    <% if (typeof searchQuery !=='undefined' && searchQuery) { %>
+                                        <!-- No Search Results -->
+                                        <div class="empty-orders no-search-results">
+                                            <div class="empty-icon">
+                                                <span class="material-icons">search_off</span>
+                                            </div>
+                                            <h2>No orders found</h2>
+                                            <p>No orders match your search for "<strong>
+                                                    <%= searchQuery %>
+                                                </strong>"</p>
+                                            <p class="search-tips">Try searching with Order ID (e.g., ZND-260114-ABC1)
+                                                or product name</p>
+                                            <a href="/user/orders" class="btn-primary">
+                                                <span class="material-icons">arrow_back</span>
+                                                View All Orders
+                                            </a>
+                                        </div>
+                                        <% } else { %>
+                                            <!-- Empty State - No Orders -->
+                                            <div class="empty-orders">
+                                                <div class="empty-icon">
+                                                    <span class="material-icons">shopping_bag</span>
+                                                </div>
+                                                <h2>No orders yet</h2>
+                                                <p>When you place your first order, it will appear here.</p>
+                                                <a href="/user/products" class="btn-primary">
+                                                    <span class="material-icons">storefront</span>
+                                                    Start Shopping
+                                                </a>
+                                            </div>
+                                            <% } %>
+                                                <% } %>
+        </main>
+</div>
+
+<script>
+    // Get current URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentQuery = urlParams.get('query') || '';
+    const currentStatus = urlParams.get('status') || 'all';
+
+    // Client-side status filtering with server-side support
+    document.addEventListener('DOMContentLoaded', function () {
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const orderCards = document.querySelectorAll('.order-card');
+        const ordersList = document.querySelector('.orders-list');
+        const noResults = document.querySelector('.no-filter-results');
+        const searchInput = document.getElementById('orderSearchInput');
+        const clearBtn = document.querySelector('.clear-search-btn');
+
+        // Set active tab based on URL parameter
+        tabBtns.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.status === currentStatus) {
+                btn.classList.add('active');
+            }
+        });
+
+        // Show/hide clear button based on input
+        if (searchInput && clearBtn) {
+            searchInput.addEventListener('input', function () {
+                clearBtn.style.display = this.value.trim() ? 'flex' : 'none';
+            });
+            // Initial state
+            clearBtn.style.display = searchInput.value.trim() ? 'flex' : 'none';
+        }
+
+        // Filter tabs - use server-side filtering when there's a search query
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', function () {
+                const status = this.dataset.status;
+
+                // If there's a search query, do server-side filtering
+                if (currentQuery) {
+                    let url = `/user/orders/search?query=${encodeURIComponent(currentQuery)}`;
+                    if (status !== 'all') {
+                        url += `&status=${encodeURIComponent(status)}`;
+                    }
+                    window.location.href = url;
+                    return;
+                }
+
+                // Otherwise, use client-side filtering
+                tabBtns.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                let visibleCount = 0;
+
+                orderCards.forEach(card => {
+                    const orderStatus = card.dataset.orderStatus;
+                    if (status === 'all' || orderStatus === status) {
+                        card.style.display = 'flex';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                if (visibleCount === 0 && noResults) {
+                    if (ordersList) ordersList.style.display = 'none';
+                    noResults.style.display = 'block';
+                } else {
+                    if (ordersList) ordersList.style.display = 'flex';
+                    if (noResults) noResults.style.display = 'none';
+                }
+            });
+        });
+
+        // Apply initial filter if status is set
+        if (currentStatus !== 'all' && !currentQuery) {
+            let visibleCount = 0;
+            orderCards.forEach(card => {
+                const orderStatus = card.dataset.orderStatus;
+                if (orderStatus === currentStatus) {
+                    card.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            if (visibleCount === 0 && noResults) {
+                if (ordersList) ordersList.style.display = 'none';
+                noResults.style.display = 'block';
+            }
+        }
+    });
+
+    function resetFilter() {
+        // Clear search and reset filter
+        if (currentQuery) {
+            window.location.href = '/user/orders';
+        } else {
+            document.querySelector('.tab-btn[data-status="all"]').click();
+        }
+    }
+
+    function searchOrders(e) {
+        e.preventDefault();
+        const query = document.getElementById('orderSearchInput').value.trim();
+        if (query) {
+            // Preserve current status filter when searching
+            let url = `/user/orders/search?query=${encodeURIComponent(query)}`;
+            if (currentStatus !== 'all') {
+                url += `&status=${encodeURIComponent(currentStatus)}`;
+            }
+            window.location.href = url;
+        } else {
+            // If search is empty and we're on search page, go back to orders
+            if (window.location.pathname.includes('/search')) {
+                window.location.href = '/user/orders';
+            }
+        }
+    }
+
+    function clearSearch() {
+        document.getElementById('orderSearchInput').value = '';
+        document.querySelector('.clear-search-btn').style.display = 'none';
+        window.location.href = '/user/orders';
+    }
+</script>

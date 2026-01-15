@@ -91,26 +91,45 @@ const getCategoriesData = catchAsync(async (req, res, next) => {
 });
 
 // ADD CATEGORY
-const addCategory = catchAsync(async (req, res, next) => {
-    const { name, description } = req.body;
+const addCategory = async (req, res) => {
+    try {
+        const { name, description } = req.body;
 
-    if (!name?.trim()) {
-        return next(new AppError("Category name is required", STATUS.BAD_REQUEST));
+        if (!name?.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: "Category name is required"
+            });
+        }
+
+        const existing = await Category.findOne({ name: name.trim() });
+        if (existing) {
+            return res.status(409).json({
+                success: false,
+                message: "Category name already exists"
+            });
+        }
+
+        const category = await Category.create({
+            name: name.trim(),
+            description: description?.trim() || "",
+            isListed: req.body.isListed === "on"
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: "Category added successfully",
+            data: category
+        });
+    } catch (error) {
+        console.error('Error adding category:', error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to add category. Please try again.",
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
-
-    const existing = await Category.findOne({ name: name.trim() });
-    if (existing) {
-        return next(new AppError("Category name already exists", STATUS.CONFLICT));
-    }
-
-    const category = await Category.create({
-        name,
-        description,
-        isListed: req.body.isListed === "on"
-    });
-
-    return successResponse(res, STATUS.CREATED, "Category added successfully", category);
-});
+};
 
 // UPDATE CATEGORY
 const updateCategory = catchAsync(async (req, res, next) => {

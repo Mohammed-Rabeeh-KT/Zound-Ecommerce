@@ -1,0 +1,533 @@
+/* =============================================
+   ZOUND - ORDER CONFIRMATION PAGE
+   Professional Design with Animations
+   ============================================= */
+
+/* Page Container */
+.order-confirmation-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.confirmation-container {
+    width: 100%;
+    max-width: 520px;
+    text-align: center;
+}
+
+/* =============================================
+   SUCCESS ANIMATION
+   ============================================= */
+.success-animation {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 32px;
+}
+
+.checkmark-circle {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    z-index: 2;
+}
+
+.checkmark-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-radius: 50%;
+    animation: scaleIn 0.5s ease-out forwards;
+    box-shadow: 0 10px 40px rgba(16, 185, 129, 0.4);
+}
+
+.checkmark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    z-index: 3;
+}
+
+.checkmark-circle-svg {
+    stroke: transparent;
+}
+
+.checkmark-check {
+    stroke: #ffffff;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: drawCheck 0.6s ease-out 0.4s forwards;
+}
+
+/* Ripple Effects */
+.success-ripple {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 2px solid #10b981;
+    opacity: 0;
+    animation: ripple 1.5s ease-out 0.3s infinite;
+}
+
+.success-ripple.delay-1 {
+    animation-delay: 0.6s;
+}
+
+.success-ripple.delay-2 {
+    animation-delay: 0.9s;
+}
+
+/* =============================================
+   ANIMATIONS
+   ============================================= */
+@keyframes scaleIn {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes drawCheck {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes ripple {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.6;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(2);
+        opacity: 0;
+    }
+}
+
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    opacity: 0;
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.fade-in-up.delay-1 {
+    animation-delay: 0.2s;
+}
+
+.fade-in-up.delay-2 {
+    animation-delay: 0.4s;
+}
+
+.fade-in-up.delay-3 {
+    animation-delay: 0.6s;
+}
+
+.fade-in-up.delay-4 {
+    animation-delay: 0.8s;
+}
+
+/* =============================================
+   SUCCESS MESSAGE
+   ============================================= */
+.success-message {
+    margin-bottom: 32px;
+}
+
+.success-message h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 8px 0;
+    letter-spacing: -0.5px;
+}
+
+.success-subtitle {
+    font-size: 16px;
+    color: #64748b;
+    margin: 0;
+    font-weight: 400;
+}
+
+/* =============================================
+   ORDER CARD
+   ============================================= */
+.order-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    margin-bottom: 28px;
+    text-align: left;
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 20px;
+}
+
+.order-id-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.order-label {
+    font-size: 12px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+.order-number {
+    font-size: 18px;
+    font-weight: 700;
+    color: #002366;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    letter-spacing: 0.5px;
+}
+
+.status-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.status-badge.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge.processing {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-badge.shipped {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.status-badge.delivered {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+/* Order Details */
+.order-details {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.detail-icon {
+    width: 40px;
+    height: 40px;
+    background: #f1f5f9;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.detail-icon .material-icons {
+    font-size: 20px;
+    color: #64748b;
+}
+
+.detail-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.detail-label {
+    font-size: 12px;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.detail-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+/* Order Total */
+.order-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 20px;
+    border-top: 2px dashed #e5e7eb;
+    margin-top: 4px;
+}
+
+.total-label {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.total-value {
+    font-size: 26px;
+    font-weight: 800;
+    color: #002366;
+    letter-spacing: -0.5px;
+}
+
+/* =============================================
+   ACTION BUTTONS
+   ============================================= */
+.action-buttons {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+}
+
+.btn-primary,
+.btn-secondary {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #002366 0%, #003399 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(0, 35, 102, 0.25);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 35, 102, 0.35);
+}
+
+.btn-secondary {
+    background: #ffffff;
+    color: #002366;
+    border: 2px solid #e5e7eb;
+}
+
+.btn-secondary:hover {
+    border-color: #002366;
+    background: #f8fafc;
+    transform: translateY(-2px);
+}
+
+.btn-primary .material-icons,
+.btn-secondary .material-icons {
+    font-size: 20px;
+}
+
+/* =============================================
+   FOOTER LINKS
+   ============================================= */
+.footer-links {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+.footer-links a {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #64748b;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: #002366;
+}
+
+.footer-links .material-icons {
+    font-size: 16px;
+}
+
+.link-divider {
+    width: 4px;
+    height: 4px;
+    background: #cbd5e1;
+    border-radius: 50%;
+}
+
+/* =============================================
+   RESPONSIVE DESIGN
+   ============================================= */
+@media (max-width: 580px) {
+    .order-confirmation-page {
+        padding: 24px 16px;
+    }
+
+    .success-animation {
+        width: 100px;
+        height: 100px;
+        margin-bottom: 24px;
+    }
+
+    .checkmark-circle,
+    .checkmark-background,
+    .success-ripple {
+        width: 100px;
+        height: 100px;
+    }
+
+    .checkmark {
+        width: 50px;
+        height: 50px;
+    }
+
+    .success-message h1 {
+        font-size: 24px;
+    }
+
+    .success-subtitle {
+        font-size: 14px;
+    }
+
+    .order-card {
+        padding: 20px;
+        border-radius: 16px;
+    }
+
+    .order-number {
+        font-size: 16px;
+    }
+
+    .order-details {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .total-value {
+        font-size: 22px;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        padding: 14px 20px;
+    }
+
+    .footer-links {
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 380px) {
+    .success-message h1 {
+        font-size: 20px;
+    }
+
+    .order-header {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .status-badge {
+        align-self: flex-start;
+    }
+
+    .detail-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .detail-icon .material-icons {
+        font-size: 18px;
+    }
+}
+
+/* =============================================
+   CONFETTI PARTICLES (Optional Enhancement)
+   ============================================= */
+.order-confirmation-page::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background-image:
+        radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(0, 35, 102, 0.08) 0%, transparent 50%);
+    z-index: 0;
+}
+
+.confirmation-container {
+    position: relative;
+    z-index: 1;
+}

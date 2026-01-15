@@ -1,212 +1,507 @@
+import User from "../../models/userSchema.js";
+import Product from "../../models/productSchema.js";
+import Category from "../../models/categorySchema.js";
+import Brand from "../../models/brandSchema.js";
+import Address from "../../models/addressSchema.js";
+import { catchAsync } from "../../utils/catchAsync.js";
+import AppError from "../../utils/AppError.js";
+import { STATUS, MESSAGE } from "../../utils/response.js";
+import nodemailer from "nodemailer";
+import bcrypt from "bcrypt";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
 const pageNotFound = async (req, res) => {
-    try {
-        return res.render('page-404')
-    } catch (error) {
-        res.redirect('/pageNotFound')
-    }
+  try {
+    return res.render('page-404')
+  } catch (error) {
+    res.redirect('/pageNotFound')
+  }
 }
+
+const getCategoryImage = (catName) => {
+  const map = {
+    "Headphones": "/images/cat/headphones.png",
+    "IEMs": "/images/cat/iems.png",
+    "Speaker": "/images/cat/speaker.png",
+    "DACs": "/images/cat/dacs.png",
+    "Earphones": "/images/cat/earphones.png",
+    "Earbuds": "/images/cat/earbuds.png",
+    "Hi-Fi Speakers": "/images/cat/hifi-speakers.png",
+    "Music Players": "/images/cat/music-players.png",
+    "Turntables": "/images/cat/turntables.png",
+    "Studio Gear": "/images/cat/studio-gear.png",
+    "Wireless Audio": "/images/cat/wireless-audio.png",
+    "Accessories": "/images/cat/accessories.png",
+    "Gaming Audio": "/images/cat/gaming-audio.png "
+  };
+  return map[catName] || "/images/cat/accessories.png"; // Default
+};
 
 
 const loadHomepage = async (req, res) => {
-    // try {
-    //     return res.render('user/home', {
-    //         layout: "layout",
-    //         user: req.user || null,
-    //         cartCount: req.session?.cart?.length || 0
-    //     })
-    // } catch (error) {
-    //     console.log("Home page not found")
-    //     res.status(500).send('Server error')
-    // }
-    
-  // ----------------------------
-  // SHOP BY CATEGORY
-  // ----------------------------
-//   const categories = [
-//     { name: "Headphones", image: "/images/cat/headphones.jpg" },
-//     { name: "IEMs", image: "/images/cat/iems.jpg" },
-//     { name: "DACs", image: "/images/cat/dacs.jpg" },
-//     { name: "Earphones", image: "/images/cat/earphones.jpg" },
-//     { name: "Earbuds", image: "/images/cat/earbuds.jpg" },
-//     { name: "Home Audio", image: "/images/cat/homeaudio.jpg" },
-//     { name: "Accessories", image: "/images/cat/accessories.jpg" },
-//     { name: "Amplifiers", image: "/images/cat/amplifiers.jpg" },
-//     { name: "Amplifiers", image: "/images/cat/amplifiers.jpg" },
-//     { name: "Amplifiers", image: "/images/cat/amplifiers.jpg" },
-//     { name: "Amplifiers", image: "/images/cat/amplifiers.jpg" },
-//     { name: "Amplifiers", image: "/images/cat/amplifiers.jpg" },
+  try {
+    // 1. Fetch Categories
+    const categoryData = await Category.find({ isListed: true });
+    const categories = categoryData.map(c => ({
+      _id: c._id,
+      name: c.name,
+      slug: c.slug,
+      image: getCategoryImage(c.name)
+    }));
 
+    // 2. Fetch Latest Products (New Arrivals)
+    const latestProducts = await Product.find({ isDeleted: false, status: 'Active' })
+      .populate('category')
+      .populate('brand')
+      .sort({ createdAt: -1 })
+      .limit(8);
 
+    // 3. Fetch Top Selling Products (Using isBestSeller flag or fallback to most viewed/stock)
+    let topProducts = await Product.find({ isDeleted: false, status: 'Active', isBestSeller: true })
+      .populate('category')
+      .populate('brand')
+      .limit(8);
 
-//   ];
-const categories = [
-  { name: "Headphones",       image: "/images/cat/headphones.png" },
-  { name: "IEMs",             image: "/images/cat/iems.png" },
-  { name: "DACs & Amps",      image: "/images/cat/dacs-amps.png" },
-  { name: "Earphones",        image: "/images/cat/earphones.png" },
-  { name: "Earbuds",          image: "/images/cat/earbuds.png" },
-  { name: "Hi-Fi Speakers",   image: "/images/cat/hifi-speakers.png" },
-  { name: "Music Players",    image: "/images/cat/music-players.png" },
-  { name: "Turntables",       image: "/images/cat/turntables.png" },
-  { name: "Studio Gear",      image: "/images/cat/studio-gear.png" },
-  { name: "Wireless Audio",   image: "/images/cat/wireless-audio.png" },
-  { name: "Accessories",      image: "/images/cat/accessories.png" },
-  { name: "Gaming Audio",     image: "/images/cat/gaming-audio.png " }
-];
-
-
-  // ----------------------------
-  // TOP SELLING PRODUCTS
-  // ----------------------------
-  const topProducts = [
-    {
-      _id: "1",
-      name: "Sennheiser HD 800 S",
-      brand: "Sennheiser",
-      price: 139999,
-      oldPrice: 149999,
-      discount: 7,
-      image: "/images/products/hd800s.jpg"
-    },
-    {
-      _id: "2",
-      name: "Focal Utopia",
-      brand: "Focal",
-      price: 442999,
-      oldPrice: 449999,
-      discount: 2,
-      image: "/images/products/utopia.jpg"
-    },
-    {
-      _id: "3",
-      name: "Audeze LCD-5",
-      brand: "Audeze",
-      price: 345000,
-      oldPrice: 449000,
-      discount: 10,
-      image: "/images/products/lcd5.jpg"
-    },
-    {
-      _id: "4",
-      name: "HiFiMan Susvara",
-      brand: "HiFiMan",
-      price: 409999,
-      oldPrice: 459999,
-      discount: 10,
-      image: "/images/products/susvara.jpg"
-    },
-    {
-      _id: "5",
-      name: "Campfire Audio Andromeda",
-      brand: "Campfire Audio",
-      price: 104999,
-      oldPrice: 114999,
-      discount: 8,
-      image: "/images/products/andromeda.jpg"
-    },
-    {
-      _id: "6",
-      name: "64 Audio U12t",
-      brand: "64 Audio",
-      price: 169999,
-      oldPrice: 184999,
-      discount: 8,
-      image: "/images/products/u12t.jpg"
-    },
-    {
-      _id: "7",
-      name: "ASK EP2300T",
-      brand: "ASK Audio",
-      price: 24800,
-      oldPrice: 44800,
-      discount: 44,
-      image: "/images/products/ask-ep2300.jpg"
-    },
-    {
-      _id: "8",
-      name: "KEF LS50 Wireless II",
-      brand: "KEF",
-      price: 279950,
-      oldPrice: 299950,
-      discount: 7,
-      image: "/images/products/ls50.jpg"
+    // Fallback if no best sellers defined
+    if (topProducts.length === 0) {
+      topProducts = await Product.find({ isDeleted: false, status: 'Active' })
+        .populate('category')
+        .populate('brand')
+        .sort({ 'variants.stock': -1 }) // Simple fallback
+        .limit(8);
     }
-  ];
 
-  // ----------------------------
-  // CURATED BRANDS
-  // ----------------------------
-  const curatedBrands = [
-    "Apple",
-    "boAt",
-    "Samsung",
-    "Sony",
-    "Bose",
-    "Sennheiser",
-    "Focal",
-    "Audeze",
-    "HiFiMan",
-    "All brands"
-  ];
 
-  // ----------------------------
-  // SPECIAL OFFERS FOR YOU
-  // ----------------------------
-  const specialOffers = [
-    {
-      _id: "101",
-      name: "Xiaomi Wireless Buds Pro",
-      brand: "Xiaomi",
-      price: 4999,
-      oldPrice: 5799,
-      discount: 14,
-      image: "/images/products/xiaomi-buds.jpg",
-      stock: 112
-    },
-    {
-      _id: "102",
-      name: "Sony WH-CH720N",
-      brand: "Sony",
-      price: 9999,
-      oldPrice: 12499,
-      discount: 20,
-      image: "/images/products/sony-ch720.jpg",
-      stock: 45
-    },
-    {
-      _id: "103",
-      name: "boAt Bluetooth Speaker",
-      brand: "boAt",
-      price: 6520,
-      oldPrice: 8000,
-      discount: 18,
-      image: "/images/products/boat-speaker.jpg",
-      stock: 13
-    },
-    {
-      _id: "104",
-      name: "Sony HeadPhones",
-      brand: "Sony",
-      price: 29990,
-      oldPrice: 31990,
-      discount: 7,
-      image: "/images/products/sony-headphones.jpg",
-      stock: 7
-    }
-  ];
 
-  res.render("user/home", {
-    layout: "layout",
-    user: req.user || null,
-    cartCount: req.session?.cart?.length || 0,
-    categories,
-    topProducts,
-    curatedBrands,
-    specialOffers
-  });
+    // 4. Fetch Brands
+    const brands = await Brand.find({ isListed: true }).limit(10);
+
+    // const specialOffers = latestProducts.slice(0, 8); // Quick mapping for now
+
+    const processProduct = (product) => {
+      const activeVariant = product.variants?.find(
+        v => v.status === 'Active' && v.stock > 0
+      );
+
+      return {
+        ...product.toObject(),
+        listingImage:
+          activeVariant?.images?.[0] ||
+          product.productImages?.[0] ||
+          '/images/placeholder.png',
+        primaryVariant: activeVariant
+      };
+    };
+
+    const latestProductsProcessed = latestProducts.map(processProduct);
+    const topProductsProcessed = topProducts.map(processProduct);
+    const specialOffersProcessed = latestProducts.map(processProduct);
+
+
+    res.render("user/home", {
+      layout: "layout",
+      user: req.user || null,
+      cartCount: req.session?.cart?.length || 0,
+      categories,
+      latestProducts: latestProductsProcessed,
+      topProducts: topProductsProcessed,
+      brands,
+      specialOffers: specialOffersProcessed
+    });
+
+  } catch (error) {
+    console.error("Home page error:", error);
+    res.status(500).render('page-404'); // Or generic error
+  }
 }
 
-export default{ 
-    loadHomepage,
-    pageNotFound
+const loadProfile = catchAsync(async (req, res, next) => {
+  const userId = req.user._id;
+  const userData = await User.findById(userId);
+
+  if (!userData) {
+    throw new AppError(MESSAGE.NOT_FOUND || "User not found", STATUS.NOT_FOUND)
+  }
+
+  res.status(STATUS.OK).render("user/profile", {
+    user: userData.toObject(),
+    currentPage: "profile"
+  });
+})
+
+
+
+const otpStore = {};
+
+const loadEditProfile = catchAsync(async (req, res, next) => {
+  const userId = req.user._id;
+  const user = await User.findById(userId);
+  if (!user)
+    return res.redirect('/user/home')
+
+  res.render('user/editProfile', { user, currentPage: 'profile' });
+})
+
+
+const sendEmailOtp = catchAsync(async (req, res, next) => {
+  const { email } = req.body;
+  const userId = req.user._id;
+
+  const existingUser = await User.findOne({ email });
+  if (existingUser && existingUser._id.toString() !== userId) {
+    return res.status(400).json({ success: false, message: "Email already in use" });
+  }
+
+  const otp = Math.floor(100000 + Math.random() * 900000);
+
+  console.log(`----------------------------`);
+  console.log(`OTP for ${email}: ${otp}`);
+  console.log(`----------------------------`);
+
+  otpStore[email] = {
+    otp,
+    expiresAt: Date.now() + 2 * 60 * 1000
+  }
+
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.NODEMAILER_EMAIL,
+      pass: process.env.NODEMAILER_PASSWORD
+    }
+  });
+
+  await transporter.sendMail({
+    from: '"ZOUND Security" <no-reply@zound.com>',
+    to: email,
+    subject: 'Verify your new email',
+    text: `Your OTP for email change is: ${otp}`
+  })
+  res.json({ success: true, message: "OTP sent" });
+})
+
+const verifyEmailOtp = catchAsync(async (req, res, next) => {
+  const { email, otp } = req.body;
+
+  const record = otpStore[email];
+
+  if (!record || record.expires < Date.now()) {
+    return res.status(400).json({ success: false, message: "OTP expired or invalid" });
+  }
+
+  if (parseInt(otp) !== record.otp) {
+    return res.status(400).json({ success: false, message: "Incorrect OTP" });
+  }
+
+  // OTP Valid
+  delete otpStore[email]; // Clear OTP
+  res.json({ success: true });
+});
+
+const updateProfile = catchAsync(async (req, res, next) => {
+  const userId = req.user.id;
+  const { name, phone, email } = req.body;
+  const updateData = { name, phone };
+
+  // If email is present, we assume it was verified on frontend (Double check logic in production)
+  if (email) {
+    updateData.email = email;
+  }
+
+  await User.findByIdAndUpdate(userId, updateData);
+
+  res.json({ success: true, message: "Profile updated" });
+});
+
+// Change Password
+const changePassword = catchAsync(async (req, res, next) => {
+  const userId = req.user._id;
+  const { currentPassword, newPassword } = req.body;
+
+  // Input validation
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({
+      success: false,
+      message: "Current password and new password are required"
+    });
+  }
+
+  // Get user with password
+  const user = await User.findById(userId).select('+password');
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found"
+    });
+  }
+
+  // Check if user has a password (might be Google OAuth user)
+  if (!user.password) {
+    return res.status(400).json({
+      success: false,
+      message: "Password change not available for social login accounts"
+    });
+  }
+
+  // Verify current password
+  const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+
+  if (!isCurrentPasswordValid) {
+    return res.status(400).json({
+      success: false,
+      message: "Current password is incorrect"
+    });
+  }
+
+  // Validate new password requirements
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+  if (!passwordRegex.test(newPassword)) {
+    return res.status(400).json({
+      success: false,
+      message: "New password must be at least 8 characters with uppercase, lowercase, and number"
+    });
+  }
+
+  // Check if new password is different from current
+  const isSamePassword = await bcrypt.compare(newPassword, user.password);
+  if (isSamePassword) {
+    return res.status(400).json({
+      success: false,
+      message: "New password must be different from current password"
+    });
+  }
+
+  // Hash new password
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  // Update password
+  await User.findByIdAndUpdate(userId, { password: hashedPassword });
+
+  res.json({ success: true, message: "Password changed successfully" });
+});
+
+// Upload Profile Picture
+const uploadProfilePicture = catchAsync(async (req, res, next) => {
+  const userId = req.user._id;
+
+  if (!req.file) {
+    return res.status(400).json({
+      success: false,
+      message: "No image file provided"
+    });
+  }
+
+  // Get current user to check for existing profile picture
+  const user = await User.findById(userId);
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found"
+    });
+  }
+
+  // Delete old profile picture if exists
+  if (user.profile_picture) {
+    const oldImagePath = path.join(__dirname, '../../public', user.profile_picture);
+    if (fs.existsSync(oldImagePath)) {
+      try {
+        fs.unlinkSync(oldImagePath);
+        console.log('Old profile picture deleted:', oldImagePath);
+      } catch (err) {
+        console.error('Error deleting old profile picture:', err);
+      }
+    }
+  }
+
+  // Generate the public URL path for the new image
+  const imageUrl = `/uploads/profile-pictures/${req.file.filename}`;
+
+  // Update user's profile picture
+  await User.findByIdAndUpdate(userId, { profile_picture: imageUrl });
+
+  res.json({
+    success: true,
+    message: "Profile picture updated successfully",
+    imageUrl: imageUrl
+  });
+});
+
+const loadAddresses = catchAsync(async (req, res, next) => {
+  const userId = req.user._id;
+
+  const addresses = await Address.find({ userId }).sort({ isDefault: -1, createdAt: -1 });
+
+  res.render('user/addresses', {
+    user: req.user,
+    addresses: addresses
+  });
+})
+
+
+const addAddress = catchAsync(async (req, res, next) => {
+  const userId = req.user._id;
+  const { label, fullName, addressLine1, addressLine2, phone, altPhone, city, state, pincode } = req.body;
+
+  // Validate required fields
+  if (!label || !fullName || !addressLine1 || !phone || !city || !state || !pincode) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please fill all required fields'
+    });
+  }
+
+  // Check if this is the first address (make it default)
+  const existingCount = await Address.countDocuments({ userId });
+  const isDefault = existingCount === 0;
+
+  const newAddress = new Address({
+    userId,
+    label,
+    fullName,
+    addressLine1,
+    addressLine2: addressLine2 || '',
+    phone,
+    altPhone: altPhone || '',
+    city,
+    state,
+    pincode,
+    isDefault
+  });
+
+  await newAddress.save();
+
+  res.json({
+    success: true,
+    message: 'Address added successfully',
+    address: newAddress
+  });
+});
+
+// Get single address by ID
+const getAddress = catchAsync(async (req, res) => {
+  const userId = req.user._id;
+  const addressId = req.params.id;
+
+  const address = await Address.findOne({ _id: addressId, userId });
+
+  if (!address) {
+    return res.status(404).json({
+      success: false,
+      message: 'Address not found'
+    });
+  }
+
+  res.json({
+    success: true,
+    data: address
+  });
+});
+
+const updateAddress = catchAsync(async (req, res) => {
+  const userId = req.user._id;
+  const addressId = req.params.id;
+  const updatedAddress = req.body;
+
+  const address = await Address.findOne({ _id: addressId, userId });
+
+  if (!address) {
+    return res.status(404).json({
+      success: false,
+      message: 'Address not found'
+    });
+  }
+
+  Object.assign(address, updatedAddress);
+
+  await address.save();
+
+  res.json({
+    success: true,
+    message: 'Address updated successfully',
+    address: address
+  });
+});
+
+
+const setDefaultAddress = catchAsync(async (req, res) => {
+  const userId = req.user._id;
+  const addressId = req.params.id;
+
+  // First, unset all existing defaults for this user
+  await Address.updateMany({ userId }, { isDefault: false });
+
+  // Set the new default
+  const address = await Address.findOneAndUpdate(
+    { _id: addressId, userId },
+    { isDefault: true },
+    { new: true }
+  );
+
+  if (!address) {
+    return res.status(404).json({
+      success: false,
+      message: 'Address not found'
+    });
+  }
+
+  res.json({
+    success: true,
+    message: 'Default address updated',
+    address
+  });
+});
+
+// Delete Address
+const deleteAddress = catchAsync(async (req, res) => {
+  const userId = req.user._id;
+  const addressId = req.params.id;
+
+  const address = await Address.findOneAndDelete({ _id: addressId, userId });
+
+  if (!address) {
+    return res.status(404).json({
+      success: false,
+      message: 'Address not found'
+    });
+  }
+
+  // If deleted address was default, set another as default
+  if (address.isDefault) {
+    const anyAddress = await Address.findOne({ userId });
+    if (anyAddress) {
+      anyAddress.isDefault = true;
+      await anyAddress.save();
+    }
+  }
+
+  res.json({
+    success: true,
+    message: 'Address deleted successfully'
+  });
+});
+
+export default {
+  loadHomepage,
+  pageNotFound,
+  loadProfile,
+  loadEditProfile,
+  sendEmailOtp,
+  verifyEmailOtp,
+  updateProfile,
+  changePassword,
+  uploadProfilePicture,
+  loadAddresses,
+  addAddress,
+  getAddress,
+  updateAddress,
+  setDefaultAddress,
+  deleteAddress
 };

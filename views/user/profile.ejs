@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Information | ZOUND</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/styles/user/profile.css">
+</head>
+
+<body>
+
+
+    <div class="page-container">
+
+        <%- include('../partials/user/user-sidebar', { currentPage: 'profile' }) %>
+
+            <main class="main-content">
+                <header class="page-header">
+                    <h1 class="headline">Personal Information</h1>
+                </header>
+
+                <section class="premium-card info-card">
+                    <div class="card-top">
+                        <h2 class="section-title">User Details</h2>
+                        <button class="edit-btn" onclick="location.href='profile/edit'">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" style="margin-right: 6px;">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                            Edit
+                        </button>
+                    </div>
+
+                    <div class="details-grid">
+                        <div class="detail-group">
+                            <label class="detail-label">Full Name</label>
+                            <p class="detail-value">
+                                <%= user.name %>
+                            </p>
+                        </div>
+
+                        <div class="detail-group">
+                            <label class="detail-label">Email Address</label>
+                            <p class="detail-value">
+                                <%= user.email %>
+                            </p>
+                        </div>
+
+                        <div class="detail-group">
+                            <label class="detail-label">Phone Number</label>
+                            <p class="detail-value">
+                                <%= user.phone || 'N/A' %>
+                            </p>
+                        </div>
+
+                        <div class="detail-group">
+                            <label class="detail-label">Member Since</label>
+                            <p class="detail-value">
+                                <%= new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric' ,
+                                    month: 'long' , day: 'numeric' }) %>
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="stats-container">
+
+                    <div class="premium-card stat-card">
+                        <div class="stat-top">
+                            <div class="stat-icon-wrapper">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                    <line x1="1" y1="10" x2="23" y2="10"></line>
+                                </svg>
+                            </div>
+                            <span class="stat-title">Wallet Balance</span>
+                            <a href="/wallet" class="stat-link">See details &rarr;</a>
+                        </div>
+                        <div class="stat-value">
+                            <span class="currency">₹</span>
+                            <%= user.walletBalance || 0 %>
+                        </div>
+                    </div>
+
+                    <div class="premium-card stat-card">
+                        <div class="stat-top">
+                            <div class="stat-icon-wrapper">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                            </div>
+                            <span class="stat-title">Total Referrals</span>
+                            <a href="/profile/referrals" class="stat-link">See details &rarr;</a>
+                        </div>
+                        <div class="stat-value">
+                            <%= user.referralCount || 0 %>
+                        </div>
+                    </div>
+
+                </section>
+
+            </main>
+    </div>
+
+</body>
+
+</html>

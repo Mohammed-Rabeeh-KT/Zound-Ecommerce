@@ -250,8 +250,8 @@
     if (otpVal.length !== 6) {
       Swal.fire({
         icon: 'error',
-        title: 'Invalid OTP',
-        text: 'Please enter a 6-digit OTP.',
+        title: 'Wait',
+        text: 'Please enter all 6 digits.',
       });
       return false;
     }
@@ -274,11 +274,12 @@
         if (response && response.success) {
           Swal.fire({
             icon: "success",
-            title: "OTP Verified Successfully",
+            title: "Success!",
+            text: response.message,
             showConfirmButton: false,
             timer: 1500
           }).then(() => {
-            window.location.href = response.redirectUrl || '/user/home';
+            window.location.href = response.redirectUrl || '/user/login';
           })
         } else {
           // Check if OTP expired
@@ -292,18 +293,31 @@
 
           Swal.fire({
             icon: "error",
-            title: "Error",
+            title: "Verification Failed",
             text: response.message || "Invalid OTP",
           })
         }
       },
-      error: function (xhr, status, error) {
-        console.log(xhr, status, error)
+      error: function (xhr){
+        // This handles 400, 429, 500 status codes
+        let errorMessage = "An error occured";
+        if(xhr.responseJSON && xhr.responseJSON.message){
+          errorMessage = xhr.responseJSON.message;
+        }
+
+        // Check if the specific error is expiration
+        if (xhr.responseJSON && xhr.responseJSON.expired) {
+        otpExpired = true;
+        document.querySelector("button[type='submit']").disabled = true;
+        document.getElementById("otp-timer").innerText = "Expired";
+      }
+
         Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "An error occurred while verifying OTP. Please try again.",
-        })
+        icon: "error",
+        title: "Oops...",
+        text: errorMessage, 
+      });
+
       }
     })
 

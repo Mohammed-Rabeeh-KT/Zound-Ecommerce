@@ -215,21 +215,65 @@ function renderPagination(total, page, limit) {
 async function submitAddCategory(e) {
     e.preventDefault();
     const form = e.target;
-    const formData = new FormData(form);
-    const statusEl = document.getElementById("addCategoryStatus");
-    formData.set("isListed", statusEl && statusEl.checked ? "on" : "off");
+    const submitBtn = form.querySelector('button[type="submit"]');
+    let originalBtnText = '';
+    
+    try {
+        // Disable submit button to prevent double submission
+        if (submitBtn) {
+            originalBtnText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+        }
 
-    const res = await fetch("/admin/categories/add", { method: "POST", body: formData });
-    const json = await res.json();
+        // Convert FormData to a plain JavaScript object
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        
+        // Handle the checkbox status
+        const statusEl = document.getElementById("addCategoryStatus");
+        data.isListed = statusEl && statusEl.checked ? "on" : "off";
 
-    if (!json || !json.success) {
-        showError((json && json.message) ? json.message : "Failed to add category");
-        return;
+        const res = await fetch("/admin/categories/add", { 
+            method: "POST", 
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(data),
+            credentials: 'same-origin' // Include cookies for session
+        });
+        
+        let json;
+        try {
+            json = await res.json();
+        } catch (err) {
+            throw new Error('Invalid response from server');
+        }
+
+        if (!res.ok || !json || !json.success) {
+            const errorMsg = json?.message || 
+                           (res.status === 500 ? 'Server error occurred' : 'Failed to add category');
+            throw new Error(errorMsg);
+        }
+        
+        // Success - reset form and update UI
+        form.reset();
+        const modal = document.getElementById("addCategoryModal");
+        if (modal) modal.classList.remove("active");
+        
+        showSuccess(json.message || "Category added successfully");
+        safeCall(loadCategories, 1);
+    } catch (error) {
+        console.error('Error adding category:', error);
+        showError(error.message || "Failed to add category. Please try again.");
+    } finally {
+        // Re-enable submit button
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText || 'Add Category';
+        }
     }
-    const modal = document.getElementById("addCategoryModal");
-    if (modal) modal.classList.remove("active");
-    showSuccess("Category added");
-    safeCall(loadCategories, 1);
 }
 
 /* ============================
@@ -262,7 +306,14 @@ async function submitEditCategory(e) {
     const statusEl = document.getElementById("editCategoryStatus");
     formData.set("isListed", statusEl && statusEl.checked ? "on" : "off");
 
-    const res = await fetch(`/admin/categories/update/${id}`, { method: "PATCH", body: formData });
+    // convert to plain object and send JSON so req.body is defined on server
+    const payload = Object.fromEntries(formData.entries());
+
+    const res = await fetch(`/admin/categories/update/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
     const json = await res.json();
 
     if (!json || !json.success) {

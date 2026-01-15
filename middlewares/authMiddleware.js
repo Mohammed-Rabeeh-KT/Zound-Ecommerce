@@ -3,16 +3,24 @@ import User from '../models/userSchema.js';
 
 export const authenticateUser = async (req, res, next) => {
     try {
-            // Skip authentication for Google OAuth routes
+        // Skip authentication for Google OAuth routes
         if (req.path.startsWith('/auth')) {
             return next();
         }
 
-        // Passport session user (Google OAuth)
+        // 1. Prioritize Passport session (Google Auth)       
         if (req.isAuthenticated && req.isAuthenticated()) {
+            // req.user is already populated by passport.deserializeUser
+            // We just need to make sure it's not blocked
+            if (req.user.isBlocked) {
+                res.clearCookie("authToken");
+                req.logout(() => { }); // Logout if blocked
+                req.user = null;
+            }
             return next();
         }
 
+        // 2. Fallback to JWT Cookie (Manual Login)
         const token = req.cookies?.authToken;
 
         if (!token) {
@@ -20,24 +28,24 @@ export const authenticateUser = async (req, res, next) => {
             return next();
         }
 
-         let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (err) {
-      res.clearCookie("authToken");
-      req.user = null;
-      return next();
-    }
+        let decoded;
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET);
+        } catch (err) {
+            res.clearCookie("authToken");
+            req.user = null;
+            return next();
+        }
 
-    const user = await User.findById(decoded.id).select("-password");
-    if (!user || user.isBlocked) {
-      res.clearCookie("authToken");
-      req.user = null;
-      return next();
-    }
+        const user = await User.findById(decoded.id).select("-password");
+        if (!user || user.isBlocked) {
+            res.clearCookie("authToken");
+            req.user = null;
+            return next();
+        }
 
-    req.user = user;
-    return next();
+        req.user = user;
+        return next();
 
     } catch (error) {
         console.log(error);

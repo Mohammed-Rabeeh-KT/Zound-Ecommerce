@@ -1,0 +1,435 @@
+<link rel="stylesheet" href="/styles/user/productDetails.css">
+
+
+<!-- Breadcrumbs -->
+<div class="container">
+    <div class="breadcrumbs">
+        <a href="/user/home">Home</a>
+        <span>/</span>
+        <a href="/user/products">Products</a>
+        <span>/</span>
+        <% if (product.category) { %>
+            <a href="/user/products?category=<%= product.category.slug %>">
+                <%= product.category.name %>
+            </a>
+            <span>/</span>
+            <% } %>
+                <span>
+                    <%= product.productName %>
+                </span>
+    </div>
+</div>
+
+<!-- Product Detail Section -->
+<div class="container product-detail-container">
+    <div class="product-detail-grid">
+
+        <!-- Left: Image Gallery -->
+        <div class="gallery-section">
+            <div class="main-image-wrapper">
+                <div class="main-image-container" id="mainImageContainer">
+                    <% let currentImages=product.productImages; const firstVariant=product.variants &&
+                        product.variants.length> 0 ? product.variants[0] : null;
+                        if (firstVariant && firstVariant.images && firstVariant.images.length > 0) {
+                        currentImages = firstVariant.images;
+                        }
+                        %>
+                        <img src="<%= currentImages[0] %>" alt="<%= product.productName %>" class="main-image"
+                            id="mainImage">
+
+                        <!-- Badges -->
+                        <% if (product.isBestSeller) { %>
+                            <span class="product-badge bestseller-badge">Best Seller</span>
+                            <% } %>
+                                <% if (firstVariant && firstVariant.salePrice < firstVariant.basePrice) { %>
+                                    <span class="product-badge sale-badge">
+                                        <%= Math.round(((firstVariant.basePrice - firstVariant.salePrice) /
+                                            firstVariant.basePrice) * 100) %>% OFF
+                                    </span>
+                                    <% } %>
+
+                                        <!-- Zoom Lens -->
+                                        <div class="zoom-lens" id="zoomLens"></div>
+                </div>
+
+                <!-- Zoom Result (Desktop) -->
+                <div class="zoom-result" id="zoomResult"></div>
+            </div>
+
+            <!-- Thumbnail Gallery -->
+            <div class="thumbnail-gallery" id="thumbnailGallery">
+                <% currentImages.forEach((image, index)=> { %>
+                    <div class="thumbnail-item <%= index === 0 ? 'active' : '' %>" data-image="<%= image %>">
+                        <img src="<%= image %>" alt="<%= product.productName %> - View <%= index + 1 %>">
+                    </div>
+                    <% }); %>
+            </div>
+        </div>
+
+        <!-- Right: Product Info -->
+        <div class="product-info-section">
+
+            <!-- Brand -->
+            <div class="product-brand-tag">
+                <%= product.brand.brandName %>
+            </div>
+
+            <!-- Product Name -->
+            <h1 class="product-title">
+                <%= product.productName %>
+            </h1>
+
+            <!-- Category -->
+            <div class="product-category">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"></path>
+                </svg>
+                <span>
+                    <%= product.category.name %>
+                </span>
+            </div>
+
+            <!-- Price Section -->
+            <div class="price-section">
+                <% if (firstVariant) { %>
+                    <div class="current-price" id="currentPrice">₹<%= firstVariant.salePrice.toLocaleString('en-IN') %>
+                    </div>
+                    <% if (firstVariant.salePrice < firstVariant.basePrice) { %>
+                        <div class="original-price" id="originalPrice">₹<%=
+                                firstVariant.basePrice.toLocaleString('en-IN') %>
+                        </div>
+                        <div class="discount-badge">
+                            Save <%= Math.round(((firstVariant.basePrice - firstVariant.salePrice) /
+                                firstVariant.basePrice) * 100) %>%
+                        </div>
+                        <% } %>
+                            <% } %>
+            </div>
+
+            <!-- Stock Status -->
+            <% if (firstVariant) { %>
+                <div class="stock-status" id="stockStatus">
+                    <% if (firstVariant.stock> 10) { %>
+                        <div class="stock-badge in-stock">
+                            <div class="stock-dot"></div>
+                            <span>In Stock</span>
+                        </div>
+                        <% } else if (firstVariant.stock> 0) { %>
+                            <div class="stock-badge low-stock">
+                                <div class="stock-dot"></div>
+                                <span>Only <%= firstVariant.stock %> left in stock</span>
+                            </div>
+                            <% } else { %>
+                                <div class="stock-badge out-of-stock">
+                                    <div class="stock-dot"></div>
+                                    <span>Out of Stock</span>
+                                </div>
+                                <% } %>
+                </div>
+                <% } %>
+
+                    <!-- Variants Section -->
+                    <% if (product.variants && product.variants.length> 1) { %>
+                        <div class="variants-section">
+                            <label class="variant-label">
+                                Select Variant: <span id="selectedVariantName">
+                                    <%= firstVariant.value || 'Default' %>
+                                </span>
+                            </label>
+                            <div class="variant-options" id="variantOptions">
+                                <% product.variants.forEach((variant, index)=> { %>
+                                    <% if (variant.status==='Active' ) { %>
+                                        <button class="variant-btn <%= index === 0 ? 'active' : '' %>"
+                                            data-variant-id="<%= variant._id %>"
+                                            data-variant='<%= JSON.stringify(variant) %>'
+                                            data-images='<%= JSON.stringify(variant.images || []) %>'
+                                            data-price="<%= variant.salePrice %>" data-stock="<%= variant.stock %>"
+                                            data-sku="<%= variant.sku %>" data-value="<%= variant.value %>">
+
+                                            <% if (variant.color) { %>
+                                                <span class="variant-color"
+                                                    style="background-color: <%= variant.color %>;"></span>
+                                                <% } %>
+                                                    <span class="variant-name">
+                                                        <%= variant.value %>
+                                                    </span>
+                                        </button>
+                                        <% } %>
+                                            <% }); %>
+                            </div>
+                        </div>
+                        <% } %>
+
+                            <!-- Quantity Selector -->
+                            <div class="quantity-section">
+                                <label class="quantity-label">Quantity:</label>
+                                <div class="quantity-controls">
+                                    <button class="qty-btn" id="decreaseQty">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                    </button>
+                                    <input type="number" class="qty-input" id="quantity" value="1" min="1"
+                                        max="<%= firstVariant ? firstVariant.stock : 0 %>">
+                                    <button class="qty-btn" id="increaseQty">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="action-buttons">
+                                <% if (firstVariant && firstVariant.stock> 0) { %>
+                                    <button class="btn-primary add-to-cart-btn" id="addToCartBtn"
+                                        data-product-id="<%= product._id %>">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <circle cx="9" cy="21" r="1"></circle>
+                                            <circle cx="20" cy="21" r="1"></circle>
+                                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6">
+                                            </path>
+                                        </svg>
+                                        Add to Cart
+                                    </button>
+                                    <% } else { %>
+                                        <button class="btn-primary" disabled>Out of Stock</button>
+                                        <% } %>
+
+                                            <button class="btn-outline wishlist-btn" id="wishlistBtn"
+                                                data-product-id="<%= product._id %>"
+                                                data-variant-id="<%= firstVariant ? firstVariant._id : '' %>"
+                                                onclick="toggleWishlistDetail()">
+                                                <svg class="wishlist-icon" width="20" height="20" viewBox="0 0 24 24"
+                                                    fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path
+                                                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                                                    </path>
+                                                </svg>
+                                                <span class="wishlist-text">Wishlist</span>
+                                            </button>
+
+                                            <button class="btn-icon share-btn" id="shareBtn">
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2">
+                                                    <circle cx="18" cy="5" r="3"></circle>
+                                                    <circle cx="6" cy="12" r="3"></circle>
+                                                    <circle cx="18" cy="19" r="3"></circle>
+                                                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                                                </svg>
+                                            </button>
+                            </div>
+
+                            <!-- Features List -->
+                            <% if (product.features && product.features.length> 0) { %>
+                                <div class="features-section">
+                                    <h3 class="section-heading">Key Features</h3>
+                                    <ul class="features-list">
+                                        <% product.features.forEach(feature=> { %>
+                                            <li class="feature-item">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                    stroke="#002366" stroke-width="2.5">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                                <span>
+                                                    <%= feature %>
+                                                </span>
+                                            </li>
+                                            <% }); %>
+                                    </ul>
+                                </div>
+                                <% } %>
+
+                                    <!-- SKU Info -->
+                                    <% if (firstVariant && firstVariant.sku) { %>
+                                        <div class="sku-info">
+                                            <span class="sku-label">SKU:</span>
+                                            <span class="sku-value" id="skuValue">
+                                                <%= firstVariant.sku %>
+                                            </span>
+                                        </div>
+                                        <% } %>
+
+        </div>
+    </div>
+</div>
+
+<!-- Description Section -->
+<div class="container description-container">
+    <div class="tabs-section">
+        <div class="tab-buttons">
+            <button class="tab-btn active" data-tab="description">Description</button>
+            <% if (product.features && product.features.length> 0) { %>
+                <button class="tab-btn" data-tab="features">All Features</button>
+                <% } %>
+                    <% if (product.variants && product.variants.length> 0) { %>
+                        <button class="tab-btn" data-tab="variants">Variants</button>
+                        <% } %>
+        </div>
+
+        <div class="tab-content-wrapper">
+            <!-- Description Tab -->
+            <div class="tab-pane active" id="description">
+                <div class="description-content">
+                    <%= product.description %>
+                </div>
+            </div>
+
+            <!-- Features Tab -->
+            <% if (product.features && product.features.length> 0) { %>
+                <div class="tab-pane" id="features">
+                    <div class="features-grid">
+                        <% product.features.forEach(feature=> { %>
+                            <div class="feature-card">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#002366"
+                                    stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                <p>
+                                    <%= feature %>
+                                </p>
+                            </div>
+                            <% }); %>
+                    </div>
+                </div>
+                <% } %>
+
+                    <!-- Variants Tab -->
+                    <% if (product.variants && product.variants.length> 0) { %>
+                        <div class="tab-pane" id="variants">
+                            <div class="variants-table-wrapper">
+                                <table class="variants-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Variant</th>
+                                            <% if (product.variants.some(v=> v.color)) { %><th>Color</th>
+                                                <% } %>
+                                                    <% if (product.variants.some(v=> v.size)) { %><th>Size</th>
+                                                        <% } %>
+                                                            <th>Price</th>
+                                                            <th>Stock</th>
+                                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% product.variants.forEach(variant=> { %>
+                                            <tr>
+                                                <td class="variant-name-cell">
+                                                    <%= variant.value %>
+                                                </td>
+                                                <% if (product.variants.some(v=> v.color)) { %>
+                                                    <td>
+                                                        <% if (variant.color) { %>
+                                                            <div class="color-preview"
+                                                                style="background-color: <%= variant.color %>;"></div>
+                                                            <% } else { %>
+                                                                -
+                                                                <% } %>
+                                                    </td>
+                                                    <% } %>
+                                                        <% if (product.variants.some(v=> v.size)) { %>
+                                                            <td>
+                                                                <%= variant.size || '-' %>
+                                                            </td>
+                                                            <% } %>
+                                                                <td class="price-cell">
+                                                                    <span class="table-price">₹<%=
+                                                                            variant.salePrice.toLocaleString('en-IN') %>
+                                                                    </span>
+                                                                    <% if (variant.salePrice < variant.basePrice) { %>
+                                                                        <span class="table-original-price">₹<%=
+                                                                                variant.basePrice.toLocaleString('en-IN')
+                                                                                %></span>
+                                                                        <% } %>
+                                                                </td>
+                                                                <td>
+                                                                    <%= variant.stock %> units
+                                                                </td>
+                                                                <td>
+                                                                    <span
+                                                                        class="status-badge <%= variant.status.toLowerCase() %>">
+                                                                        <%= variant.status %>
+                                                                    </span>
+                                                                </td>
+                                            </tr>
+                                            <% }); %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <% } %>
+        </div>
+    </div>
+</div>
+
+<!-- Related Products (if you have this data) -->
+<% if (relatedProducts && relatedProducts.length> 0) { %>
+    <div class="container related-container">
+        <h2 class="section-title">You May Also Like</h2>
+
+        <div class="related-grid">
+            <% relatedProducts.forEach(product=> { %>
+
+                <a href="/user/products/<%= product.slug %>" class="related-card">
+
+                    <!-- IMAGE -->
+                    <div class="related-image">
+                        <img src="<%= product.listingImage || product.productImages?.[0] %>"
+                            alt="<%= product.productName %>">
+                    </div>
+
+                    <!-- INFO -->
+                    <div class="related-info">
+
+                        <!-- BRAND -->
+                        <div class="related-brand">
+                            <%= product.brand ? product.brand.brandName : 'ZOUND' %>
+                        </div>
+
+                        <!-- NAME -->
+                        <h4 class="related-name">
+                            <%= product.productName %>
+                        </h4>
+
+                        <!-- PRICE -->
+                        <% if (product.variants && product.variants.length> 0) { %>
+                            <div class="related-price">
+
+                                <span class="related-sale-price">
+                                    ₹<%= product.variants[0].salePrice.toLocaleString('en-IN') %>
+                                </span>
+
+                                <% if (product.variants[0].basePrice> product.variants[0].salePrice) { %>
+                                    <span class="related-base-price">
+                                        ₹<%= product.variants[0].basePrice.toLocaleString('en-IN') %>
+                                    </span>
+                                    <% } %>
+
+                            </div>
+                            <% } %>
+
+                    </div>
+                </a>
+
+                <% }) %>
+        </div>
+    </div>
+    <% } %>
+
+        <div id="commonImageData" data-common='<%- JSON.stringify(product.productImages) %>' style="display:none;">
+        </div>
+
+        <!-- DEFAULT VARIANT FALLBACK  -->
+        <div id="defaultVariantData" data-variant='<%- JSON.stringify(firstVariant) %>'
+            data-images='<%- JSON.stringify(firstVariant?.images || []) %>' style="display:none;">
+        </div>
+
+        <!-- Toast Notification -->
+        <div class="toast" id="toast"></div>
+
+        <script src="/js/user/productDetails.js"></script>
