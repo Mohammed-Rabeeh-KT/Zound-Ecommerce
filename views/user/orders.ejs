@@ -63,9 +63,9 @@
                         <div class="orders-list">
                             <% for (let o=0; o < orders.length; o++) { const order=orders[o]; let productName='Product'
                                 ; let productImage='/images/placeholder.png' ; let variantInfo='' ; if
-                                (order.orderdItems.length> 0 &&
-                                order.orderdItems[0].product) {
-                                const firstItem = order.orderdItems[0];
+                                (order.orderedItems.length> 0 &&
+                                order.orderedItems[0].product) {
+                                const firstItem = order.orderedItems[0];
                                 const product = firstItem.product;
                                 productName = product.productName;
 
@@ -96,9 +96,9 @@
                                 'returned';
 
                                 let itemsText = '';
-                                if (order.orderdItems.length > 1) {
-                                itemsText = ' + ' + (order.orderdItems.length - 1) + ' more item' +
-                                (order.orderdItems.length >
+                                if (order.orderedItems.length > 1) {
+                                itemsText = ' + ' + (order.orderedItems.length - 1) + ' more item' +
+                                (order.orderedItems.length >
                                 2 ? 's' : '');
                                 }
                                 %>

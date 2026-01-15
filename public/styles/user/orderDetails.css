@@ -316,6 +316,17 @@
     font-size: 32px;
 }
 
+/* Fully Returned - Complete */
+.status-alert.returned-complete {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 1px solid #86efac;
+}
+
+.status-alert.returned-complete .material-icons {
+    color: #16a34a;
+    font-size: 32px;
+}
+
 .alert-title {
     display: block;
     font-size: 18px;
@@ -528,6 +539,54 @@
 .cancelled-price {
     color: #94a3b8 !important;
     text-decoration: line-through;
+}
+
+/* Return Requested Item Styles */
+.order-item.item-return-requested-row {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 20%, #ffffff 100%);
+    border-left: 3px solid #f59e0b;
+}
+
+.item-return-requested-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #b45309;
+    margin-top: 6px;
+    animation: pulse 2s infinite;
+}
+
+.item-return-requested-badge .material-icons {
+    font-size: 14px;
+}
+
+/* Returned Item Styles */
+.order-item.item-returned-row {
+    opacity: 0.75;
+    background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 20%, #ffffff 100%);
+    border-left: 3px solid #ea580c;
+}
+
+.item-returned-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #c2410c;
+    margin-top: 6px;
+}
+
+.item-returned-badge .material-icons {
+    font-size: 14px;
 }
 
 /* Address Card */

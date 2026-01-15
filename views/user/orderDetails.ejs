@@ -61,17 +61,35 @@
                                     <% } %>
                 </div>
             </div>
-            <% } else { %>
-                <div class="status-alert slide-up delay-1 <%= isCancelled ? 'cancelled' : 'returned' %>">
+            <% } else { const returnRequestedCount=order.orderedItems.filter(function(item) { return
+                item.itemStatus==='Return Requested' ; }).length; const
+                returnedCount=order.orderedItems.filter(function(item) { return item.itemStatus==='Returned' ;
+                }).length; const allReturned=(order.status==='Returned' ); let alertClass='returned' ; if (isCancelled)
+                { alertClass='cancelled' ; } else if (allReturned) { alertClass='returned-complete' ; } let
+                alertIcon='assignment_return' ; if (isCancelled) { alertIcon='cancel' ; } else if (allReturned) {
+                alertIcon='check_circle' ; } %>
+                <div class="status-alert slide-up delay-1 <%= alertClass %>">
                     <span class="material-icons">
-                        <%= isCancelled ? 'cancel' : 'assignment_return' %>
+                        <%= alertIcon %>
                     </span>
                     <div class="alert-content">
                         <span class="alert-title">
                             <%= order.status %>
                         </span>
                         <span class="alert-desc">
-                            <%= isCancelled ? 'This order has been cancelled' : 'Return request is being processed' %>
+                            <% if (isCancelled) { %>
+                                This order has been cancelled
+                                <% } else if (allReturned) { %>
+                                    All items have been returned successfully
+                                    <% } else if (returnRequestedCount> 0 && returnedCount > 0) { %>
+                                        <%= returnedCount %> item(s) returned, <%= returnRequestedCount %> pending
+                                                <% } else if (returnRequestedCount> 0) { %>
+                                                    <%= returnRequestedCount %> return request(s) pending
+                                                        <% } else if (returnedCount> 0) { %>
+                                                            <%= returnedCount %> item(s) returned
+                                                                <% } else { %>
+                                                                    Return request is being processed
+                                                                    <% } %>
                         </span>
                     </div>
                 </div>
@@ -84,77 +102,85 @@
                             <!-- Ordered Items -->
                             <div class="card items-card slide-up delay-2">
                                 <div class="card-header">
-                                    <h3>
-                                        <span class="material-icons">shopping_bag</span>
-                                        Order Items
-                                    </h3>
+                                    <h3><span class="material-icons">shopping_bag</span> Order Items</h3>
                                     <span class="items-count">
-                                        <%= order.orderdItems.length %> item<%= order.orderdItems.length> 1 ? 's' : ''
-                                                %>
+                                        <%= order.orderedItems.length %> item<%= (order.orderedItems.length> 1) ? 's' :
+                                                '' %>
                                     </span>
                                 </div>
                                 <div class="items-list">
-                                    <% for (let i=0; i < order.orderdItems.length; i++) { const
-                                        item=order.orderdItems[i]; const product=item.product; let
-                                        itemImage='/images/placeholder.png' ; let variantValue='' ; if (product &&
+                                    <% for (var i=0; i < order.orderedItems.length; i++) { var
+                                        item=order.orderedItems[i]; var product=item.product; var
+                                        itemImage='/images/placeholder.png' ; var variantValue='' ; if (product &&
                                         product.variants && product.variants.length> 0) {
-                                        let variant = null;
-
+                                        var variant = null;
                                         if (item.variantId) {
-                                        variant = product.variants.find(v => v._id.toString() ===
-                                        item.variantId.toString());
-                                        }
-
-                                        if (!variant) {
-                                        variant = product.variants[0];
-                                        }
-
-                                        if (variant) {
-                                        if (variant.images && variant.images.length > 0) {
-                                        itemImage = variant.images[0];
-                                        }
-                                        variantValue = variant.value || '';
-                                        }
-                                        } else if (product && product.productImages && product.productImages.length > 0)
-                                        {
-                                        itemImage = product.productImages[0];
-                                        }
-                                        %>
-                                        <div
-                                            class="order-item <%= item.itemStatus === 'Cancelled' ? 'item-cancelled-row' : '' %>">
-                                            <div class="item-image">
-                                                <img src="<%= itemImage %>"
-                                                    alt="<%= product ? product.productName : 'Product' %>">
-                                                <span class="item-qty">
-                                                    <%= item.quantity %>
-                                                </span>
-                                            </div>
-                                            <div class="item-info">
-                                                <h4 class="item-name">
-                                                    <%= product ? product.productName : 'Product Unavailable' %>
-                                                </h4>
-                                                <% if (variantValue) { %>
-                                                    <span class="item-variant">
-                                                        <%= variantValue %>
-                                                    </span>
-                                                    <% } %>
-                                                        <div class="item-price-row">
-                                                            <span class="unit-price">₹<%= Number(item.price).toFixed(2)
-                                                                    %> × <%= item.quantity %></span>
-                                                        </div>
-                                                        <% if (item.itemStatus==='Cancelled' ) { %>
-                                                            <span class="item-cancelled-badge">
-                                                                <span class="material-icons">cancel</span>
-                                                                Cancelled
-                                                            </span>
-                                                            <% } %>
-                                            </div>
+                                        for (var v = 0; v < product.variants.length; v++) { if
+                                            (product.variants[v]._id.toString()===item.variantId.toString()) {
+                                            variant=product.variants[v]; break; } } } if (!variant) {
+                                            variant=product.variants[0]; } if (variant) { if (variant.images &&
+                                            variant.images.length> 0) { itemImage = variant.images[0]; }
+                                            variantValue = variant.value || '';
+                                            }
+                                            } else if (product && product.productImages && product.productImages.length
+                                            > 0) {
+                                            itemImage = product.productImages[0];
+                                            }
+                                            var cancelledClass = (item.itemStatus === 'Cancelled' || order.status ===
+                                            'Cancelled') ? 'item-cancelled-row' : '';
+                                            var returnReqClass = (item.itemStatus === 'Return Requested') ?
+                                            'item-return-requested-row' : '';
+                                            var returnedClass = (item.itemStatus === 'Returned') ? 'item-returned-row' :
+                                            '';
+                                            var priceClass = (item.itemStatus === 'Cancelled' || item.itemStatus ===
+                                            'Returned' || order.status === 'Cancelled') ? 'cancelled-price' : '';
+                                            var showCancelledBadge = (item.itemStatus === 'Cancelled' || order.status
+                                            === 'Cancelled');
+                                            %>
                                             <div
-                                                class="item-total <%= item.itemStatus === 'Cancelled' ? 'cancelled-price' : '' %>">
-                                                ₹<%= Number(item.price * item.quantity).toFixed(2) %>
+                                                class="order-item <%= cancelledClass %> <%= returnReqClass %> <%= returnedClass %>">
+                                                <div class="item-image">
+                                                    <img src="<%= itemImage %>"
+                                                        alt="<%= product ? product.productName : 'Product' %>">
+                                                    <span class="item-qty">
+                                                        <%= item.quantity %>
+                                                    </span>
+                                                </div>
+                                                <div class="item-info">
+                                                    <h4 class="item-name">
+                                                        <%= product ? product.productName : 'Product Unavailable' %>
+                                                    </h4>
+                                                    <% if (variantValue) { %>
+                                                        <span class="item-variant">
+                                                            <%= variantValue %>
+                                                        </span>
+                                                        <% } %>
+                                                            <div class="item-price-row">
+                                                                <span class="unit-price">₹<%=
+                                                                        Number(item.price).toFixed(2) %> × <%=
+                                                                            item.quantity %></span>
+                                                            </div>
+                                                            <% if (showCancelledBadge) { %>
+                                                                <span class="item-cancelled-badge"><span
+                                                                        class="material-icons">cancel</span>
+                                                                    Cancelled</span>
+                                                                <% } %>
+                                                                    <% if (item.itemStatus==='Return Requested' ) { %>
+                                                                        <span class="item-return-requested-badge"><span
+                                                                                class="material-icons">pending_actions</span>
+                                                                            Return Requested</span>
+                                                                        <% } %>
+                                                                            <% if (item.itemStatus==='Returned' ) { %>
+                                                                                <span class="item-returned-badge"><span
+                                                                                        class="material-icons">assignment_return</span>
+                                                                                    Returned</span>
+                                                                                <% } %>
+                                                </div>
+                                                <div class="item-total <%= priceClass %>">
+                                                    ₹<%= Number(item.price * item.quantity).toFixed(2) %>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <% } %>
+                                            <% } %>
                                 </div>
                             </div>
 
@@ -224,7 +250,8 @@
                                             <div class="summary-row">
                                                 <span>Shipping</span>
                                                 <span>
-                                                    <%= (order.finalAmount - order.totalPrice + order.discount)> 0 ? '₹'
+                                                    <%= (order.finalAmount - order.totalPrice + order.discount)> 0 ?
+                                                        '₹'
                                                         + Number(order.finalAmount - order.totalPrice +
                                                         order.discount).toFixed(2) : 'FREE' %>
                                                 </span>
@@ -341,7 +368,7 @@
 
             <!-- Products List -->
             <div class="cancel-items-list" id="cancelItemsList">
-                <% for (let i=0; i < order.orderdItems.length; i++) { const item=order.orderdItems[i]; const
+                <% for (let i=0; i < order.orderedItems.length; i++) { const item=order.orderedItems[i]; const
                     product=item.product; const isItemActive=!item.itemStatus || item.itemStatus==='Active' ; let
                     itemImage='/images/placeholder.png' ; let variantValue='' ; if (product && product.variants &&
                     product.variants.length> 0) {
@@ -458,7 +485,7 @@
             <div class="items-divider"></div>
             <!-- Products List -->
             <div class="return-items-list" id="returnItemsList">
-                <% for (let i=0; i < order.orderdItems.length; i++) { const item=order.orderdItems[i]; const
+                <% for (let i=0; i < order.orderedItems.length; i++) { const item=order.orderedItems[i]; const
                     product=item.product; const isItemActive=!item.itemStatus || item.itemStatus==='Active' ; const
                     canReturn=isItemActive && order.status==='Delivered' ; let itemImage='/images/placeholder.png' ; let
                     variantValue='' ; if (product && product.variants && product.variants.length> 0) {
