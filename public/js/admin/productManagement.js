@@ -550,19 +550,6 @@ function openCropper(src) {
     });
 }
 
-function cancelCrop() {
-  if (cropperInstance) {
-    cropperInstance.destroy();
-    cropperInstance = null;
-  }
-
-  cropQueue = [];
-  currentCropFile = null;
-
-  document.getElementById('cropperModal').classList.remove('show');
-}
-
-
 function saveCrop() {
     if (!cropperInstance) return;
 
@@ -1041,6 +1028,15 @@ async function toggleProduct(id, currentStatus) {
 // ==========================================
 // DETAILS PAGE ACTIONS
 // ==========================================
+
+
+async function editVariantFromDetails(productId, variantIndex) {
+    // Load data without opening Main Content Modal
+    await fetchProductData(productId, false);
+
+    // Then open Variant Modal
+    openVariantModal(variantIndex);
+}
 
 async function toggleVariantStatus(productId, variantId, currentStatus) {
     const isActive = currentStatus === 'Active';

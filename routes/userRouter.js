@@ -101,6 +101,8 @@ router.delete('/wishlist/remove/:productId', wishlistController.removeFromWishli
 router.delete('/wishlist/clear', wishlistController.clearWishlist);
 router.get('/wishlist/count', wishlistController.getWishlistCount);
 router.get('/wishlist/check/:productId', wishlistController.checkWishlist);
+router.post('/wishlist/move-to-cart', wishlistController.moveToCart);
+
 
 
 export default router;

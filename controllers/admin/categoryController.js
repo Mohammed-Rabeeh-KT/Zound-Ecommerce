@@ -91,7 +91,7 @@ const getCategoriesData = catchAsync(async (req, res, next) => {
 });
 
 // ADD CATEGORY
-const addCategory = async (req, res) => {
+const addCategory = catchAsync(async (req, res, next) => {
     try {
         const { name, description } = req.body;
 
@@ -129,7 +129,7 @@ const addCategory = async (req, res) => {
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
-};
+});
 
 // UPDATE CATEGORY
 const updateCategory = catchAsync(async (req, res, next) => {

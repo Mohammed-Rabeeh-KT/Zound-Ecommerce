@@ -263,7 +263,6 @@ const updateProduct = catchAsync(async (req, res, next) => {
   // Separate files
   let mainImages = [];
   let variantFiles = [];
-
   if (req.files && req.files.length > 0) {
     mainImages = req.files.filter(f => f.fieldname === 'images');
     variantFiles = req.files.filter(f => f.fieldname.startsWith('variantImage_'));

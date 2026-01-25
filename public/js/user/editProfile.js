@@ -1,6 +1,7 @@
 // Global State
 let isEmailVerified = true;
 let emailChanged = false;
+let isOtpRequestInProgress = false;
 let otpTimer = null;
 let hasFormChanges = false;
 let profilePictureChanged = false;
@@ -126,11 +127,17 @@ async function handleEmailInput(e) {
 }
 
 async function initiateEmailVerification() {
+    if (isOtpRequestInProgress) {
+        console.log('OTP request already in progress, ignoring duplicate call');
+        return;
+    }
     const newEmail = emailInput.value.trim();
     if (!newEmail) {
         showFeedback('Please enter a valid email address', 'error');
         return;
     }
+
+    isOtpRequestInProgress = true;
 
     try {
         const response = await fetch('/user/send-email-otp', {
@@ -151,6 +158,10 @@ async function initiateEmailVerification() {
     } catch (error) {
         console.error('Error:', error);
         showFeedback('Failed to send verification code. Please try again.', 'error');
+    } finally {
+        setTimeout(() => {
+            isOtpRequestInProgress = false;
+        }, 3000)
     }
 }
 
