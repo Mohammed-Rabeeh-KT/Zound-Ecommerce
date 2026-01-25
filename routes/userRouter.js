@@ -78,6 +78,7 @@ router.delete('/cart/remove/:productId', cartController.removeFromCart);
 router.delete('/cart/clear', cartController.clearCart);
 router.post('/cart/apply-discount', cartController.applyDiscount);
 router.get('/cart/count', cartController.getCartCount);
+router.get('/cart/validate-stock', cartController.validateStock);
 
 
 // Checkout Routes
@@ -101,6 +102,8 @@ router.delete('/wishlist/remove/:productId', wishlistController.removeFromWishli
 router.delete('/wishlist/clear', wishlistController.clearWishlist);
 router.get('/wishlist/count', wishlistController.getWishlistCount);
 router.get('/wishlist/check/:productId', wishlistController.checkWishlist);
+router.post('/wishlist/move-to-cart', wishlistController.moveToCart);
+
 
 
 export default router;

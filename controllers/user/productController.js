@@ -128,7 +128,27 @@ const getProductListing = catchAsync(async (req, res, next) => {
         .limit(limit)
 
     const processedProducts = products.map(product => {
-        const activeVariant = product.variants.find(v => v.status === "Active" && v.stock > 0);
+        // Filter active and in-stock variants
+        let validVariants = product.variants.filter(v => v.status === "Active" && v.stock > 0);
+
+        // If no in-stock variants, try to find any active variant to show price (even if OOS)
+        if (validVariants.length === 0) {
+            validVariants = product.variants.filter(v => v.status === "Active");
+        }
+
+        // Sort variants based on user preference to show consistent price
+        if (validVariants.length > 1) {
+            if (sort === "price-low") {
+                validVariants.sort((a, b) => Number(a.salePrice) - Number(b.salePrice));
+            } else if (sort === "price-high") {
+                validVariants.sort((a, b) => Number(b.salePrice) - Number(a.salePrice));
+            } else {
+                // Default to lowest price (Starting At concept)
+                validVariants.sort((a, b) => Number(a.salePrice) - Number(b.salePrice));
+            }
+        }
+
+        const activeVariant = validVariants[0] || product.variants[0]; // Fallback to first variant if absolutely nothing valid
 
         return {
             ...product.toObject(),
@@ -196,6 +216,9 @@ const getProductDetails = catchAsync(async (req, res, next) => {
 
 
     const activeVariants = product.variants.filter(v => v.status === 'Active' && v.stock > 0);
+
+    // Sort variants by price ascending to default to the cheapest option
+    activeVariants.sort((a, b) => Number(a.salePrice) - Number(b.salePrice));
 
     if (activeVariants.length === 0) {
         return res.status(404).render("user/productUnavailable", {

@@ -316,6 +316,28 @@
     font-size: 32px;
 }
 
+/* Fully Returned - Complete */
+.status-alert.returned-complete {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 1px solid #86efac;
+}
+
+.status-alert.returned-complete .material-icons {
+    color: #16a34a;
+    font-size: 32px;
+}
+
+/* Delivered */
+.status-alert.delivered {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 1px solid #86efac;
+}
+
+.status-alert.delivered .material-icons {
+    color: #16a34a;
+    font-size: 32px;
+}
+
 .alert-title {
     display: block;
     font-size: 18px;
@@ -528,6 +550,108 @@
 .cancelled-price {
     color: #94a3b8 !important;
     text-decoration: line-through;
+}
+
+/* Return Requested Item Styles */
+.order-item.item-return-requested-row {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 20%, #ffffff 100%);
+    border-left: 3px solid #f59e0b;
+}
+
+.item-return-requested-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #b45309;
+    margin-top: 6px;
+    animation: pulse 2s infinite;
+}
+
+.item-return-requested-badge .material-icons {
+    font-size: 14px;
+}
+
+/* Returned Item Styles */
+.order-item.item-returned-row {
+    opacity: 0.75;
+    background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 20%, #ffffff 100%);
+    border-left: 3px solid #ea580c;
+}
+
+.item-returned-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #c2410c;
+    margin-top: 6px;
+}
+
+.item-returned-badge .material-icons {
+    font-size: 14px;
+}
+
+/* Return Rejected Item Styles */
+.order-item.item-return-rejected-row {
+    opacity: 0.8;
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 20%, #ffffff 100%);
+    border-left: 3px solid #dc2626;
+}
+
+.item-return-rejected-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #dc2626;
+    margin-top: 6px;
+}
+
+.item-return-rejected-badge .material-icons {
+    font-size: 14px;
+}
+
+/* Rejection Reason Box - shown to user when return is rejected */
+.rejection-reason-box {
+    margin-top: 10px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border-left: 3px solid #dc2626;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.85rem;
+}
+
+.rejection-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: #991b1b;
+    margin-bottom: 6px;
+}
+
+.rejection-label .material-icons {
+    font-size: 16px;
+}
+
+.rejection-text {
+    display: block;
+    color: #b91c1c;
+    line-height: 1.5;
+    font-style: italic;
 }
 
 /* Address Card */

@@ -24,7 +24,7 @@ const orderSchema = new Schema({
         ref: 'User',
         required: true
     },
-    orderdItems: [{
+    orderedItems: [{
         product: {
             type: Schema.Types.ObjectId,
             ref: 'Product',
@@ -44,7 +44,7 @@ const orderSchema = new Schema({
         },
         itemStatus: {
             type: String,
-            enum: ['Active', 'Cancelled', 'Return Requested', 'Returned'],
+            enum: ['Active', 'Cancelled',  'Return Requested', 'Returned', 'Return Rejected' , 'Delivered'],
             default: 'Active'
         },
         cancelReason: {
@@ -52,6 +52,10 @@ const orderSchema = new Schema({
             default: null
         },
         returnReason: {
+            type: String,
+            default: null
+        },
+        returnRejectReason: {
             type: String,
             default: null
         }

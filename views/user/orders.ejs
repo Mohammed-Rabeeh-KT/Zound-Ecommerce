@@ -61,78 +61,126 @@
                     <% if (orders && orders.length> 0) { %>
                         <!-- Orders List -->
                         <div class="orders-list">
-                            <% for (let o=0; o < orders.length; o++) { const order=orders[o]; let productName='Product'
-                                ; let productImage='/images/placeholder.png' ; let variantInfo='' ; if
-                                (order.orderdItems.length> 0 &&
-                                order.orderdItems[0].product) {
-                                const firstItem = order.orderdItems[0];
-                                const product = firstItem.product;
-                                productName = product.productName;
+                            <% for (let o=0; o < orders.length; o++) { %>
+                                <% const order=orders[o]; let productName='Product' ; let
+                                    productImage='/images/placeholder.png' ; let variantInfo='' ; %>
 
-                                if (product.variants && product.variants.length > 0) {
-                                let variant = product.variants[0];
-                                if (firstItem.variantId) {
-                                const foundVariant = product.variants.find(v => v._id.toString() ===
-                                firstItem.variantId.toString());
-                                if (foundVariant) variant = foundVariant;
-                                }
-                                if (variant.images && variant.images.length > 0) {
-                                productImage = variant.images[0];
-                                }
-                                if (variant.value) {
-                                variantInfo = variant.value;
-                                }
-                                } else if (product.productImages && product.productImages.length > 0) {
-                                productImage = product.productImages[0];
-                                }
-                                }
+                                    <% if (order.orderedItems.length> 0 && order.orderedItems[0].product) { %>
+                                        <% const firstItem=order.orderedItems[0]; const product=firstItem.product;
+                                            productName=product.productName; %>
 
-                                let statusClass = 'pending';
-                                if (order.status === 'Delivered') statusClass = 'delivered';
-                                else if (order.status === 'Processing') statusClass = 'processing';
-                                else if (order.status === 'Shipped') statusClass = 'shipped';
-                                else if (order.status === 'Cancelled') statusClass = 'cancelled';
-                                else if (order.status === 'Returned' || order.status === 'Return Request') statusClass =
-                                'returned';
+                                            <% if (product.variants && product.variants.length> 0) { %>
+                                                <% let variant=product.variants[0]; if (firstItem.variantId) { const
+                                                    foundVariant=product.variants.find(v=>
+                                                    v._id.toString() === firstItem.variantId.toString()
+                                                    );
+                                                    if (foundVariant) variant = foundVariant;
+                                                    }
 
-                                let itemsText = '';
-                                if (order.orderdItems.length > 1) {
-                                itemsText = ' + ' + (order.orderdItems.length - 1) + ' more item' +
-                                (order.orderdItems.length >
-                                2 ? 's' : '');
-                                }
-                                %>
-                                <a href="/user/orders/<%= order.orderId %>" class="order-card"
-                                    data-order-status="<%= order.status %>">
-                                    <div class="product-image">
-                                        <img src="<%= productImage %>" alt="<%= productName %>">
-                                    </div>
+                                                    if (variant.images && variant.images.length > 0) {
+                                                    productImage = variant.images[0];
+                                                    }
 
-                                    <div class="order-details">
-                                        <span class="order-id">ORDER #<%= order.orderId %></span>
-                                        <h3 class="product-name">
-                                            <%= productName %>
-                                                <% if (variantInfo) { %> - <%= variantInfo %>
-                                                        <% } %>
-                                                            <%= itemsText %>
-                                        </h3>
-                                        <span class="order-date">Purchased on <%= new
-                                                Date(order.createdOn).toLocaleDateString('en-IN', { day: 'numeric' ,
-                                                month: 'short' , year: 'numeric' }) %></span>
-                                        <span class="order-price">₹<%= Number(order.finalAmount).toFixed(2) %></span>
-                                    </div>
+                                                    if (variant.value) {
+                                                    variantInfo = variant.value;
+                                                    }
+                                                    %>
+                                                    <% } else if (product.productImages && product.productImages.length>
+                                                        0) { %>
+                                                        <% productImage=product.productImages[0]; %>
+                                                            <% } %>
+                                                                <% } %>
 
-                                    <div class="order-status">
-                                        <span class="status-badge <%= statusClass %>">
-                                            <%= order.status %>
-                                        </span>
-                                    </div>
+                                                                    <% let statusClass='pending' ; if
+                                                                        (order.status==='Delivered' )
+                                                                        statusClass='delivered' ; else if
+                                                                        (order.status==='Processing' )
+                                                                        statusClass='processing' ; else if
+                                                                        (order.status==='Shipped' )
+                                                                        statusClass='shipped' ; else if
+                                                                        (order.status==='Cancelled' )
+                                                                        statusClass='cancelled' ; else if
+                                                                        (order.status==='Returned' ||
+                                                                        order.status==='Return Request' )
+                                                                        statusClass='returned' ; let itemsText='' ; if
+                                                                        (order.orderedItems.length> 1) {
+                                                                        itemsText =
+                                                                        ' + ' +
+                                                                        (order.orderedItems.length - 1) +
+                                                                        ' more item' +
+                                                                        (order.orderedItems.length > 2 ? 's' : '');
+                                                                        }
+                                                                        %>
 
-                                    <div class="order-arrow">
-                                        <span class="material-icons">arrow_forward</span>
-                                    </div>
-                                </a>
-                                <% } %>
+                                                                        <a href="/user/orders/<%= order.orderId %>"
+                                                                            class="order-card"
+                                                                            data-order-status="<%= order.status %>">
+
+                                                                            <div class="product-image">
+                                                                                <img src="<%= productImage %>"
+                                                                                    alt="<%= productName %>">
+                                                                            </div>
+
+                                                                            <div class="order-details">
+                                                                                <span class="order-id">ORDER #<%=
+                                                                                        order.orderId %></span>
+
+                                                                                <h3 class="product-name">
+                                                                                    <%= productName %>
+                                                                                        <% if (variantInfo) { %> - <%=
+                                                                                                variantInfo %>
+                                                                                                <% } %>
+                                                                                                    <%= itemsText %>
+                                                                                </h3>
+
+                                                                                <span class="order-date">
+                                                                                    Purchased on
+                                                                                    <%= new
+                                                                                        Date(order.createdOn).toLocaleDateString('en-IN',
+                                                                                        { day: 'numeric' ,
+                                                                                        month: 'short' , year: 'numeric'
+                                                                                        }) %>
+                                                                                </span>
+
+                                                                                <span class="order-price">
+                                                                                    <% var
+                                                                                        isOrderCancelled=order.status==='Cancelled'
+                                                                                        || (order.orderedItems &&
+                                                                                        order.orderedItems.length> 0 &&
+                                                                                        order.orderedItems.every(function(item)
+                                                                                        { return item.itemStatus ===
+                                                                                        'Cancelled'; }));
+                                                                                        var displayPrice =
+                                                                                        order.finalAmount;
+                                                                                        if (isOrderCancelled) {
+                                                                                        displayPrice = 0;
+                                                                                        for (var i = 0; i <
+                                                                                            order.orderedItems.length;
+                                                                                            i++) { displayPrice
+                                                                                            +=order.orderedItems[i].price
+                                                                                            *
+                                                                                            order.orderedItems[i].quantity;
+                                                                                            } } %>
+                                                                                            ₹<%= Number(displayPrice).toFixed(2)
+                                                                                                %>
+
+                                                                                </span>
+                                                                            </div>
+
+                                                                            <div class="order-status">
+                                                                                <span
+                                                                                    class="status-badge <%= statusClass %>">
+                                                                                    <%= order.status %>
+                                                                                </span>
+                                                                            </div>
+
+                                                                            <div class="order-arrow">
+                                                                                <span
+                                                                                    class="material-icons">arrow_forward</span>
+                                                                            </div>
+                                                                        </a>
+
+                                                                        <% } %>
                         </div>
 
                         <!-- No Results Message -->

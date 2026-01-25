@@ -66,19 +66,20 @@
       <span class="rating-text">(<%= product.reviews %>)</span>
     </div> -->
     <div class="product-pricing">
-      <% if (product.variants && product.variants.length> 0) { %>
-        <span class="current-price">
-          ₹<%= product.variants[0].salePrice.toLocaleString() %>
-        </span>
-        <% if (product.variants[0].basePrice> product.variants[0].salePrice) {
-          %>
-          <span class="original-price">
-            ₹<%= product.variants[0].basePrice.toLocaleString() %>
+      <% const displayVariant=product.primaryVariant || (product.variants && product.variants.length> 0 ?
+        product.variants[0] : null); %>
+        <% if (displayVariant) { %>
+          <span class="current-price">
+            ₹<%= displayVariant.salePrice.toLocaleString() %>
           </span>
-          <% } %>
-            <% } else { %>
-              <span class="text-red-500">Price Unavailable</span>
-              <% } %>
+          <% if (displayVariant.basePrice> displayVariant.salePrice) { %>
+            <span class="original-price">
+              ₹<%= displayVariant.basePrice.toLocaleString() %>
+            </span>
+            <% } %>
+              <% } else { %>
+                <span class="text-red-500">Price Unavailable</span>
+                <% } %>
     </div>
     <a href="/user/products/<%= product.slug %>" class="view-details-btn">View Details</a>
   </div>

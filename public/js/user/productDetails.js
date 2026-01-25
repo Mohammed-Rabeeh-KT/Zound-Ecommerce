@@ -71,20 +71,109 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- Stock UI Update Function ---
+    function updateStockUI(stock) {
+        // Update quantity input max value
+        if (quantityInput) {
+            quantityInput.max = stock;
+            // Reset quantity to 1 if current value exceeds new stock
+            if (parseInt(quantityInput.value) > stock) {
+                quantityInput.value = Math.min(parseInt(quantityInput.value), stock) || 1;
+            }
+        }
+
+        // Update stock status display
+        if (stockStatusContainer) {
+            let stockHTML = '';
+            if (stock > 10) {
+                stockHTML = `
+                    <div class="stock-badge in-stock">
+                        <div class="stock-dot"></div>
+                        <span>In Stock</span>
+                    </div>`;
+            } else if (stock > 0) {
+                stockHTML = `
+                    <div class="stock-badge low-stock">
+                        <div class="stock-dot"></div>
+                        <span>Only ${stock} left in stock</span>
+                    </div>`;
+            } else {
+                stockHTML = `
+                    <div class="stock-badge out-of-stock">
+                        <div class="stock-dot"></div>
+                        <span>Out of Stock</span>
+                    </div>`;
+            }
+            stockStatusContainer.innerHTML = stockHTML;
+        }
+
+        // Update Add to Cart button state
+        if (addToCartBtn) {
+            if (stock <= 0) {
+                addToCartBtn.disabled = true;
+                addToCartBtn.innerHTML = 'Out of Stock';
+                addToCartBtn.classList.add('disabled');
+            } else {
+                addToCartBtn.disabled = false;
+                addToCartBtn.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    Add to Cart`;
+                addToCartBtn.classList.remove('disabled');
+            }
+        }
+    }
+
     // --- 4. QUANTITY LOGIC ---
     const decreaseBtn = document.getElementById('decreaseQty');
     const increaseBtn = document.getElementById('increaseQty');
 
+    // Toast function for notifications
+    function showToast(message, type = 'warning') {
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+        });
+        Toast.fire({
+            icon: type,
+            title: message
+        });
+    }
+
     if (decreaseBtn && increaseBtn && quantityInput) {
         decreaseBtn.addEventListener('click', () => {
             let val = parseInt(quantityInput.value);
-            if (val > 1) quantityInput.value = val - 1;
+            if (val > 1) {
+                quantityInput.value = val - 1;
+            } else {
+                showToast('Minimum quantity is 1', 'info');
+            }
         });
 
         increaseBtn.addEventListener('click', () => {
             let val = parseInt(quantityInput.value);
-            let max = parseInt(quantityInput.max) || 1;
-            if (val < max) quantityInput.value = val + 1;
+            let max = parseInt(quantityInput.max) || 10;
+            let maxPerOrder = 10; // Maximum per order limit
+
+            // Check max per order limit first
+            if (val >= maxPerOrder) {
+                showToast('Maximum 10 items per order', 'warning');
+                return;
+            }
+
+            // Check stock limit
+            if (val >= max) {
+                showToast(`Only ${max} items available in stock`, 'warning');
+                return;
+            }
+
+            quantityInput.value = val + 1;
         });
     }
 
@@ -342,7 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     Swal.fire({
                         icon: 'warning',
                         title: 'Please Login',
-                        text: 'You need to login to add items to cart',
+                        text: error.response?.data?.message || 'You need to login to add items to cart',
                         showConfirmButton: true,
                         confirmButtonText: 'Login Now',
                         showCancelButton: true,
@@ -421,9 +510,9 @@ async function toggleWishlistDetail() {
         console.error('Error toggling wishlist:', error);
         if (error.response?.status === 401) {
             Swal.fire({
-                icon: 'info',
+                icon: 'warning',
                 title: 'Login Required',
-                text: 'Please login to add items to your wishlist',
+                text: error.response?.data?.message || 'Please login to add items to your wishlist',
                 showConfirmButton: true,
                 confirmButtonText: 'Login Now',
                 showCancelButton: true,

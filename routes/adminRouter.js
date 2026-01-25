@@ -7,6 +7,7 @@ import userManagementController from "../controllers/admin/userManagementControl
 import categoryController from "../controllers/admin/categoryController.js";
 import productController from "../controllers/admin/productController.js";
 import brandController from "../controllers/admin/brandController.js";
+import orderController from "../controllers/admin/orderController.js";
 
 import { catchAsync } from "../utils/catchAsync.js";
 import { protectAdmin } from "../middlewares/adminAuth.js";
@@ -65,6 +66,13 @@ router.patch('/products/:id/toggle', productController.toggleProductStatus);
 router.delete('/products/:id', productController.softDeleteProduct);
 router.post('/product/variant/delete', productController.deleteVariant);
 router.post('/product/variant/toggle', productController.toggleVariantStatus);
+
+// ORDER MANAGEMENT
+router.get("/orders", orderController.getOrderManagement);
+router.post("/orders/update-status", orderController.updateOrderStatus);
+router.post("/orders/return-request", orderController.handleReturnRequest);
+router.post("/orders/update-item-status", orderController.updateItemStatus);
+router.get("/orders/:orderId", orderController.getOrderDetails);
 
 // BRAND MANAGEMENT 
 router.get("/brands", brandController.getBrandPage);

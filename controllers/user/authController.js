@@ -3,30 +3,27 @@ import jwt from "jsonwebtoken";
 import User from "../../models/userSchema.js";
 import nodemailer from "nodemailer";
 import passport from "passport";
+import { catchAsync } from "../../utils/catchAsync.js";
 
-const loadLogin = async (req, res) => {
-  try {
-    // Redirect authenticated users away from login
-    if (req.user) {
-      return res.redirect('/user/home');
-    }
-    return res.render("user/login", {
-      layout: "layout",
-      user: req.user || null,
-      cartCount: req.session?.cart?.length || 0,
-      message: null,
-      errors: {}
-    });
-  } catch (error) {
-    res.status(500).send('Server error')
+const loadLogin = catchAsync(async (req, res, next) => {
+  // Redirect authenticated users away from login
+  if (req.user) {
+    return res.redirect('/user/home');
   }
-}
+  return res.render("user/login", {
+    layout: "layout",
+    user: req.user || null,
+    cartCount: req.session?.cart?.length || 0,
+    message: null,
+    errors: {}
+  });
+});
 
 const loadSignup = (req, res) => {
-    // Redirect authenticated users away from signup
-    if (req.user) {
-      return res.redirect('/user/home');
-    }
+  // Redirect authenticated users away from signup
+  if (req.user) {
+    return res.redirect('/user/home');
+  }
   res.render("user/signup", { layout: "layout", message: null, user: req.user || null, cartCount: req.session?.cart?.length || 0 });
 }
 
@@ -65,7 +62,7 @@ async function sendOTPEmail(email, otp) {
   }
 }
 
-const signup = async (req, res) => {
+const signup = catchAsync(async (req, res, next) => {
   try {
     const { name, email, password, confirmPassword } = req.body;
 
@@ -121,9 +118,9 @@ const signup = async (req, res) => {
     console.error("Error during signup:", error);
     res.redirect('/pageNotFound');
   }
-}
+});
 
-const verifyOTP = async (req, res) => {
+const verifyOTP = catchAsync(async (req, res, next) => {
   try {
     const { otp } = req.body;
     console.log("Entered OTP:", otp.join(''));
@@ -165,7 +162,6 @@ const verifyOTP = async (req, res) => {
 
       return res.json({ success: true, redirectUrl: '/user/login', message: "Signup successful!" });
 
-
     } else {
       return res.status(400).json({ success: false, message: "The OTP you entered is incorrect." });
     }
@@ -174,10 +170,10 @@ const verifyOTP = async (req, res) => {
     console.error('Error Verifying OTP:', error);
     return res.status(500).json({ success: false, message: "Server error during OTP verification." });
   }
-}
+});
 
 // Resend OTP endpoint
-const resendOTP = async (req, res) => {
+const resendOTP = catchAsync(async (req, res, next) => {
   try {
     // Check if user has valid session data
     if (!req.session.userData) {
@@ -215,15 +211,14 @@ const resendOTP = async (req, res) => {
     console.error("Error resending OTP:", error);
     return res.status(500).json({ success: false, message: "Server error. Please try again." });
   }
-}
+});
 
 
-const login = async (req, res) => {
+const login = catchAsync(async (req, res, next) => {
   const { email, password, remember } = req.body;
 
   try {
     const errors = {};
-
 
     // Validate email
     if (!email || email.trim() === "") {
@@ -242,7 +237,6 @@ const login = async (req, res) => {
       errors.password = "Password must be at least 8 characters long.";
     }
 
-
     if (Object.keys(errors).length > 0) {
       return res.render('user/login', {
         layout: "layout",
@@ -252,21 +246,19 @@ const login = async (req, res) => {
         cartCount: req.session?.cart?.length || 0
       });
     }
+
     // ============ SANITIZE INPUTS ============
     const sanitizedEmail = email.trim().toLowerCase();
     const sanitizedPassword = password.trim();
 
-
     //find user by email
     const user = await User.findOne({ email: sanitizedEmail });
-
-    
 
     if (!user) {
       return res.render('user/login', { layout: "layout", message: "Invalid email or user doesn't exist.", errors: {}, user: req.user || null, cartCount: req.session?.cart?.length || 0 })
     }
 
-    if(user.role !== 'user'){
+    if (user.role !== 'user') {
       return res.render('user/login', {
         layout: "layout",
         message: "Invalid email or password",
@@ -292,16 +284,13 @@ const login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: remember ? '7d' : '1d' });
 
-
     res.cookie('authToken', token, {
       httpOnly: true,
       maxAge: remember ? 7 * 24 * 60 * 60 * 1000 : null
     });
 
     res.redirect('/user/home');
-  }
-
-  catch (error) {
+  } catch (error) {
     console.error("Error during login:", error);
     res.render('user/login', {
       layout: "layout",
@@ -310,11 +299,11 @@ const login = async (req, res) => {
       cartCount: req.session?.cart?.length || 0
     })
   }
-};
+});
 
 // // ------------------ AJAX: CHECK IF EMAIL EXISTS (used in signUp)------------------
 
-const checkEmail = async (req, res) => {
+const checkEmail = catchAsync(async (req, res, next) => {
   try {
     const { email } = req.query;
 
@@ -333,7 +322,7 @@ const checkEmail = async (req, res) => {
     console.log("Email check error:", error);
     res.status(500).json({ exists: false, message: "Server error" });
   }
-}
+});
 
 
 const logout = (req, res) => {
@@ -353,13 +342,13 @@ const logout = (req, res) => {
     // Destroy express-session if it exists
     if (req.session) {
       req.session.destroy(err => {
-        if (err) 
+        if (err)
           console.error("Session destroy error:", err);
 
         return res.redirect("/user/home");
       });
     } else {
-          return res.redirect("/user/home");
+      return res.redirect("/user/home");
     }
 
   } catch (error) {
@@ -414,54 +403,48 @@ const googleCallback = (req, res, next) => {
 
 
 
-const loadForgotPassword = async (req, res) => {
-  try {
-    return res.render('user/forgot-password', {
-      layout: "layout",
-      user: req.user || null,
-      cartCount: req.session?.cart?.length || 0
-    })
-  }
-  catch (error) {
-    console.log("Forgot password page not found")
-    res.status(500).send('Server error')
-  }
-}
+const loadForgotPassword = catchAsync(async (req, res, next) => {
+  return res.render('user/forgot-password', {
+    layout: "layout",
+    user: req.user || null,
+    cartCount: req.session?.cart?.length || 0
+  });
+});
 
 
-const forgotPassword = async (req, res) => {
+const forgotPassword = catchAsync(async (req, res, next) => {
   try {
     const { email } = req.body;
-    
+
     // Validate email
     if (!email || email.trim() === "") {
-        return res.render('user/forgot-password', {
-            layout: "layout",
-            message: "Email is required",
-            user: req.user || null,
-            cartCount: req.session?.cart?.length || 0,
-            errors: { email: "Email is required" }
-        });
+      return res.render('user/forgot-password', {
+        layout: "layout",
+        message: "Email is required",
+        user: req.user || null,
+        cartCount: req.session?.cart?.length || 0,
+        errors: { email: "Email is required" }
+      });
     }
     const user = await User.findOne({ email: email.trim().toLowerCase() });
-    
+
     if (!user) {
-        return res.render('user/forgot-password', {
-            layout: "layout",
-            message: "The otp has shared to your email account",
-            user: req.user || null,
-            cartCount: req.session?.cart?.length || 0,
-            errors: { email: "User not found" }
-        });
+      return res.render('user/forgot-password', {
+        layout: "layout",
+        message: "The otp has shared to your email account",
+        user: req.user || null,
+        cartCount: req.session?.cart?.length || 0,
+        errors: { email: "User not found" }
+      });
     }
 
     if (user.isBlocked) {
-        return res.render('user/forgot-password', {
-            layout: "layout",
-            message: "This account has been blocked. Please contact support.",
-            user: req.user || null,
-            cartCount: req.session?.cart?.length || 0
-        });
+      return res.render('user/forgot-password', {
+        layout: "layout",
+        message: "This account has been blocked. Please contact support.",
+        user: req.user || null,
+        cartCount: req.session?.cart?.length || 0
+      });
     }
 
     // Generate and send OTP
@@ -469,13 +452,13 @@ const forgotPassword = async (req, res) => {
     const emailSent = await sendOTPEmail(email, otp);
     console.log("Generated FP OTP:", otp);
     if (!emailSent) {
-        return res.render('user/forgot-password', {
-            layout: "layout",
-            message: "Failed to send OTP. Please try again.",
-            user: req.user || null,
-            cartCount: req.session?.cart?.length || 0,
-            errors: {}
-        });
+      return res.render('user/forgot-password', {
+        layout: "layout",
+        message: "Failed to send OTP. Please try again.",
+        user: req.user || null,
+        cartCount: req.session?.cart?.length || 0,
+        errors: {}
+      });
     }
     // Store in session
     req.session.fpOTP = otp;
@@ -486,69 +469,59 @@ const forgotPassword = async (req, res) => {
     console.error("Error in forgot password:", error);
     res.status(500).send('Server error');
   }
-}
+});
 
 
-const loadFpVerifyOTP = async (req, res) => {
-    try {
-        if (!req.session.fpOTP) {
-            return res.redirect('/user/forgot-password');
-        }
-        res.render('user/fp-verify-otp', {
-            layout: "layout",
-            user: req.user || null,
-            cartCount: req.session?.cart?.length || 0,
-            errorMessage: null
-        });
-    } catch (error) {
-        console.error("Error loading FP verify OTP:", error);
-        res.status(500).send('Server error');
+const loadFpVerifyOTP = catchAsync(async (req, res, next) => {
+  if (!req.session.fpOTP) {
+    return res.redirect('/user/forgot-password');
+  }
+  res.render('user/fp-verify-otp', {
+    layout: "layout",
+    user: req.user || null,
+    cartCount: req.session?.cart?.length || 0,
+    errorMessage: null
+  });
+});
+
+
+
+const verifyFpOTP = catchAsync(async (req, res, next) => {
+  try {
+    const { otp } = req.body;
+    // Handle if otp is array or string depending on your frontend implementation
+    const enteredOTP = Array.isArray(otp) ? otp.join('') : otp;
+    if (!req.session.fpOTP) {
+      return res.status(400).json({ success: false, message: "Session expired. Please try again." });
     }
-}
-
-
-
-const verifyFpOTP = async (req, res) => {
-    try {
-        const { otp } = req.body;
-        // Handle if otp is array or string depending on your frontend implementation
-        const enteredOTP = Array.isArray(otp) ? otp.join('') : otp;
-        if (!req.session.fpOTP) {
-             return res.status(400).json({ success: false, message: "Session expired. Please try again." });
-        }
-        if (enteredOTP === req.session.fpOTP) {
-            req.session.fpVerified = true;
-            // Optional: Clear OTP to prevent reuse, but keep email
-            delete req.session.fpOTP; 
-            return res.json({ success: true, redirectUrl: '/user/fp-reset-password' });
-        } else {
-            return res.status(400).json({ success: false, message: "Invalid OTP" });
-        }
-    } catch (error) {
-        console.error("Error verifying FP OTP:", error);
-        res.status(500).json({ success: false, message: "Server error" });
+    if (enteredOTP === req.session.fpOTP) {
+      req.session.fpVerified = true;
+      // Optional: Clear OTP to prevent reuse, but keep email
+      delete req.session.fpOTP;
+      return res.json({ success: true, redirectUrl: '/user/fp-reset-password' });
+    } else {
+      return res.status(400).json({ success: false, message: "Invalid OTP" });
     }
-}
-const loadResetPassword = async (req, res) => {
-    try {
-        if (!req.session.fpVerified || !req.session.fpEmail) {
-            return res.redirect('/user/forgot-password');
-        }
-        res.render('user/fp-reset-password', {
-            layout: "layout",
-            user: req.user || null,
-            cartCount: req.session?.cart?.length || 0,
-            message: null,
-            errors: {}
-        });
-    } catch (error) {
-        console.error("Error loading reset password:", error);
-        res.status(500).send('Server error');
-    }
-}
+  } catch (error) {
+    console.error("Error verifying FP OTP:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+const loadResetPassword = catchAsync(async (req, res, next) => {
+  if (!req.session.fpVerified || !req.session.fpEmail) {
+    return res.redirect('/user/forgot-password');
+  }
+  res.render('user/fp-reset-password', {
+    layout: "layout",
+    user: req.user || null,
+    cartCount: req.session?.cart?.length || 0,
+    message: null,
+    errors: {}
+  });
+});
 
 
-const resetPassword = async (req, res) => {
+const resetPassword = catchAsync(async (req, res, next) => {
   try {
     const { password, confirmPassword } = req.body;
 
@@ -584,10 +557,10 @@ const resetPassword = async (req, res) => {
     console.error("Reset error:", err);
     return res.json({ success: false, message: "Server error. Please try again." });
   }
-};
+});
 
 
-const resendFpOTP = async (req, res) => {
+const resendFpOTP = catchAsync(async (req, res, next) => {
   try {
     // Check if the session has the email from the first step
     if (!req.session.fpEmail) {
@@ -596,7 +569,7 @@ const resendFpOTP = async (req, res) => {
 
     // Generate new OTP
     const otp = generateOTP();
-    
+
     // Send email
     const emailSent = await sendOTPEmail(req.session.fpEmail, otp);
 
@@ -611,15 +584,14 @@ const resendFpOTP = async (req, res) => {
     console.log("Resent FP OTP:", otp);
     return res.json({ success: true, message: "OTP has been resent to your email." });
 
-
   } catch (error) {
     console.error("Error resending FP OTP:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
-}
+});
 
 
-export default{
+export default {
   loadLogin,
   loadSignup,
   signup,

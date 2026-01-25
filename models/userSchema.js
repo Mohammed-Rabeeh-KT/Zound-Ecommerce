@@ -120,13 +120,11 @@ const userSchema = new Schema({
     },
 
     role: {
-    type: String,
-    enum: ["user", "admin"],
-    default: "user"
-},
-
-
-
+        type: String,
+        enum: ["user", "admin"],
+        default: "user"
+    }
+    
 },
     {
         timestamps: true, // auto adds createdAt & updatedAt

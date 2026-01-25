@@ -3,7 +3,7 @@ import Category from "../../models/categorySchema.js";
 import Brand from "../../models/brandSchema.js";
 import { catchAsync } from "../../utils/catchAsync.js";
 import AppError from "../../utils/AppError.js";
-import { successResponse, STATUS } from "../../utils/response.js";
+import { errorResponse , successResponse, STATUS } from "../../utils/response.js";
 
 const escapeRegExp = (str = "") => String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -202,7 +202,9 @@ const addProduct = catchAsync(async (req, res, next) => {
     if (imgCount < 3) {
       return next(new AppError(`Variant #${i + 1}: Please upload at least 3 images`, STATUS.BAD_REQUEST));
     }
+
   }
+
 
   // 5. Create Product
   const newProduct = new Product({
@@ -268,7 +270,7 @@ const updateProduct = catchAsync(async (req, res, next) => {
     variantFiles = req.files.filter(f => f.fieldname.startsWith('variantImage_'));
   }
 
-  // Keep existing common images if not explicitly provided (variant-only update)
+  // Keep existing common images if not explicitly provided (variant-only update)   
   let keptImages = [];
   if (existingImages !== undefined) {
     keptImages = Array.isArray(existingImages) ? existingImages : [existingImages];

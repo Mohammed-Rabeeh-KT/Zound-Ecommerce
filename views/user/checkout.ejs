@@ -277,44 +277,74 @@
 
                         <!-- Cart Items Preview -->
                         <div class="summary-items">
-                            <% for (var i=0; i < cart.items.length; i++) { var item=cart.items[i]; var variant=null; if
-                                (item.productId.variants && item.variantId) { for (var v=0; v <
-                                item.productId.variants.length; v++) { if
-                                (item.productId.variants[v]._id.toString()===item.variantId.toString()) {
-                                variant=item.productId.variants[v]; break; } } } if (!variant && item.productId.variants
-                                && item.productId.variants.length> 0) {
-                                variant = item.productId.variants[0];
-                                }
-                                var itemImage = '/images/placeholder.png';
+                            <% for (var i = 0; i < cart.items.length; i++) { %>
+
+                                <%
+                                var item = cart.items[i];
+                                var variant = null;
+                                %>
+
+                                <% if (item.productId.variants && item.variantId) { %>
+                                <% for (var v = 0; v < item.productId.variants.length; v++) { %>
+                                    <% if (
+                                    item.productId.variants[v]._id.toString() ===
+                                    item.variantId.toString()
+                                    ) { %>
+                                    <%
+                                        variant = item.productId.variants[v];
+                                        break;
+                                    %>
+                                    <% } %>
+                                <% } %>
+                                <% } %>
+
+                                <% if (
+                                !variant &&
+                                item.productId.variants &&
+                                item.productId.variants.length > 0
+                                ) { %>
+                                <%
+                                    variant = item.productId.variants[0];
+                                %>
+                                <% } %>
+
+                                <%
+                                var itemImage = "/images/placeholder.png";
+
                                 if (variant && variant.images && variant.images.length > 0) {
-                                itemImage = variant.images[0];
-                                } else if (item.productId.productImages && item.productId.productImages.length > 0) {
-                                itemImage = item.productId.productImages[0];
+                                    itemImage = variant.images[0];
+                                } else if (
+                                    item.productId.productImages &&
+                                    item.productId.productImages.length > 0
+                                ) {
+                                    itemImage = item.productId.productImages[0];
                                 }
+
                                 var itemPrice = variant ? variant.salePrice : 0;
                                 %>
+
                                 <div class="summary-item">
-                                    <div class="item-image">
-                                        <img src="<%= itemImage %>" alt="<%= item.productId.productName %>">
-                                        <span class="item-qty">
-                                            <%= item.quantity %>
-                                        </span>
-                                    </div>
-                                    <div class="item-details">
-                                        <h4>
-                                            <%= item.productId.productName %>
-                                        </h4>
-                                        <% if (variant && variant.value) { %>
-                                            <span class="item-variant">
-                                                <%= variant.value %>
-                                            </span>
-                                            <% } %>
-                                    </div>
-                                    <div class="item-price">₹<%= Number(itemPrice * item.quantity).toFixed(2) %>
-                                    </div>
+                                <div class="item-image">
+                                    <img src="<%= itemImage %>" alt="<%= item.productId.productName %>">
+                                    <span class="item-qty"><%= item.quantity %></span>
                                 </div>
-                                <% } %>
-                        </div>
+
+                                <div class="item-details">
+                                    <h4><%= item.productId.productName %></h4>
+
+                                    <% if (variant && variant.value) { %>
+                                    <span class="item-variant"><%= variant.value %></span>
+                                    <% } %>
+                                </div>
+
+                                <div class="item-price">
+                                    ₹<%= Number(itemPrice * item.quantity).toFixed(2) %>
+                                </div>
+                                </div>
+
+                            <% } %>
+                            </div>
+
 
                         <div class="summary-divider"></div>
 

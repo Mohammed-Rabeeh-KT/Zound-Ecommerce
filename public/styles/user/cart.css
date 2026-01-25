@@ -446,6 +446,17 @@ button {
     cursor: not-allowed;
 }
 
+/* At limit buttons - look disabled but still clickable for toast */
+.qty-btn.at-limit {
+    opacity: 0.4;
+    cursor: pointer;
+}
+
+.qty-btn.at-limit:hover {
+    background: transparent;
+    color: var(--text-primary);
+}
+
 .qty-btn .material-icons {
     font-size: 18px;
 }
@@ -537,6 +548,40 @@ button {
 
 .continue-shopping-link:hover .material-icons {
     transform: translateX(-4px);
+}
+
+/* Cart Actions Container */
+.cart-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 32px 20px;
+    border-top: 1px solid var(--border-light);
+}
+
+/* Clear Cart Button */
+.clear-cart-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--error-red);
+    background: var(--error-light);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+.clear-cart-btn:hover {
+    background: var(--error-red);
+    color: white;
+    border-color: var(--error-red);
+}
+
+.clear-cart-btn .material-icons {
+    font-size: 18px;
 }
 
 /* ========================================
