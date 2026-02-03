@@ -78,6 +78,7 @@ router.delete('/cart/remove/:productId', cartController.removeFromCart);
 router.delete('/cart/clear', cartController.clearCart);
 router.post('/cart/apply-discount', cartController.applyDiscount);
 router.get('/cart/count', cartController.getCartCount);
+router.get('/cart/validate-stock', cartController.validateStock);
 
 
 // Checkout Routes

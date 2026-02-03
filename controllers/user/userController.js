@@ -3,6 +3,7 @@ import Product from "../../models/productSchema.js";
 import Category from "../../models/categorySchema.js";
 import Brand from "../../models/brandSchema.js";
 import Address from "../../models/addressSchema.js";
+import offerController from "../admin/offerManagementController.js";
 import { catchAsync } from "../../utils/catchAsync.js";
 import AppError from "../../utils/AppError.js";
 import { STATUS, MESSAGE } from "../../utils/response.js";
@@ -75,10 +76,14 @@ const loadHomepage = catchAsync(async (req, res, next) => {
   // 4. Fetch Brands
   const brands = await Brand.find({ isListed: true }).limit(10);
 
-  const processProduct = (product) => {
+  const processProduct = async (product) => {
     const activeVariant = product.variants?.find(
       v => v.status === 'Active' && v.stock > 0
     );
+
+    const variantIndex = product.variants.findIndex(v => v._id && activeVariant._id && v._id.toString() === activeVariant._id.toString());
+
+    const offerData = await offerController.calculateOfferPrice(product, variantIndex >= 0 ? variantIndex : 0)
 
     return {
       ...product.toObject(),
@@ -86,13 +91,14 @@ const loadHomepage = catchAsync(async (req, res, next) => {
         activeVariant?.images?.[0] ||
         product.productImages?.[0] ||
         '/images/placeholder.png',
-      primaryVariant: activeVariant
+      primaryVariant: activeVariant,
+      offer: offerData
     };
   };
 
-  const latestProductsProcessed = latestProducts.map(processProduct);
-  const topProductsProcessed = topProducts.map(processProduct);
-  const specialOffersProcessed = latestProducts.map(processProduct);
+  const latestProductsProcessed = await Promise.all(latestProducts.map(processProduct));
+  const topProductsProcessed = await Promise.all(topProducts.map(processProduct));
+  const specialOffersProcessed = await Promise.all(latestProducts.map(processProduct));
 
   res.render("user/home", {
     layout: "layout",
@@ -190,11 +196,76 @@ const verifyEmailOtp = catchAsync(async (req, res, next) => {
 const updateProfile = catchAsync(async (req, res, next) => {
   const userId = req.user.id;
   const { name, phone, email } = req.body;
-  const updateData = { name, phone };
+
+  // Server-side validation patterns
+  const nameRegex = /^[A-Za-z\s]{2,50}$/;
+  const phoneRegex = /^(\+91[\-\s]?)?[0]?(91)?[6789]\d{9}$/;
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+  // Validate name
+  if (!name || !name.trim()) {
+    return res.status(400).json({
+      success: false,
+      message: 'Name is required'
+    });
+  }
+
+  const trimmedName = name.trim();
+  if (trimmedName.length < 2 || trimmedName.length > 50) {
+    return res.status(400).json({
+      success: false,
+      message: 'Name must be between 2 and 50 characters'
+    });
+  }
+
+  if (!nameRegex.test(trimmedName)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Name should only contain letters and spaces'
+    });
+  }
+
+  // Validate phone (optional but if provided, must be valid)
+  if (phone && phone.trim()) {
+    const cleanPhone = phone.trim().replace(/[\s\-]/g, '');
+    if (!phoneRegex.test(cleanPhone)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please enter a valid 10-digit Indian phone number'
+      });
+    }
+  }
+
+  // Validate email
+  if (email && email.trim()) {
+    if (!emailRegex.test(email.trim())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please enter a valid email address'
+      });
+    }
+
+    // Check if email is already used by another user
+    const existingUser = await User.findOne({
+      email: email.trim(),
+      _id: { $ne: userId }
+    });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'This email is already in use by another account'
+      });
+    }
+  }
+
+  const updateData = {
+    name: trimmedName,
+    phone: phone ? phone.trim() : ''
+  };
 
   // If email is present, we assume it was verified on frontend (Double check logic in production)
-  if (email) {
-    updateData.email = email;
+  if (email && email.trim()) {
+    updateData.email = email.trim();
   }
 
   await User.findByIdAndUpdate(userId, updateData);
@@ -341,6 +412,14 @@ const addAddress = catchAsync(async (req, res, next) => {
     });
   }
 
+  // Validate alternate phone
+  if (altPhone && phone === altPhone) {
+    return res.status(400).json({
+      success: false,
+      message: 'Alternative phone must be different from primary phone'
+    });
+  }
+
   // Check if this is the first address (make it default)
   const existingCount = await Address.countDocuments({ userId });
   const isDefault = existingCount === 0;
@@ -402,6 +481,18 @@ const updateAddress = catchAsync(async (req, res) => {
     });
   }
 
+  // Validate alternate phone for update
+  const finalPhone = updatedAddress.phone || address.phone;
+  // Use property access for altPhone since it could be an empty string which is falsy but valid update
+  const finalAltPhone = typeof updatedAddress.altPhone !== 'undefined' ? updatedAddress.altPhone : address.altPhone;
+
+  if (finalAltPhone && finalPhone === finalAltPhone) {
+    return res.status(400).json({
+      success: false,
+      message: 'Alternative phone must be different from primary phone'
+    });
+  }
+
   Object.assign(address, updatedAddress);
 
   await address.save();
@@ -447,23 +538,24 @@ const deleteAddress = catchAsync(async (req, res) => {
   const userId = req.user._id;
   const addressId = req.params.id;
 
-  const address = await Address.findOneAndDelete({ _id: addressId, userId });
+  // Find address first to check if it's default
+  const addressToCheck = await Address.findOne({ _id: addressId, userId });
 
-  if (!address) {
+  if (!addressToCheck) {
     return res.status(404).json({
       success: false,
       message: 'Address not found'
     });
   }
 
-  // If deleted address was default, set another as default
-  if (address.isDefault) {
-    const anyAddress = await Address.findOne({ userId });
-    if (anyAddress) {
-      anyAddress.isDefault = true;
-      await anyAddress.save();
-    }
+  if (addressToCheck.isDefault) {
+    return res.status(400).json({
+      success: false,
+      message: 'Cannot delete the default address. Please set another address as default first.'
+    });
   }
+
+  await Address.findByIdAndDelete(addressId);
 
   res.json({
     success: true,

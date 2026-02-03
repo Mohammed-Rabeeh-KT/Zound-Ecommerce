@@ -4,6 +4,7 @@ import Address from '../../models/addressSchema.js';
 import Order from '../../models/orderSchema.js';
 import Product from '../../models/productSchema.js';
 import User from '../../models/userSchema.js';
+import offerController from '../admin/offerManagementController.js';
 // import Coupon from '../../models/couponSchema.js';
 import { catchAsync } from "../../utils/catchAsync.js";
 import { errorResponse, successResponse, STATUS, MESSAGE } from "../../utils/response.js";
@@ -103,13 +104,30 @@ const loadCheckout = catchAsync(async (req, res, next) => {
         return res.redirect('/user/cart?message=No valid items in cart. Please review your cart.');
     }
 
+    // Calculate offers for each valid item
+    for (let i = 0; i < validItems.length; i++) {
+        const item = validItems[i];
+        const product = item.product;
+        const variant = item.variant;
 
+        // Find variant index
+        const variantIndex = product.variants.findIndex(v => v._id.toString() === variant._id.toString());
 
-    // Calculate cart subtotal
+        // Calculate offer
+        const offerData = await offerController.calculateOfferPrice(product, variantIndex >= 0 ? variantIndex : 0);
+
+        validItems[i].offer = offerData;
+
+        // Use offer price if available
+        const effectivePrice = offerData.hasOffer ? offerData.offerPrice : variant.salePrice;
+        validItems[i].effectivePrice = effectivePrice;
+        validItems[i].effectiveTotalPrice = effectivePrice * item.quantity;
+    }
+
+    // Calculate cart subtotal using effective prices
     let cartSubtotal = 0;
     for (let item of validItems) {
-        const price = item.variant ? item.variant.salePrice : 0;
-        cartSubtotal += price * item.quantity;
+        cartSubtotal += item.effectiveTotalPrice || (item.variant.salePrice * item.quantity);
     }
 
     // Shipping logic
@@ -447,7 +465,11 @@ const placeOrder = catchAsync(async (req, res, next) => {
                 return errorResponse(res, STATUS.BAD_REQUEST, `Only ${variant.stock} units of ${product.productName} available`);
             }
 
-            const itemPrice = variant.salePrice * item.quantity;
+            // Calculate offer price
+            const offerData = await offerController.calculateOfferPrice(item.productId, variantIndex);
+            const effectivePrice = offerData.hasOffer ? offerData.offerPrice : variant.salePrice;
+
+            const itemPrice = effectivePrice * item.quantity;
             cartSubtotal += itemPrice;
 
             // Store for processing
@@ -456,7 +478,9 @@ const placeOrder = catchAsync(async (req, res, next) => {
                 variantIndex,
                 variant,
                 quantity: item.quantity,
-                price: variant.salePrice
+                price: effectivePrice,
+                originalPrice: variant.salePrice,
+                offer: offerData
             });
         }
 
@@ -500,6 +524,8 @@ const placeOrder = catchAsync(async (req, res, next) => {
             finalAmount: finalAmount,
             address: address._id,
             status: 'Pending',
+            paymentMethod: 'COD',
+            paymentStatus: 'Pending',
             couponApplied: false,
             invoiceDate: new Date()
         });
@@ -922,7 +948,15 @@ function generateInvoiceHTML(order) {
     });
     let itemsHTML = '';
     let subtotal = 0;
-    order.orderedItems.forEach((item, index) => {
+    let itemNumber = 0; // Track actual item number for display
+
+    order.orderedItems.forEach((item) => {
+        // Skip cancelled and returned items completely from invoice
+        if (item.itemStatus === 'Cancelled' || item.itemStatus === 'Returned') {
+            return; // Skip this item
+        }
+
+        itemNumber++; // Increment only for active items
         const product = item.product;
         let variantValue = '';
 
@@ -933,30 +967,17 @@ function generateInvoiceHTML(order) {
             }
         }
         const itemTotal = item.price * item.quantity;
-        // Exclude cancelled and returned items from subtotal
-        if (item.itemStatus !== 'Cancelled' && item.itemStatus !== 'Returned') {
-            subtotal += itemTotal;
-        }
+        subtotal += itemTotal;
 
-        // Determine item status label
+        // Determine item status label (only for active items now)
         let statusLabel = '';
-        let statusStyle = '';
-        if (item.itemStatus === 'Cancelled') {
-            statusLabel = '<br><small style="color: #dc2626; font-weight: 600;">✕ Cancelled</small>';
-            statusStyle = 'text-decoration: line-through; color: #999;';
-        } else if (item.itemStatus === 'Return Requested') {
+        if (item.itemStatus === 'Return Requested') {
             statusLabel = '<br><small style="color: #b45309; font-weight: 600;">⏳ Return Requested</small>';
-            statusStyle = '';
-        } else if (item.itemStatus === 'Returned') {
-            statusLabel = '<br><small style="color: #c2410c; font-weight: 600;">↩ Returned</small>';
-            statusStyle = 'text-decoration: line-through; color: #999;';
         }
-
-        const rowClass = (item.itemStatus === 'Cancelled' || item.itemStatus === 'Returned') ? 'cancelled' : '';
 
         itemsHTML += `
-            <tr class="${rowClass}">
-                <td>${index + 1}</td>
+            <tr>
+                <td>${itemNumber}</td>
                 <td>
                     ${product ? product.productName : 'Product Unavailable'}
                     ${variantValue ? `<br><small style="color: #666;">${variantValue}</small>` : ''}
@@ -964,7 +985,7 @@ function generateInvoiceHTML(order) {
                 </td>
                 <td style="text-align: center;">${item.quantity}</td>
                 <td style="text-align: right;">₹${item.price.toFixed(2)}</td>
-                <td style="text-align: right; ${statusStyle}">₹${itemTotal.toFixed(2)}</td>
+                <td style="text-align: right;">₹${itemTotal.toFixed(2)}</td>
             </tr>
         `;
     });

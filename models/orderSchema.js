@@ -44,7 +44,7 @@ const orderSchema = new Schema({
         },
         itemStatus: {
             type: String,
-            enum: ['Active', 'Cancelled', 'Return Requested', 'Returned', 'Return Rejected'],
+            enum: ['Active', 'Cancelled',  'Return Requested', 'Returned', 'Return Rejected' , 'Delivered'],
             default: 'Active'
         },
         cancelReason: {

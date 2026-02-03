@@ -34,15 +34,65 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 3. GALLERY & UI UPDATE LOGIC ---
     function updateProductUI(variantData, variantImages = []) {
         // A. Update Text Elements
-        if (displayPrice) displayPrice.textContent = `₹${variantData.salePrice.toLocaleString('en-IN')}`;
+        // Check if the variant has a valid offer attached
+        const hasOffer = variantData.offer && variantData.offer.hasOffer;
+        if (displayPrice) {
+            if (hasOffer) {
+                displayPrice.textContent = `₹${variantData.offer.offerPrice.toLocaleString('en-IN')}`;
+            } else {
+                displayPrice.textContent = `₹${variantData.salePrice.toLocaleString('en-IN')}`;
+            }
+        }
         if (displaySku) displaySku.textContent = variantData.sku || 'N/A';
-
         if (displayBasePrice) {
-            if (variantData.salePrice < variantData.basePrice) {
+            if (hasOffer) {
+                // Show original price (strike-through)
+                displayBasePrice.textContent = `₹${variantData.offer.basePrice.toLocaleString('en-IN')}`;
+                displayBasePrice.style.display = 'block';
+                // Update Badge Logic
+                const badge = document.getElementById('discountBadge');
+                if (badge) {
+                    badge.textContent = `${variantData.offer.totalDiscountPercent}% OFF`;
+                    badge.style.display = 'flex';
+                }
+
+
+                // Update Offer Breakdown
+                const breakdown = document.getElementById('offerBreakdown');
+                if (breakdown) {
+                    let breakdownHTML = '';
+                    if (variantData.offer.saleDiscountPercent > 0) {
+                        breakdownHTML += `<div style="color: #6b7280; font-size: 0.8rem;">
+                            <i class="bi bi-percent"></i> Sale: ${variantData.offer.saleDiscountPercent}% off
+                        </div>`;
+                    }
+                    breakdownHTML += `<div style="color: #166534; font-size: 0.85rem; font-weight: 500;">
+                        <i class="bi bi-tag-fill"></i> 
+                        + ${variantData.offer.offerDiscountPercent}% (${variantData.offer.offerTitle} - ${variantData.offer.offerSource} offer)
+                    </div>`;
+                    breakdown.innerHTML = breakdownHTML;
+                    breakdown.style.display = 'block';
+                }
+            } else if (variantData.salePrice < variantData.basePrice) {
+                // Standard sale discount (no offer)
                 displayBasePrice.textContent = `₹${variantData.basePrice.toLocaleString('en-IN')}`;
                 displayBasePrice.style.display = 'block';
+                const badge = document.getElementById('discountBadge');
+                if (badge) {
+                    const discount = Math.round(((variantData.basePrice - variantData.salePrice) / variantData.basePrice) * 100);
+                    badge.textContent = `${discount}% OFF`;
+                    badge.style.display = 'flex';
+                }
+
+                const breakdown = document.getElementById('offerBreakdown');
+                if (breakdown) breakdown.style.display = 'none';
             } else {
+                // No discount or offer
                 displayBasePrice.style.display = 'none';
+                const badge = document.getElementById('discountBadge');
+                if (badge) badge.style.display = 'none';
+                const breakdown = document.getElementById('offerBreakdown');
+                if (breakdown) breakdown.style.display = 'none';
             }
         }
 

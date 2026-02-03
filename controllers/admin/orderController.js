@@ -83,24 +83,39 @@ const updateOrderStatus = catchAsync(async (req, res, next) => {
         return errorResponse(res, STATUS.NOT_FOUND, 'Order not found');
     }
 
-    // Status transition rules
-    const invalidTransitions = {
-        Delivered: ['Pending', 'Processing', 'Shipped'],
-        Cancelled: ['Pending', 'Processing', 'Shipped', 'Delivered']
+    // Status transition rules - prevent invalid status changes
+    if (order.status === 'Delivered' && status === 'Cancelled') {
+        return errorResponse(res, STATUS.BAD_REQUEST, 'Delivered orders cannot be cancelled. Customer can request a return instead.');
     }
 
-    if (invalidTransitions[order.status]?.includes(status)) {
-        return errorResponse(res, STATUS.BAD_REQUEST, `Cannot change status from ${order.status} to ${status}`)
+    // Already cancelled orders cannot be changed
+    if (order.status === 'Cancelled') {
+        return errorResponse(res, STATUS.BAD_REQUEST, 'Cancelled orders cannot be modified');
+    }
+
+    // Already returned orders cannot be changed
+    if (order.status === 'Returned') {
+        return errorResponse(res, STATUS.BAD_REQUEST, 'Returned orders cannot be modified');
+    }
+
+    // Prevent going backwards in the order flow
+    const statusOrder = ['Pending', 'Processing', 'Shipped', 'Delivered'];
+    const currentIndex = statusOrder.indexOf(order.status);
+    const newIndex = statusOrder.indexOf(status);
+
+    // Don't allow going backwards except for Cancelled (which can happen from any state except Delivered)
+    if (currentIndex !== -1 && newIndex !== -1 && newIndex < currentIndex && status !== 'Cancelled') {
+        return errorResponse(res, STATUS.BAD_REQUEST, `Cannot change status from ${order.status} to ${status}`);
     }
 
     order.status = status;
 
-
-    // COD payment handling
-    if (status === 'Delivered' && order.paymentMethod === 'COD') {
+    // Payment status handling when order is delivered
+    if (status === 'Delivered') {
+        // Mark payment as Paid when order is delivered
+        // For COD: payment collected at delivery
+        // For Razorpay/Wallet: payment was made at checkout
         order.paymentStatus = 'Paid';
-        order.paymentDetails = order.paymentDetails || {};
-        order.paymentDetails.paymentStatus = 'Paid';
     }
 
     await order.save();
@@ -169,7 +184,7 @@ const getOrderDetails = catchAsync(async (req, res, next) => {
 
 // Handle return request (approve/reject)
 const handleReturnRequest = catchAsync(async (req, res, next) => {
-    const { orderId, itemId, action } = req.body;
+    const { orderId, itemId, action, rejectReason } = req.body;
 
     if (!orderId || !itemId || !action) {
         return errorResponse(res, STATUS.BAD_REQUEST, 'Order ID, Item ID and Action are required');
@@ -214,38 +229,42 @@ const handleReturnRequest = catchAsync(async (req, res, next) => {
                     { _id: item.product, 'variants._id': item.variantId },
                     { $inc: { 'variants.$.stock': item.quantity } }
                 );
-                console.log(`Stock restored: ${item.quantity} units added to variant ${item.variantId} of product ${item.product}`);
             } else {
                 // Product without variant - restore main product stock
                 await Product.updateOne(
                     { _id: item.product },
                     { $inc: { stock: item.quantity } }
                 );
-                console.log(`Stock restored: ${item.quantity} units added to product ${item.product}`);
             }
         }
 
-        // TODO: Process refund to wallet if payment was made
-        // This would involve adding the refund amount to user's wallet
-
     } else {
-        // Reject return - change status back to 'Active' (delivered items)
-        order.orderedItems[itemIndex].itemStatus = 'Active';
-        order.orderedItems[itemIndex].returnReason = null;
+        // Reject return - keep as delivered but mark as rejected with optional reason
+        order.orderedItems[itemIndex].itemStatus = 'Return Rejected';
+        if (rejectReason) {
+            order.orderedItems[itemIndex].returnRejectReason = rejectReason;
+        }
     }
 
-    // Check if all items are now returned
-    const activeItems = order.orderedItems.filter(
-        item => item.itemStatus !== 'Returned' && item.itemStatus !== 'Cancelled'
+
+    // Check if all items are now returned or cancelled
+    const nonDeliverableItems = order.orderedItems.filter(
+        item => item.itemStatus === 'Returned' || item.itemStatus === 'Cancelled'
     );
 
-    if (activeItems.length === 0) {
-        order.status = 'Returned';
+    if (nonDeliverableItems.length === order.orderedItems.length) {
+        // All items are either returned or cancelled
+        const hasReturnedItems = order.orderedItems.some(item => item.itemStatus === 'Returned');
+        order.status = hasReturnedItems ? 'Returned' : 'Cancelled';
     } else {
         // If order was in Return Request status but not all items are returned
         const hasReturnRequested = order.orderedItems.some(item => item.itemStatus === 'Return Requested');
         if (!hasReturnRequested && order.status === 'Return Request') {
             order.status = 'Delivered';
+            // Ensure payment status is set to Paid for delivered orders
+            if (order.paymentStatus === 'Pending') {
+                order.paymentStatus = 'Paid';
+            }
         }
     }
 
@@ -267,7 +286,7 @@ const updateItemStatus = catchAsync(async (req, res, next) => {
         return errorResponse(res, STATUS.BAD_REQUEST, 'Order ID, Item ID and Status are required');
     }
 
-    const allowedStatuses = ['Active', 'Cancelled', 'Return Requested', 'Returned'];
+    const allowedStatuses = ['Active', 'Cancelled', 'Return Requested', 'Returned', 'Return Rejected'];
     if (!allowedStatuses.includes(status)) {
         return errorResponse(res, STATUS.BAD_REQUEST, 'Invalid item status');
     }

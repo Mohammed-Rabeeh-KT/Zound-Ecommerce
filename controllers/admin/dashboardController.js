@@ -125,7 +125,7 @@ const loadDashboard = catchAsync(async (req, res, next) => {
         {
             $group: {
                 _id: '$categoryInfo.name',
-                total: { $sum: { $multiply: ['$orderdItems.quantity', '$orderdItems.price'] } }
+                total: { $sum: { $multiply: ['$orderedItems.quantity', '$orderedItems.price'] } }
             }
         },
         { $sort: { total: -1 } },
@@ -149,19 +149,19 @@ const loadDashboard = catchAsync(async (req, res, next) => {
         .limit(5)
         .populate({
             path: 'address',
-            select: 'name'
+            select: 'fullName'
         })
         .populate({
-            path: 'orderdItems.product',
+            path: 'orderedItems.product',
             select: 'productName'
         })
         .lean();
 
     const formattedOrders = recentOrders.map(order => {
-        const firstProduct = order.orderdItems[0];
+        const firstProduct = order.orderedItems[0];
         return {
             orderId: order.orderId,
-            customerName: order.address?.name || 'Unknown',
+            customerName: order.address?.fullName || 'Unknown',
             productName: firstProduct?.product?.productName || 'Unknown Product',
             finalAmount: order.finalAmount,
             status: order.status
@@ -188,12 +188,6 @@ const loadDashboard = catchAsync(async (req, res, next) => {
     });
 
 })
-
-
-
-
-
-
 
 
 

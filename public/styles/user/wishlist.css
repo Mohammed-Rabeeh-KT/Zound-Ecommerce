@@ -430,6 +430,28 @@ button {
     font-style: italic;
 }
 
+/* Offer Price Styles */
+.offer-price {
+    color: var(--royal-blue) !important;
+}
+
+.offer-badge {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    animation: pulse-offer 2s ease-in-out infinite;
+}
+
+@keyframes pulse-offer {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+}
+
 /* Added Date */
 .added-date {
     font-size: 0.75rem;

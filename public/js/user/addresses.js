@@ -159,17 +159,17 @@ const VALIDATION_PATTERNS = {
     // Full name: Only letters, spaces, and dots (for initials). Min 2, Max 50 chars
     fullName: /^[A-Za-z][A-Za-z\s.]{1,49}$/,
 
-    // Address: Letters, numbers, spaces, commas, hyphens, slashes, #, and periods. Min 5 chars
-    address: /^[A-Za-z0-9\s,.\-\/#]{5,150}$/,
+    // Address: Letters, numbers, spaces, and common punctuation. Min 5 chars
+    address: /^[A-Za-z0-9\s,.\-\/#()':&]{5,150}$/,
 
     // Phone: Indian mobile number starting with 6-9, exactly 10 digits
     phone: /^[6-9]\d{9}$/,
 
-    // City: Only letters and spaces, min 2 chars
-    city: /^[A-Za-z][A-Za-z\s]{1,49}$/,
+    // City: Letters, spaces, dots, hyphens. Min 2 chars
+    city: /^[A-Za-z][A-Za-z\s.-]{1,49}$/,
 
-    // State: Only letters and spaces, min 2 chars
-    state: /^[A-Za-z][A-Za-z\s]{1,49}$/,
+    // State: Letters, spaces, dots, hyphens. Min 2 chars
+    state: /^[A-Za-z][A-Za-z\s.-]{1,49}$/,
 
     // Pincode: Exactly 6 digits, Indian pincode (starts with 1-9)
     pincode: /^[1-9]\d{5}$/

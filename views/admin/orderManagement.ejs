@@ -127,14 +127,12 @@
                                     <td>
                                         <% if (order.status==='Return Request' ) { %>
                                             <!-- For Return Request, show a badge and direct to details -->
-                                            <span class="status-select status-ReturnRequest"
-                                                style="display: inline-block; padding: 8px 16px; cursor: default;">
+                                            <span class="status-badge status-ReturnRequest">
                                                 Return Request
                                             </span>
                                             <% } else if (order.status==='Returned' ) { %>
                                                 <!-- Returned orders - show static badge -->
-                                                <span class="status-select status-Returned"
-                                                    style="display: inline-block; padding: 8px 16px; cursor: default;">
+                                                <span class="status-badge status-Returned">
                                                     Returned
                                                 </span>
                                                 <% } else { %>

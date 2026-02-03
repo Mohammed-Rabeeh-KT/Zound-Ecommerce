@@ -335,6 +335,11 @@
             color: #c2410c;
         }
 
+        .item-status.ReturnRejected {
+            background: #fecaca;
+            color: #991b1b;
+        }
+
         /* Action buttons for return requests */
         .action-btns {
             display: flex;
@@ -883,58 +888,88 @@
         <script>
             async function handleReturnRequest(orderId, itemId, action) {
                 const actionText = action === 'approve' ? 'approve' : 'reject';
-                const confirmText = action === 'approve'
-                    ? 'This will mark the item as returned and restore stock.'
-                    : 'This will reject the return request.';
 
-                const result = await Swal.fire({
-                    title: `${action === 'approve' ? 'Approve' : 'Reject'} Return Request?`,
-                    text: confirmText,
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: action === 'approve' ? '#15803d' : '#b91c1c',
-                    cancelButtonColor: '#64748b',
-                    confirmButtonText: `Yes, ${actionText} it!`
-                });
+                let rejectReason = null;
 
-                if (result.isConfirmed) {
-                    try {
-                        const response = await fetch('/admin/orders/return-request', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({ orderId, itemId, action })
-                        });
-
-                        const data = await response.json();
-
-                        if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success!',
-                                text: data.message,
-                                confirmButtonColor: '#002366'
-                            }).then(() => {
-                                window.location.reload();
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error!',
-                                text: data.message || 'Something went wrong.',
-                                confirmButtonColor: '#002366'
-                            });
+                if (action === 'reject') {
+                    // Prompt for optional rejection reason
+                    const { value: reason, isConfirmed } = await Swal.fire({
+                        title: 'Reject Return Request',
+                        html: `
+                            <p style="margin-bottom: 16px; color: #64748b;">You can optionally provide a reason for rejecting this return request. This will be visible to the customer.</p>
+                            <textarea id="rejectReasonInput" class="swal2-textarea" placeholder="Enter rejection reason (optional)..." style="min-height: 100px;"></textarea>
+                        `,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#b91c1c',
+                        cancelButtonColor: '#64748b',
+                        confirmButtonText: 'Reject Request',
+                        cancelButtonText: 'Cancel',
+                        preConfirm: () => {
+                            // Return the reason value (can be empty)
+                            return document.getElementById('rejectReasonInput').value.trim();
                         }
-                    } catch (error) {
-                        console.error('Error:', error);
+                    });
+
+                    if (!isConfirmed) return;
+                    rejectReason = reason || null; // Set to null if empty
+
+                } else {
+                    // Approve confirmation
+                    const result = await Swal.fire({
+                        title: 'Approve Return Request?',
+                        text: 'This will mark the item as returned and restore stock.',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#15803d',
+                        cancelButtonColor: '#64748b',
+                        confirmButtonText: 'Yes, approve it!'
+                    });
+
+                    if (!result.isConfirmed) return;
+                }
+
+                try {
+                    const requestBody = { orderId, itemId, action };
+                    if (rejectReason) {
+                        requestBody.rejectReason = rejectReason;
+                    }
+
+                    const response = await fetch('/admin/orders/return-request', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: data.message,
+                            confirmButtonColor: '#002366'
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
                         Swal.fire({
                             icon: 'error',
                             title: 'Error!',
-                            text: 'Failed to communicate with server.',
+                            text: data.message || 'Something went wrong.',
                             confirmButtonColor: '#002366'
                         });
                     }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: 'Failed to communicate with server.',
+                        confirmButtonColor: '#002366'
+                    });
                 }
             }
         </script>
