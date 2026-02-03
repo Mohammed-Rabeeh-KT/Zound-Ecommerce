@@ -3,7 +3,7 @@ import Category from "../../models/categorySchema.js";
 import Brand from "../../models/brandSchema.js";
 import { catchAsync } from "../../utils/catchAsync.js";
 import AppError from "../../utils/AppError.js";
-import { errorResponse , successResponse, STATUS } from "../../utils/response.js";
+import { errorResponse, successResponse, STATUS } from "../../utils/response.js";
 
 const escapeRegExp = (str = "") => String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -352,9 +352,12 @@ const updateProduct = catchAsync(async (req, res, next) => {
   const compareVariants = (arr) => (arr || []).map(v => ({
     type: (v.type || '').trim(),
     value: (v.value || '').trim(),
+    color: (v.color || '').trim(),
+    size: (v.size || '').trim(),
     basePrice: Number(v.basePrice),
     salePrice: Number(v.salePrice),
     stock: Number(v.stock),
+    status: (v.status || 'Active').trim(),
     images: Array.isArray(v.images) ? [...v.images].sort() : []
   }));
 
@@ -405,14 +408,19 @@ const updateProduct = catchAsync(async (req, res, next) => {
     return next(new AppError("Please add at least one feature", STATUS.BAD_REQUEST));
   }
 
-  await product.save();
-  return successResponse(res, STATUS.OK, "Product updated successfully", product);
+  try {
+    await product.save();
+    return successResponse(res, STATUS.OK, "Product updated successfully", product);
+  } catch (saveError) {
+    console.error("Product save error:", saveError);
+    return next(new AppError(saveError.message || "Failed to save product", STATUS.INTERNAL_ERROR));
+  }
 });
 
 const toggleProductStatus = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   const product = await Product.findById(id);
-  
+
   if (!product) {
     return next(new AppError('Product not found', 404));
   }
@@ -450,13 +458,13 @@ const toggleVariantStatus = catchAsync(async (req, res, next) => {
 });
 
 export default {
-    getProductPage,
-    getProductDetailsPage,
-    addProduct,
-    getProductById,
-    updateProduct,
-    toggleProductStatus,
-    softDeleteProduct,
-    deleteVariant,
-    toggleVariantStatus
+  getProductPage,
+  getProductDetailsPage,
+  addProduct,
+  getProductById,
+  updateProduct,
+  toggleProductStatus,
+  softDeleteProduct,
+  deleteVariant,
+  toggleVariantStatus
 };

@@ -4,6 +4,7 @@ import Address from '../../models/addressSchema.js';
 import Order from '../../models/orderSchema.js';
 import Product from '../../models/productSchema.js';
 import User from '../../models/userSchema.js';
+import offerController from '../admin/offerManagementController.js';
 // import Coupon from '../../models/couponSchema.js';
 import { catchAsync } from "../../utils/catchAsync.js";
 import { errorResponse, successResponse, STATUS, MESSAGE } from "../../utils/response.js";
@@ -103,13 +104,30 @@ const loadCheckout = catchAsync(async (req, res, next) => {
         return res.redirect('/user/cart?message=No valid items in cart. Please review your cart.');
     }
 
+    // Calculate offers for each valid item
+    for (let i = 0; i < validItems.length; i++) {
+        const item = validItems[i];
+        const product = item.product;
+        const variant = item.variant;
 
+        // Find variant index
+        const variantIndex = product.variants.findIndex(v => v._id.toString() === variant._id.toString());
 
-    // Calculate cart subtotal
+        // Calculate offer
+        const offerData = await offerController.calculateOfferPrice(product, variantIndex >= 0 ? variantIndex : 0);
+
+        validItems[i].offer = offerData;
+
+        // Use offer price if available
+        const effectivePrice = offerData.hasOffer ? offerData.offerPrice : variant.salePrice;
+        validItems[i].effectivePrice = effectivePrice;
+        validItems[i].effectiveTotalPrice = effectivePrice * item.quantity;
+    }
+
+    // Calculate cart subtotal using effective prices
     let cartSubtotal = 0;
     for (let item of validItems) {
-        const price = item.variant ? item.variant.salePrice : 0;
-        cartSubtotal += price * item.quantity;
+        cartSubtotal += item.effectiveTotalPrice || (item.variant.salePrice * item.quantity);
     }
 
     // Shipping logic
@@ -447,7 +465,11 @@ const placeOrder = catchAsync(async (req, res, next) => {
                 return errorResponse(res, STATUS.BAD_REQUEST, `Only ${variant.stock} units of ${product.productName} available`);
             }
 
-            const itemPrice = variant.salePrice * item.quantity;
+            // Calculate offer price
+            const offerData = await offerController.calculateOfferPrice(item.productId, variantIndex);
+            const effectivePrice = offerData.hasOffer ? offerData.offerPrice : variant.salePrice;
+
+            const itemPrice = effectivePrice * item.quantity;
             cartSubtotal += itemPrice;
 
             // Store for processing
@@ -456,7 +478,9 @@ const placeOrder = catchAsync(async (req, res, next) => {
                 variantIndex,
                 variant,
                 quantity: item.quantity,
-                price: variant.salePrice
+                price: effectivePrice,
+                originalPrice: variant.salePrice,
+                offer: offerData
             });
         }
 

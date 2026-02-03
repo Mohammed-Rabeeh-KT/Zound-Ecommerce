@@ -1,6 +1,7 @@
 import Cart from '../../models/cartSchema.js';
 import Product from '../../models/productSchema.js';
 import Category from '../../models/categorySchema.js';
+import offerController from "../admin/offerManagementController.js";
 import { catchAsync } from "../../utils/catchAsync.js";
 import AppError from "../../utils/AppError.js";
 import { STATUS, MESSAGE, successResponse, errorResponse } from "../../utils/response.js";
@@ -36,29 +37,48 @@ const loadCart = catchAsync(async (req, res, next) => {
             return true;
         });
 
-        // Calculate totals for in-stock items only
-        cart.items.forEach(item => {
-            const variant = item.productId.variants?.find(
+        // Calculate offers for each item using async for loop
+        for (let i = 0; i < cart.items.length; i++) {
+            const item = cart.items[i];
+            const product = item.productId;
+
+            // Find the variant
+            const variant = product.variants?.find(
                 v => v._id.toString() === item.variantId?.toString()
-            ) || item.productId.variants?.[0];
+            ) || product.variants?.[0];
 
             if (variant) {
+                // Find variant index
+                const variantIndex = product.variants.findIndex(v => v._id.toString() === variant._id.toString());
+
+                // Calculate offer for this product/variant
+                const offerData = await offerController.calculateOfferPrice(product, variantIndex >= 0 ? variantIndex : 0);
+
+                // Attach offer data to item
+                item.offer = offerData;
+
+                // Use offer price if available
+                const effectivePrice = offerData.hasOffer ? offerData.offerPrice : variant.salePrice;
+                item.effectivePrice = effectivePrice;
+                item.effectiveTotalPrice = effectivePrice * item.quantity;
+
                 // Check for stock issues (insufficient stock)
                 if (item.quantity > variant.stock) {
                     hasStockIssues = true;
                 }
 
                 if (variant.stock > 0) {
-                    cartTotal += item.totalPrice;
-                    if (variant.basePrice && variant.salePrice && variant.basePrice > variant.salePrice) {
+                    cartTotal += item.effectiveTotalPrice;
+
+                    // Calculate savings from offers
+                    if (offerData.hasOffer) {
+                        savings += (offerData.originalPrice - offerData.offerPrice) * item.quantity;
+                    } else if (variant.basePrice && variant.salePrice && variant.basePrice > variant.salePrice) {
                         savings += (variant.basePrice - variant.salePrice) * item.quantity;
                     }
                 }
             }
-        });
-
-        // Save cart if items were filtered out
-        // await cart.save(); // DISABLED to prevent accidental item deletion during edge cases
+        }
     }
 
     res.render('user/cart', {

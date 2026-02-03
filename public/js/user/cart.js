@@ -117,8 +117,9 @@ async function updateQuantity(productId, variantId, newQuantity, btnElement) {
             // Update UI without reload
             qtyInput.value = newQuantity;
 
-            // Update item total
-            const newItemTotal = price * newQuantity;
+            // Update item total using effective price (offer price if available)
+            const effectivePrice = parseFloat(cartItem.dataset.effectivePrice) || price;
+            const newItemTotal = effectivePrice * newQuantity;
             itemTotalEl.textContent = formatCurrency(newItemTotal);
             itemTotalEl.dataset.itemTotal = newItemTotal;
 
@@ -190,17 +191,19 @@ function recalculateOrderSummary() {
     cartItems.forEach(item => {
         const totalEl = item.querySelector('.total-price');
         const qtyInput = item.querySelector('.qty-input');
-        const price = parseFloat(item.dataset.price) || 0;
+        const effectivePrice = parseFloat(item.dataset.effectivePrice) || parseFloat(item.dataset.price) || 0;
         const basePrice = parseFloat(item.dataset.basePrice) || 0;
+        const hasOffer = item.dataset.hasOffer === 'true';
         const quantity = qtyInput ? parseInt(qtyInput.value) || 1 : 1;
 
         if (totalEl) {
             subtotal += parseFloat(totalEl.dataset.itemTotal) || 0;
         }
 
-        // Calculate savings (basePrice - salePrice) * quantity
-        if (basePrice > price) {
-            savings += (basePrice - price) * quantity;
+        // Calculate savings (basePrice - effectivePrice) * quantity
+        // This includes both regular discounts and offer discounts
+        if (basePrice > effectivePrice) {
+            savings += (basePrice - effectivePrice) * quantity;
         }
     });
 

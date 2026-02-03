@@ -9,10 +9,10 @@ const productSchema = new Schema({
         required: true,
         trim: true,
     },
-    slug: { 
-        type: String, 
-        unique: true, 
-        lowercase: true ,
+    slug: {
+        type: String,
+        unique: true,
+        lowercase: true,
         index: true
     },
     description: {
@@ -37,9 +37,9 @@ const productSchema = new Schema({
         type: String
     }],
     variants: [{
-        type: { type: String, default: 'Color' }, 
-        value: { type: String }, 
-        images: [String], 
+        type: { type: String, default: 'Color' },
+        value: { type: String },
+        images: [String],
         color: { type: String },
         size: { type: String },
         basePrice: { type: Number, required: true },
@@ -69,13 +69,13 @@ const productSchema = new Schema({
     timestamps: true
 });
 
-productSchema.pre('save', function(next) {
+productSchema.pre('save', function (next) {
     if (this.isModified('productName')) {
-        this.slug = slugify(this.productName, { 
+        this.slug = slugify(this.productName, {
             lower: true,
-            strict: true ,
-            trim : true
-            });
+            strict: true,
+            trim: true
+        });
     }
     // next();
 });

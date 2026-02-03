@@ -3,6 +3,7 @@ import Product from "../../models/productSchema.js";
 import Category from "../../models/categorySchema.js";
 import Brand from "../../models/brandSchema.js";
 import Address from "../../models/addressSchema.js";
+import offerController from "../admin/offerManagementController.js";
 import { catchAsync } from "../../utils/catchAsync.js";
 import AppError from "../../utils/AppError.js";
 import { STATUS, MESSAGE } from "../../utils/response.js";
@@ -75,10 +76,14 @@ const loadHomepage = catchAsync(async (req, res, next) => {
   // 4. Fetch Brands
   const brands = await Brand.find({ isListed: true }).limit(10);
 
-  const processProduct = (product) => {
+  const processProduct = async (product) => {
     const activeVariant = product.variants?.find(
       v => v.status === 'Active' && v.stock > 0
     );
+
+    const variantIndex = product.variants.findIndex(v => v._id && activeVariant._id && v._id.toString() === activeVariant._id.toString());
+
+    const offerData = await offerController.calculateOfferPrice(product, variantIndex >= 0 ? variantIndex : 0)
 
     return {
       ...product.toObject(),
@@ -86,13 +91,14 @@ const loadHomepage = catchAsync(async (req, res, next) => {
         activeVariant?.images?.[0] ||
         product.productImages?.[0] ||
         '/images/placeholder.png',
-      primaryVariant: activeVariant
+      primaryVariant: activeVariant,
+      offer: offerData
     };
   };
 
-  const latestProductsProcessed = latestProducts.map(processProduct);
-  const topProductsProcessed = topProducts.map(processProduct);
-  const specialOffersProcessed = latestProducts.map(processProduct);
+  const latestProductsProcessed = await Promise.all(latestProducts.map(processProduct));
+  const topProductsProcessed = await Promise.all(topProducts.map(processProduct));
+  const specialOffersProcessed = await Promise.all(latestProducts.map(processProduct));
 
   res.render("user/home", {
     layout: "layout",

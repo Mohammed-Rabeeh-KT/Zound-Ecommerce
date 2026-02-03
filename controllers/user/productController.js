@@ -1,6 +1,7 @@
 import Product from "../../models/productSchema.js";
 import Category from "../../models/categorySchema.js";
 import Brand from "../../models/brandSchema.js";
+import offerController from "../admin/offerManagementController.js";
 import { catchAsync } from "../../utils/catchAsync.js";
 import AppError from "../../utils/AppError.js";
 import { STATUS, MESSAGE } from "../../utils/response.js";
@@ -127,7 +128,7 @@ const getProductListing = catchAsync(async (req, res, next) => {
         .skip(skip)
         .limit(limit)
 
-    const processedProducts = products.map(product => {
+    const processedProducts = await Promise.all(products.map(async product => {
         // Filter active and in-stock variants
         let validVariants = product.variants.filter(v => v.status === "Active" && v.stock > 0);
 
@@ -150,6 +151,14 @@ const getProductListing = catchAsync(async (req, res, next) => {
 
         const activeVariant = validVariants[0] || product.variants[0]; // Fallback to first variant if absolutely nothing valid
 
+        // Find index of activeVariant in the original variants array
+        const variantIndex = product.variants.findIndex(v => v._id && activeVariant._id && v._id.toString() === activeVariant._id.toString());
+
+        // Calculate offer for this product
+        const offerData = await offerController.calculateOfferPrice(product, variantIndex >= 0 ? variantIndex : 0);
+
+
+
         return {
             ...product.toObject(),
 
@@ -161,9 +170,10 @@ const getProductListing = catchAsync(async (req, res, next) => {
                 activeVariant?.images?.[0] ||
                 product.productImages?.[0] ||
                 '/images/placeholder.png',
-            primaryVariant: activeVariant
+            primaryVariant: activeVariant,
+            offer: offerData
         }
-    })
+    }));
 
     const totalPages = Math.ceil(totalProducts / limit);
 
@@ -258,15 +268,29 @@ const getProductDetails = catchAsync(async (req, res, next) => {
         };
     });
 
+    const activeVariantsWithOffers = await Promise.all(activeVariants.map(async (variant) => {
+        // Find existing index to get original price reference if needed, or just use variant data
+        const originalIndex = product.variants.findIndex(v => v._id.toString() === variant._id.toString());
+
+        // Calculate offer for this specific variant
+        const offer = await offerController.calculateOfferPrice(product, originalIndex >= 0 ? originalIndex : 0);
+
+        return {
+            ...variant.toObject(),
+            offer
+        };
+    }));
+
 
 
     res.render('user/productDetails', {
         product: {
             ...product.toObject(),
-            variants: activeVariants
+            variants: activeVariantsWithOffers,
+            offer: activeVariantsWithOffers[0]?.offer
         },
         relatedProducts,
-        firstVariant: activeVariants[0],
+        firstVariant: activeVariantsWithOffers[0],
         pageTitle: `${product.productName} - ZOUND`,
         searchQuery: "",
         selectedFilters: {}

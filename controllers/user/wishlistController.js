@@ -1,6 +1,7 @@
 import Wishlist from '../../models/wishlistSchema.js';
 import Product from '../../models/productSchema.js';
 import Cart from '../../models/cartSchema.js';
+import offerController from '../admin/offerManagementController.js';
 import { catchAsync } from "../../utils/catchAsync.js";
 import AppError from "../../utils/AppError.js";
 import { STATUS, MESSAGE, successResponse, errorResponse } from "../../utils/response.js";
@@ -27,10 +28,47 @@ const loadWishlist = catchAsync(async (req, res, next) => {
         await wishlist.save();
     }
 
+    // Calculate offers for each wishlist item
+    const productsWithOffers = [];
+    if (wishlist && wishlist.products) {
+        for (let item of wishlist.products) {
+            const product = item.productId;
+            if (!product) continue;
+
+            // Find the variant
+            let variant = null;
+            const itemVariantId = item.variantId ? item.variantId.toString() : null;
+            if (itemVariantId && product.variants) {
+                variant = product.variants.find(v => v._id.toString() === itemVariantId);
+            }
+            if (!variant && product.variants && product.variants.length > 0) {
+                variant = product.variants[0];
+            }
+
+            // Calculate offer for this product/variant
+            let offerData = { hasOffer: false };
+            if (variant) {
+                const variantIndex = product.variants.findIndex(v => v._id.toString() === variant._id.toString());
+                offerData = await offerController.calculateOfferPrice(product, variantIndex >= 0 ? variantIndex : 0);
+            }
+
+            productsWithOffers.push({
+                ...item.toObject(),
+                offer: offerData
+            });
+        }
+    }
+
+    // Create modified wishlist object with offers
+    const wishlistWithOffers = wishlist ? {
+        ...wishlist.toObject(),
+        products: productsWithOffers
+    } : { products: [] };
+
     res.render('user/wishlist', {
         user: req.user,
-        wishlist: wishlist || { products: [] },
-        wishlistCount: wishlist?.products?.length || 0
+        wishlist: wishlistWithOffers,
+        wishlistCount: wishlistWithOffers.products?.length || 0
     });
 });
 

@@ -49,10 +49,10 @@ const userSchema = new Schema({
         type: Boolean
     },
 
-    redeemedUsers: {
+    redeemedUsers: [{
         type: Schema.Types.ObjectId,
         ref: 'User'
-    },
+    }],
 
     searchHistory: [{
         category: {
@@ -124,7 +124,7 @@ const userSchema = new Schema({
         enum: ["user", "admin"],
         default: "user"
     }
-    
+
 },
     {
         timestamps: true, // auto adds createdAt & updatedAt
