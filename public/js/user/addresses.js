@@ -154,42 +154,138 @@ async function handleAddAddress(event) {
     }
 }
 
+// Validation Regex Patterns
+const VALIDATION_PATTERNS = {
+    // Full name: Only letters, spaces, and dots (for initials). Min 2, Max 50 chars
+    fullName: /^[A-Za-z][A-Za-z\s.]{1,49}$/,
+
+    // Address: Letters, numbers, spaces, and common punctuation. Min 5 chars
+    address: /^[A-Za-z0-9\s,.\-\/#()':&]{5,150}$/,
+
+    // Phone: Indian mobile number starting with 6-9, exactly 10 digits
+    phone: /^[6-9]\d{9}$/,
+
+    // City: Letters, spaces, dots, hyphens. Min 2 chars
+    city: /^[A-Za-z][A-Za-z\s.-]{1,49}$/,
+
+    // State: Letters, spaces, dots, hyphens. Min 2 chars
+    state: /^[A-Za-z][A-Za-z\s.-]{1,49}$/,
+
+    // Pincode: Exactly 6 digits, Indian pincode (starts with 1-9)
+    pincode: /^[1-9]\d{5}$/
+};
+
 // Validate Address Form
 function validateAddressForm(data) {
     let isValid = true;
 
-    if (!data.label) {
+    // Label validation
+    if (!data.label || data.label.trim() === '') {
         showFieldError('labelError', 'Please select an address label');
         isValid = false;
     }
 
-    if (!data.fullName || data.fullName.length < 2) {
-        showFieldError('fullNameError', 'Please enter a valid name');
+    // Full Name validation
+    if (!data.fullName) {
+        showFieldError('fullNameError', 'Full name is required');
+        isValid = false;
+    } else if (data.fullName.length < 2) {
+        showFieldError('fullNameError', 'Name must be at least 2 characters');
+        isValid = false;
+    } else if (data.fullName.length > 50) {
+        showFieldError('fullNameError', 'Name cannot exceed 50 characters');
+        isValid = false;
+    } else if (!VALIDATION_PATTERNS.fullName.test(data.fullName)) {
+        showFieldError('fullNameError', 'Name should only contain letters, spaces, and dots');
         isValid = false;
     }
 
-    if (!data.addressLine1 || data.addressLine1.length < 5) {
-        showFieldError('addressLine1Error', 'Please enter a valid address');
+    // Address Line 1 validation
+    if (!data.addressLine1) {
+        showFieldError('addressLine1Error', 'Address is required');
+        isValid = false;
+    } else if (data.addressLine1.length < 5) {
+        showFieldError('addressLine1Error', 'Address must be at least 5 characters');
+        isValid = false;
+    } else if (data.addressLine1.length > 150) {
+        showFieldError('addressLine1Error', 'Address cannot exceed 150 characters');
+        isValid = false;
+    } else if (!VALIDATION_PATTERNS.address.test(data.addressLine1)) {
+        showFieldError('addressLine1Error', 'Address contains invalid characters');
         isValid = false;
     }
 
-    if (!data.phone || !/^[6-9]\d{9}$/.test(data.phone.replace(/\D/g, ''))) {
-        showFieldError('phoneError', 'Please enter a valid 10-digit phone number');
+    // Address Line 2 validation (optional, but if provided must be valid)
+    if (data.addressLine2 && data.addressLine2.length > 0) {
+        if (data.addressLine2.length > 150) {
+            showFieldError('addressLine2Error', 'Address cannot exceed 150 characters');
+            isValid = false;
+        } else if (!VALIDATION_PATTERNS.address.test(data.addressLine2)) {
+            showFieldError('addressLine2Error', 'Address contains invalid characters');
+            isValid = false;
+        }
+    }
+
+    // Phone Number validation
+    const cleanPhone = data.phone.replace(/\D/g, '');
+    if (!data.phone) {
+        showFieldError('phoneError', 'Phone number is required');
+        isValid = false;
+    } else if (!VALIDATION_PATTERNS.phone.test(cleanPhone)) {
+        showFieldError('phoneError', 'Enter a valid 10-digit mobile number starting with 6-9');
         isValid = false;
     }
 
-    if (!data.city || data.city.length < 2) {
-        showFieldError('cityError', 'Please enter a valid city');
+    // Alternative Phone validation (optional, but if provided must be valid)
+    if (data.altPhone && data.altPhone.trim() !== '') {
+        const cleanAltPhone = data.altPhone.replace(/\D/g, '');
+        if (!VALIDATION_PATTERNS.phone.test(cleanAltPhone)) {
+            showFieldError('altPhoneError', 'Enter a valid 10-digit mobile number starting with 6-9');
+            isValid = false;
+        }
+        // Check if alt phone is same as primary phone
+        if (cleanAltPhone === cleanPhone) {
+            showFieldError('altPhoneError', 'Alternative phone must be different from primary phone');
+            isValid = false;
+        }
+    }
+
+    // City validation
+    if (!data.city) {
+        showFieldError('cityError', 'City is required');
+        isValid = false;
+    } else if (data.city.length < 2) {
+        showFieldError('cityError', 'City name must be at least 2 characters');
+        isValid = false;
+    } else if (data.city.length > 50) {
+        showFieldError('cityError', 'City name cannot exceed 50 characters');
+        isValid = false;
+    } else if (!VALIDATION_PATTERNS.city.test(data.city)) {
+        showFieldError('cityError', 'City should only contain letters and spaces');
         isValid = false;
     }
 
-    if (!data.state || data.state.length < 2) {
-        showFieldError('stateError', 'Please enter a valid state');
+    // State validation
+    if (!data.state) {
+        showFieldError('stateError', 'State is required');
+        isValid = false;
+    } else if (data.state.length < 2) {
+        showFieldError('stateError', 'State name must be at least 2 characters');
+        isValid = false;
+    } else if (data.state.length > 50) {
+        showFieldError('stateError', 'State name cannot exceed 50 characters');
+        isValid = false;
+    } else if (!VALIDATION_PATTERNS.state.test(data.state)) {
+        showFieldError('stateError', 'State should only contain letters and spaces');
         isValid = false;
     }
 
-    if (!data.pincode || !/^\d{6}$/.test(data.pincode)) {
-        showFieldError('pincodeError', 'Please enter a valid 6-digit pincode');
+    // Pincode validation
+    if (!data.pincode) {
+        showFieldError('pincodeError', 'Pincode is required');
+        isValid = false;
+    } else if (!VALIDATION_PATTERNS.pincode.test(data.pincode)) {
+        showFieldError('pincodeError', 'Enter a valid 6-digit pincode');
         isValid = false;
     }
 

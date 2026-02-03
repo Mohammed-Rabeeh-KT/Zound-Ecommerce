@@ -1,6 +1,7 @@
 // Global State
 let isEmailVerified = true;
 let emailChanged = false;
+let isOtpRequestInProgress = false;
 let otpTimer = null;
 let hasFormChanges = false;
 let profilePictureChanged = false;
@@ -44,14 +45,217 @@ function initializeChangeTracking() {
     originalValues.phone = document.getElementById('originalPhone')?.value || phoneInput?.value || '';
     originalValues.email = originalEmail;
 
-    // Add input listeners for change detection
+    // Add input listeners for change detection and validation
     if (nameInput) {
-        nameInput.addEventListener('input', checkForChanges);
+        nameInput.addEventListener('input', () => {
+            validateName();
+            checkForChanges();
+        });
+        nameInput.addEventListener('blur', validateName);
     }
     if (phoneInput) {
-        phoneInput.addEventListener('input', checkForChanges);
+        phoneInput.addEventListener('input', () => {
+            validatePhone();
+            checkForChanges();
+        });
+        phoneInput.addEventListener('blur', validatePhone);
     }
-    // Email already has its own handler that also calls checkForChanges
+    if (emailInput && !isGoogleUser) {
+        emailInput.addEventListener('blur', validateEmail);
+    }
+}
+
+// ========================================
+// REGEX VALIDATION PATTERNS
+// ========================================
+
+const validationPatterns = {
+    // Name: Letters (including unicode), spaces, min 2 chars, max 50
+    name: /^[A-Za-z\s]{2,50}$/,
+    // Phone: Indian format - 10 digits, optionally with +91 or 0 prefix
+    phone: /^(\+91[\-\s]?)?[0]?(91)?[6789]\d{9}$/,
+    // Email: Standard email format
+    email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+};
+
+// Validation error messages
+const validationMessages = {
+    name: {
+        empty: 'Name is required',
+        invalid: 'Name should only contain letters and spaces (2-50 characters)',
+        tooShort: 'Name must be at least 2 characters',
+        tooLong: 'Name cannot exceed 50 characters'
+    },
+    phone: {
+        invalid: 'Please enter a valid 10-digit Indian phone number',
+        format: 'Phone number should start with 6, 7, 8, or 9'
+    },
+    email: {
+        empty: 'Email is required',
+        invalid: 'Please enter a valid email address'
+    }
+};
+
+// ========================================
+// VALIDATION FUNCTIONS
+// ========================================
+
+function validateName() {
+    const name = nameInput?.value?.trim() || '';
+    const errorDiv = getOrCreateErrorDiv('name');
+
+    // Clear previous error
+    clearFieldError(nameInput, errorDiv);
+
+    if (!name) {
+        showFieldError(nameInput, errorDiv, validationMessages.name.empty);
+        return false;
+    }
+
+    if (name.length < 2) {
+        showFieldError(nameInput, errorDiv, validationMessages.name.tooShort);
+        return false;
+    }
+
+    if (name.length > 50) {
+        showFieldError(nameInput, errorDiv, validationMessages.name.tooLong);
+        return false;
+    }
+
+    if (!validationPatterns.name.test(name)) {
+        showFieldError(nameInput, errorDiv, validationMessages.name.invalid);
+        return false;
+    }
+
+    showFieldSuccess(nameInput);
+    return true;
+}
+
+function validatePhone() {
+    const phone = phoneInput?.value?.trim() || '';
+    const errorDiv = getOrCreateErrorDiv('phone');
+
+    // Clear previous error
+    clearFieldError(phoneInput, errorDiv);
+
+    // Phone is optional, but if provided, must be valid
+    if (!phone) {
+        return true;
+    }
+
+    // Remove spaces, dashes for validation
+    const cleanPhone = phone.replace(/[\s\-]/g, '');
+
+    // Check if it's a valid Indian phone number
+    if (!validationPatterns.phone.test(cleanPhone)) {
+        showFieldError(phoneInput, errorDiv, validationMessages.phone.invalid);
+        return false;
+    }
+
+    showFieldSuccess(phoneInput);
+    return true;
+}
+
+function validateEmail() {
+    if (isGoogleUser) return true;
+
+    const email = emailInput?.value?.trim() || '';
+    const errorDiv = getOrCreateErrorDiv('email');
+
+    // Clear previous error (but not feedback text used for OTP)
+    clearFieldError(emailInput, errorDiv);
+
+    if (!email) {
+        showFieldError(emailInput, errorDiv, validationMessages.email.empty);
+        return false;
+    }
+
+    if (!validationPatterns.email.test(email)) {
+        showFieldError(emailInput, errorDiv, validationMessages.email.invalid);
+        return false;
+    }
+
+    showFieldSuccess(emailInput);
+    return true;
+}
+
+// Validate all fields
+function validateAllFields() {
+    const isNameValid = validateName();
+    const isPhoneValid = validatePhone();
+    const isEmailValid = validateEmail();
+
+    return isNameValid && isPhoneValid && isEmailValid;
+}
+
+// ========================================
+// ERROR DISPLAY HELPERS
+// ========================================
+
+function getOrCreateErrorDiv(fieldId) {
+    let errorDiv = document.getElementById(`${fieldId}-validation-error`);
+
+    if (!errorDiv) {
+        const input = document.getElementById(fieldId);
+        if (input) {
+            errorDiv = document.createElement('div');
+            errorDiv.id = `${fieldId}-validation-error`;
+            errorDiv.className = 'field-validation-error';
+            errorDiv.style.cssText = 'color: #dc2626; font-size: 0.75rem; margin-top: 0.25rem; display: none;';
+
+            // Determine insert position
+            const inputWrapper = input.closest('.input-wrapper');
+
+            if (inputWrapper) {
+                // Insert AFTER the input-wrapper to prevent layout overlap
+                if (inputWrapper.nextSibling) {
+                    inputWrapper.parentNode.insertBefore(errorDiv, inputWrapper.nextSibling);
+                } else {
+                    inputWrapper.parentNode.appendChild(errorDiv);
+                }
+            } else {
+                // Standard positioning for simple inputs
+                if (input.nextSibling) {
+                    input.parentNode.insertBefore(errorDiv, input.nextSibling);
+                } else {
+                    input.parentNode.appendChild(errorDiv);
+                }
+            }
+        }
+    }
+
+    return errorDiv;
+}
+
+function showFieldError(input, errorDiv, message) {
+    if (input) {
+        input.classList.add('validation-error');
+        input.classList.remove('validation-success');
+        input.style.borderColor = '#dc2626';
+    }
+    if (errorDiv) {
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+    }
+}
+
+function showFieldSuccess(input) {
+    if (input) {
+        input.classList.remove('validation-error');
+        input.classList.add('validation-success');
+        input.style.borderColor = '#16a34a';
+    }
+}
+
+function clearFieldError(input, errorDiv) {
+    if (input) {
+        input.classList.remove('validation-error', 'validation-success');
+        input.style.borderColor = '';
+    }
+    if (errorDiv) {
+        errorDiv.textContent = '';
+        errorDiv.style.display = 'none';
+    }
 }
 
 // Check if form has changes
@@ -126,11 +330,22 @@ async function handleEmailInput(e) {
 }
 
 async function initiateEmailVerification() {
-    const newEmail = emailInput.value.trim();
-    if (!newEmail) {
-        showFeedback('Please enter a valid email address', 'error');
+    // Clear any previous feedback to ensure a clean state
+    showFeedback('', '');
+
+    if (isOtpRequestInProgress) {
+        console.log('OTP request already in progress, ignoring duplicate call');
         return;
     }
+
+    // Use strict validation before sending OTP
+    if (!validateEmail()) {
+        return;
+    }
+
+    const newEmail = emailInput.value.trim();
+
+    isOtpRequestInProgress = true;
 
     try {
         const response = await fetch('/user/send-email-otp', {
@@ -151,6 +366,10 @@ async function initiateEmailVerification() {
     } catch (error) {
         console.error('Error:', error);
         showFeedback('Failed to send verification code. Please try again.', 'error');
+    } finally {
+        setTimeout(() => {
+            isOtpRequestInProgress = false;
+        }, 3000)
     }
 }
 
@@ -190,15 +409,26 @@ async function verifyInlineOtp() {
 async function handleProfileUpdate(e) {
     e.preventDefault();
 
+    // Validate all fields first
+    if (!validateAllFields()) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Validation Error',
+            text: 'Please fix the errors in the form before saving.',
+            confirmButtonColor: '#002366'
+        });
+        return;
+    }
+
     if (!isEmailVerified && emailChanged) {
         showFeedback('Please verify your email before saving', 'error');
         return;
     }
 
     const formData = {
-        name: document.getElementById('name').value,
-        phone: document.getElementById('phone').value,
-        email: emailInput.value
+        name: document.getElementById('name').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        email: emailInput.value.trim()
     };
 
     const originalText = saveBtn?.innerHTML || 'Save';

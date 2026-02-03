@@ -3,7 +3,7 @@ import Category from "../../models/categorySchema.js";
 import Brand from "../../models/brandSchema.js";
 import { catchAsync } from "../../utils/catchAsync.js";
 import AppError from "../../utils/AppError.js";
-import { successResponse, STATUS } from "../../utils/response.js";
+import { errorResponse, successResponse, STATUS } from "../../utils/response.js";
 
 const escapeRegExp = (str = "") => String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -202,7 +202,9 @@ const addProduct = catchAsync(async (req, res, next) => {
     if (imgCount < 3) {
       return next(new AppError(`Variant #${i + 1}: Please upload at least 3 images`, STATUS.BAD_REQUEST));
     }
+
   }
+
 
   // 5. Create Product
   const newProduct = new Product({
@@ -268,7 +270,7 @@ const updateProduct = catchAsync(async (req, res, next) => {
     variantFiles = req.files.filter(f => f.fieldname.startsWith('variantImage_'));
   }
 
-  // Keep existing common images if not explicitly provided (variant-only update)
+  // Keep existing common images if not explicitly provided (variant-only update)   
   let keptImages = [];
   if (existingImages !== undefined) {
     keptImages = Array.isArray(existingImages) ? existingImages : [existingImages];
@@ -350,9 +352,12 @@ const updateProduct = catchAsync(async (req, res, next) => {
   const compareVariants = (arr) => (arr || []).map(v => ({
     type: (v.type || '').trim(),
     value: (v.value || '').trim(),
+    color: (v.color || '').trim(),
+    size: (v.size || '').trim(),
     basePrice: Number(v.basePrice),
     salePrice: Number(v.salePrice),
     stock: Number(v.stock),
+    status: (v.status || 'Active').trim(),
     images: Array.isArray(v.images) ? [...v.images].sort() : []
   }));
 
@@ -403,14 +408,19 @@ const updateProduct = catchAsync(async (req, res, next) => {
     return next(new AppError("Please add at least one feature", STATUS.BAD_REQUEST));
   }
 
-  await product.save();
-  return successResponse(res, STATUS.OK, "Product updated successfully", product);
+  try {
+    await product.save();
+    return successResponse(res, STATUS.OK, "Product updated successfully", product);
+  } catch (saveError) {
+    console.error("Product save error:", saveError);
+    return next(new AppError(saveError.message || "Failed to save product", STATUS.INTERNAL_ERROR));
+  }
 });
 
 const toggleProductStatus = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   const product = await Product.findById(id);
-  
+
   if (!product) {
     return next(new AppError('Product not found', 404));
   }
@@ -448,13 +458,13 @@ const toggleVariantStatus = catchAsync(async (req, res, next) => {
 });
 
 export default {
-    getProductPage,
-    getProductDetailsPage,
-    addProduct,
-    getProductById,
-    updateProduct,
-    toggleProductStatus,
-    softDeleteProduct,
-    deleteVariant,
-    toggleVariantStatus
+  getProductPage,
+  getProductDetailsPage,
+  addProduct,
+  getProductById,
+  updateProduct,
+  toggleProductStatus,
+  softDeleteProduct,
+  deleteVariant,
+  toggleVariantStatus
 };

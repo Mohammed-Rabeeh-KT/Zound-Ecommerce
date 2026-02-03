@@ -41,15 +41,20 @@
                         <% if (product.isBestSeller) { %>
                             <span class="product-badge bestseller-badge">Best Seller</span>
                             <% } %>
-                                <% if (firstVariant && firstVariant.salePrice < firstVariant.basePrice) { %>
+                                <% if (product.offer && product.offer.hasOffer ){ %>
+                                    <!-- Show TOTAL discount when offer exists -->
                                     <span class="product-badge sale-badge">
-                                        <%= Math.round(((firstVariant.basePrice - firstVariant.salePrice) /
-                                            firstVariant.basePrice) * 100) %>% OFF
+                                        <%= product.offer.totalDiscountPercent %>% OFF
                                     </span>
-                                    <% } %>
+                                    <% } else if (firstVariant && firstVariant.salePrice < firstVariant.basePrice) { %>
+                                        <span class="product-badge sale-badge">
+                                            <%= Math.round(((firstVariant.basePrice - firstVariant.salePrice) /
+                                                firstVariant.basePrice) * 100) %> % OFF
+                                        </span>
+                                        <% } %>
 
-                                        <!-- Zoom Lens -->
-                                        <div class="zoom-lens" id="zoomLens"></div>
+                                            <!-- Zoom Lens -->
+                                            <div class="zoom-lens" id="zoomLens"></div>
                 </div>
 
                 <!-- Zoom Result (Desktop) -->
@@ -91,19 +96,53 @@
 
             <!-- Price Section -->
             <div class="price-section">
-                <% if (firstVariant) { %>
-                    <div class="current-price" id="currentPrice">₹<%= firstVariant.salePrice.toLocaleString('en-IN') %>
+                <% if (product.offer && product.offer.hasOffer) { %>
+                    <!-- OFFER PRICE DISPLAY -->
+                    <div class="current-price" id="currentPrice">
+                        ₹<%= product.offer.offerPrice.toLocaleString('en-IN') %>
                     </div>
-                    <% if (firstVariant.salePrice < firstVariant.basePrice) { %>
-                        <div class="original-price" id="originalPrice">₹<%=
-                                firstVariant.basePrice.toLocaleString('en-IN') %>
-                        </div>
-                        <div class="discount-badge">
-                            Save <%= Math.round(((firstVariant.basePrice - firstVariant.salePrice) /
-                                firstVariant.basePrice) * 100) %>%
-                        </div>
-                        <% } %>
+
+                    <!-- BASE PRICE crossed out -->
+                    <div class="original-price" id="originalPrice">
+                        ₹<%= product.offer.basePrice.toLocaleString('en-IN') %>
+                    </div>
+
+                    <!-- Total Discount Badge -->
+                    <div class="discount-badge" id="discountBadge" style="display: flex;">
+                        <%= product.offer.totalDiscountPercent %>% OFF
+                    </div>
+
+                    <!-- Offer Breakdown Details -->
+                    <div class="offer-breakdown" id="offerBreakdown" style="margin-top: 8px;">
+                        <% if (product.offer.saleDiscountPercent> 0) { %>
+                            <div style="color: #6b7280; font-size: 0.8rem;">
+                                <i class="bi bi-percent"></i> Sale: <%= product.offer.saleDiscountPercent %>% off
+                            </div>
                             <% } %>
+                                <div style="color: #166534; font-size: 0.85rem; font-weight: 500;">
+                                    <i class="bi bi-tag-fill"></i>
+                                    + <%= product.offer.offerDiscountPercent %>% (<%= product.offer.offerTitle %> - <%=
+                                                product.offer.offerSource %> offer)
+                                </div>
+                    </div>
+                    <% } else if (firstVariant) { %>
+                        <!-- STANDARD SALE PRICE DISPLAY (No Offer) -->
+                        <div class="current-price" id="currentPrice">
+                            ₹<%= firstVariant.salePrice.toLocaleString('en-IN') %>
+                        </div>
+                        <% if (firstVariant.salePrice < firstVariant.basePrice) { %>
+                            <div class="original-price" id="originalPrice">
+                                ₹<%= firstVariant.basePrice.toLocaleString('en-IN') %>
+                            </div>
+                            <div class="discount-badge" id="discountBadge">
+                                <%= Math.round(((firstVariant.basePrice - firstVariant.salePrice) /
+                                    firstVariant.basePrice) * 100) %>% OFF
+                            </div>
+                            <% } else { %>
+                                <div class="original-price" id="originalPrice" style="display: none;"></div>
+                                <div class="discount-badge" id="discountBadge" style="display: none;"></div>
+                                <% } %>
+                                    <% } %>
             </div>
 
             <!-- Stock Status -->

@@ -7,6 +7,8 @@ import userManagementController from "../controllers/admin/userManagementControl
 import categoryController from "../controllers/admin/categoryController.js";
 import productController from "../controllers/admin/productController.js";
 import brandController from "../controllers/admin/brandController.js";
+import orderController from "../controllers/admin/orderController.js";
+import offerController from "../controllers/admin/offerManagementController.js";
 
 import { catchAsync } from "../utils/catchAsync.js";
 import { protectAdmin } from "../middlewares/adminAuth.js";
@@ -54,6 +56,9 @@ router.post('/products',
   productController.addProduct
 );
 
+// Product search for autocomplete (must be before /products/:id)
+router.get('/products/search', offerController.searchProducts);
+
 router.get('/products/:id', productController.getProductById);
 
 router.put('/products/:id',
@@ -65,6 +70,13 @@ router.patch('/products/:id/toggle', productController.toggleProductStatus);
 router.delete('/products/:id', productController.softDeleteProduct);
 router.post('/product/variant/delete', productController.deleteVariant);
 router.post('/product/variant/toggle', productController.toggleVariantStatus);
+
+// ORDER MANAGEMENT
+router.get("/orders", orderController.getOrderManagement);
+router.post("/orders/update-status", orderController.updateOrderStatus);
+router.post("/orders/return-request", orderController.handleReturnRequest);
+router.post("/orders/update-item-status", orderController.updateItemStatus);
+router.get("/orders/:orderId", orderController.getOrderDetails);
 
 // BRAND MANAGEMENT 
 router.get("/brands", brandController.getBrandPage);
@@ -81,5 +93,16 @@ router.patch(
   brandController.updateBrand
 );
 router.patch("/brands/:id/toggle", brandController.toggleBrandStatus);
+
+// OFFER MANAGEMENT
+router.get("/offers", offerController.getOfferManagement);
+router.post("/offers/product/add", offerController.addProductOffer);
+router.post("/offers/category/add", offerController.addCategoryOffer);
+router.post("/offers/brand/add", offerController.addBrandOffer);
+router.delete("/offers/:type/:offerId", offerController.deleteOffer);
+router.post("/referrals/update", offerController.updateReferralConfig);
+router.patch("/offers/:offerId/toggle", offerController.toggleOfferStatus);
+router.put("/offers/:offerId", offerController.updateOffer);
+
 
 export default router;

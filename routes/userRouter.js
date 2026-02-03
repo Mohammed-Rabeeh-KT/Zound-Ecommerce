@@ -6,6 +6,7 @@ import productController from '../controllers/user/productController.js'
 import cartController from '../controllers/user/cartController.js'
 import wishlistController from '../controllers/user/wishlistController.js'
 import checkoutController from '../controllers/user/checkoutController.js';
+import paymentController from '../controllers/user/paymentController.js';
 import { authenticateUser, requireUser, requireAdmin } from '../middlewares/authMiddleware.js';
 import uploadProfilePicture from '../middlewares/uploadProfilePicture.js';
 
@@ -78,12 +79,18 @@ router.delete('/cart/remove/:productId', cartController.removeFromCart);
 router.delete('/cart/clear', cartController.clearCart);
 router.post('/cart/apply-discount', cartController.applyDiscount);
 router.get('/cart/count', cartController.getCartCount);
+router.get('/cart/validate-stock', cartController.validateStock);
 
 
 // Checkout Routes
 router.get('/checkout', checkoutController.loadCheckout);
 router.post('/checkout/place-order', checkoutController.placeOrder);
 router.get('/orders/confirmation/:orderId', checkoutController.orderConfirmation);
+
+// Payment Routes
+router.post('/create-razorpay-order', paymentController.createRazorpayOrder);
+router.post('/verify-payment', paymentController.verifyPayment);
+router.post('/handle-payment-failure', paymentController.handlePaymentFailure);
 
 // Orders Routes
 router.get('/orders', checkoutController.getOrders);
@@ -101,6 +108,8 @@ router.delete('/wishlist/remove/:productId', wishlistController.removeFromWishli
 router.delete('/wishlist/clear', wishlistController.clearWishlist);
 router.get('/wishlist/count', wishlistController.getWishlistCount);
 router.get('/wishlist/check/:productId', wishlistController.checkWishlist);
+router.post('/wishlist/move-to-cart', wishlistController.moveToCart);
+
 
 
 export default router;

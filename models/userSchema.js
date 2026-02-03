@@ -49,10 +49,10 @@ const userSchema = new Schema({
         type: Boolean
     },
 
-    redeemedUsers: {
+    redeemedUsers: [{
         type: Schema.Types.ObjectId,
         ref: 'User'
-    },
+    }],
 
     searchHistory: [{
         category: {
@@ -120,12 +120,10 @@ const userSchema = new Schema({
     },
 
     role: {
-    type: String,
-    enum: ["user", "admin"],
-    default: "user"
-},
-
-
+        type: String,
+        enum: ["user", "admin"],
+        default: "user"
+    }
 
 },
     {

@@ -4,6 +4,7 @@ import Address from '../../models/addressSchema.js';
 import Order from '../../models/orderSchema.js';
 import Product from '../../models/productSchema.js';
 import User from '../../models/userSchema.js';
+import offerController from '../admin/offerManagementController.js';
 // import Coupon from '../../models/couponSchema.js';
 import { catchAsync } from "../../utils/catchAsync.js";
 import { errorResponse, successResponse, STATUS, MESSAGE } from "../../utils/response.js";
@@ -103,13 +104,30 @@ const loadCheckout = catchAsync(async (req, res, next) => {
         return res.redirect('/user/cart?message=No valid items in cart. Please review your cart.');
     }
 
+    // Calculate offers for each valid item
+    for (let i = 0; i < validItems.length; i++) {
+        const item = validItems[i];
+        const product = item.product;
+        const variant = item.variant;
 
+        // Find variant index
+        const variantIndex = product.variants.findIndex(v => v._id.toString() === variant._id.toString());
 
-    // Calculate cart subtotal
+        // Calculate offer
+        const offerData = await offerController.calculateOfferPrice(product, variantIndex >= 0 ? variantIndex : 0);
+
+        validItems[i].offer = offerData;
+
+        // Use offer price if available
+        const effectivePrice = offerData.hasOffer ? offerData.offerPrice : variant.salePrice;
+        validItems[i].effectivePrice = effectivePrice;
+        validItems[i].effectiveTotalPrice = effectivePrice * item.quantity;
+    }
+
+    // Calculate cart subtotal using effective prices
     let cartSubtotal = 0;
     for (let item of validItems) {
-        const price = item.variant ? item.variant.salePrice : 0;
-        cartSubtotal += price * item.quantity;
+        cartSubtotal += item.effectiveTotalPrice || (item.variant.salePrice * item.quantity);
     }
 
     // Shipping logic
@@ -363,11 +381,11 @@ const loadCheckout = catchAsync(async (req, res, next) => {
 
 
 
-// PLACE ORDER (COD ONLY) - Without Transactions (for standalone MongoDB)
+// PLACE ORDER - Without Transactions (for standalone MongoDB)
 const placeOrder = catchAsync(async (req, res, next) => {
     try {
         const userId = req.user._id;
-        const { addressId } = req.body;
+        const { addressId, paymentMethod = 'COD', couponCode } = req.body;
 
         // Validate user
         const user = await User.findById(userId);
@@ -447,7 +465,11 @@ const placeOrder = catchAsync(async (req, res, next) => {
                 return errorResponse(res, STATUS.BAD_REQUEST, `Only ${variant.stock} units of ${product.productName} available`);
             }
 
-            const itemPrice = variant.salePrice * item.quantity;
+            // Calculate offer price
+            const offerData = await offerController.calculateOfferPrice(item.productId, variantIndex);
+            const effectivePrice = offerData.hasOffer ? offerData.offerPrice : variant.salePrice;
+
+            const itemPrice = effectivePrice * item.quantity;
             cartSubtotal += itemPrice;
 
             // Store for processing
@@ -456,7 +478,9 @@ const placeOrder = catchAsync(async (req, res, next) => {
                 variantIndex,
                 variant,
                 quantity: item.quantity,
-                price: variant.salePrice
+                price: effectivePrice,
+                originalPrice: variant.salePrice,
+                offer: offerData
             });
         }
 
@@ -465,8 +489,14 @@ const placeOrder = catchAsync(async (req, res, next) => {
         const finalAmount = cartSubtotal + shippingCharge;
 
         // COD restriction check
-        if (finalAmount > 100000) {
+        if (paymentMethod === 'cod' && finalAmount > 100000) {
             return errorResponse(res, STATUS.BAD_REQUEST, 'Cash on Delivery is not available for orders above ₹100000');
+        }
+
+        // Determine payment status based on method
+        let paymentStatus = 'Pending';
+        if (paymentMethod === 'wallet') {
+            paymentStatus = 'Paid';
         }
 
         // Second pass: Deduct stock (after all validations pass)
@@ -491,15 +521,24 @@ const placeOrder = catchAsync(async (req, res, next) => {
             });
         }
 
+        // Map payment method to proper format
+        const paymentMethodMap = {
+            'cod': 'COD',
+            'razorpay': 'Razorpay',
+            'wallet': 'Wallet'
+        };
+
         // Create order
         const order = new Order({
             userId: userId,
-            orderdItems: orderedItems,
+            orderedItems: orderedItems,
             totalPrice: cartSubtotal,
             discount: 0,
             finalAmount: finalAmount,
             address: address._id,
             status: 'Pending',
+            paymentMethod: paymentMethodMap[paymentMethod] || 'COD',
+            paymentStatus: paymentStatus,
             couponApplied: false,
             invoiceDate: new Date()
         });
@@ -512,7 +551,9 @@ const placeOrder = catchAsync(async (req, res, next) => {
 
         return successResponse(res, STATUS.CREATED, 'Order placed successfully', {
             orderId: order._id,
-            orderNumber: order.orderId
+            orderNumber: order.orderId,
+            finalAmount: finalAmount,
+            paymentMethod: order.paymentMethod
         });
 
     } catch (error) {
@@ -529,7 +570,7 @@ const orderConfirmation = catchAsync(async (req, res, next) => {
     // Validate order belongs to user
     const order = await Order.findOne({ _id: orderId, userId })
         .populate({
-            path: 'orderdItems.product',
+            path: 'orderedItems.product',
             select: 'productName productImages variants'
         })
         .populate('address');
@@ -556,14 +597,14 @@ const getOrderDetails = catchAsync(async (req, res, next) => {
     if (mongoose.Types.ObjectId.isValid(orderId)) {
         order = await Order.findOne({ _id: orderId, userId })
             .populate({
-                path: 'orderdItems.product',
+                path: 'orderedItems.product',
                 select: 'productName productImages variants slug'
             })
             .populate('address');
     } else {
         order = await Order.findOne({ orderId: orderId, userId })
             .populate({
-                path: 'orderdItems.product',
+                path: 'orderedItems.product',
                 select: 'productName productImages variants slug'
             })
             .populate('address');
@@ -616,7 +657,7 @@ const getOrders = catchAsync(async (req, res, next) => {
         .skip(skip)
         .limit(limit)
         .populate({
-            path: 'orderdItems.product',
+            path: 'orderedItems.product',
             select: 'productName productImages variants'
         });
 
@@ -664,7 +705,7 @@ const cancelOrderItems = catchAsync(async (req, res, next) => {
 
         // Find the order
         const order = await Order.findOne({ _id: orderId, userId }).populate({
-            path: 'orderdItems.product',
+            path: 'orderedItems.product',
             select: 'productName variants'
         });
 
@@ -684,7 +725,7 @@ const cancelOrderItems = catchAsync(async (req, res, next) => {
 
         // Process each item for cancellation
         for (const itemId of itemIds) {
-            const itemIndex = order.orderdItems.findIndex(
+            const itemIndex = order.orderedItems.findIndex(
                 item => item._id.toString() === itemId
             );
 
@@ -692,7 +733,7 @@ const cancelOrderItems = catchAsync(async (req, res, next) => {
                 continue; // Skip if item not found
             }
 
-            const item = order.orderdItems[itemIndex];
+            const item = order.orderedItems[itemIndex];
 
             // Skip if already cancelled
             if (item.itemStatus === 'Cancelled') {
@@ -700,8 +741,8 @@ const cancelOrderItems = catchAsync(async (req, res, next) => {
             }
 
             // Mark item as cancelled
-            order.orderdItems[itemIndex].itemStatus = 'Cancelled';
-            order.orderdItems[itemIndex].cancelReason = fullReason;
+            order.orderedItems[itemIndex].itemStatus = 'Cancelled';
+            order.orderedItems[itemIndex].cancelReason = fullReason;
 
             // Restore stock
             if (item.product && item.variantId) {
@@ -729,7 +770,7 @@ const cancelOrderItems = catchAsync(async (req, res, next) => {
         }
 
         // Check if all items are now cancelled
-        const activeItems = order.orderdItems.filter(
+        const activeItems = order.orderedItems.filter(
             item => item.itemStatus !== 'Cancelled'
         );
 
@@ -740,7 +781,7 @@ const cancelOrderItems = catchAsync(async (req, res, next) => {
 
         // Update order totals
         let newTotalPrice = 0;
-        for (const item of order.orderdItems) {
+        for (const item of order.orderedItems) {
             if (item.itemStatus !== 'Cancelled') {
                 newTotalPrice += item.price * item.quantity;
             }
@@ -801,7 +842,7 @@ const returnOrderItems = catchAsync(async (req, res, next) => {
     const fullReason = description ? `${reason} : ${description}` : reason;
 
     const order = await Order.findOne({ _id: orderId, userId }).populate({
-        path: 'orderdItems.product',
+        path: 'orderedItems.product',
         select: 'productName variants'
     })
 
@@ -821,7 +862,7 @@ const returnOrderItems = catchAsync(async (req, res, next) => {
 
     // Process each item for return
     for (const itemId of itemIds) {
-        const itemIndex = order.orderdItems.findIndex(
+        const itemIndex = order.orderedItems.findIndex(
             item => item._id.toString() === itemId
         )
 
@@ -829,15 +870,15 @@ const returnOrderItems = catchAsync(async (req, res, next) => {
             continue;
         }
 
-        const item = order.orderdItems[itemIndex];
+        const item = order.orderedItems[itemIndex];
 
         if (item.itemStatus === 'Cancelled' || item.itemStatus === 'Returned' || item.itemStatus === 'Return Requested') {
             continue;
         }
 
         // Mark item as return requested
-        order.orderdItems[itemIndex].itemStatus = 'Return Requested';
-        order.orderdItems[itemIndex].returnReason = fullReason;
+        order.orderedItems[itemIndex].itemStatus = 'Return Requested';
+        order.orderedItems[itemIndex].returnReason = fullReason;
 
         // Calculate refund amount
         totalRefundAmount += item.price * item.quantity;
@@ -850,7 +891,7 @@ const returnOrderItems = catchAsync(async (req, res, next) => {
     }
 
     // Check if all active items are now requesting return
-    const activeItems = order.orderdItems.filter(
+    const activeItems = order.orderedItems.filter(
         item => item.itemStatus === 'Active'
     );
 
@@ -888,7 +929,7 @@ const downloadInvoice = catchAsync(async (req, res, next) => {
     if (mongoose.Types.ObjectId.isValid(orderId)) {
         order = await Order.findOne({ _id: orderId, userId })
             .populate({
-                path: 'orderdItems.product',
+                path: 'orderedItems.product',
                 select: 'productName variants'
             })
             .populate('address')
@@ -896,7 +937,7 @@ const downloadInvoice = catchAsync(async (req, res, next) => {
     } else {
         order = await Order.findOne({ orderId: orderId, userId })
             .populate({
-                path: 'orderdItems.product',
+                path: 'orderedItems.product',
                 select: 'productName variants'
             })
             .populate('address')
@@ -922,7 +963,15 @@ function generateInvoiceHTML(order) {
     });
     let itemsHTML = '';
     let subtotal = 0;
-    order.orderdItems.forEach((item, index) => {
+    let itemNumber = 0; // Track actual item number for display
+
+    order.orderedItems.forEach((item) => {
+        // Skip cancelled and returned items completely from invoice
+        if (item.itemStatus === 'Cancelled' || item.itemStatus === 'Returned') {
+            return; // Skip this item
+        }
+
+        itemNumber++; // Increment only for active items
         const product = item.product;
         let variantValue = '';
 
@@ -933,20 +982,25 @@ function generateInvoiceHTML(order) {
             }
         }
         const itemTotal = item.price * item.quantity;
-        if (item.itemStatus !== 'Cancelled') {
-            subtotal += itemTotal;
+        subtotal += itemTotal;
+
+        // Determine item status label (only for active items now)
+        let statusLabel = '';
+        if (item.itemStatus === 'Return Requested') {
+            statusLabel = '<br><small style="color: #b45309; font-weight: 600;">⏳ Return Requested</small>';
         }
+
         itemsHTML += `
-            <tr class="${item.itemStatus === 'Cancelled' ? 'cancelled' : ''}">
-                <td>${index + 1}</td>
+            <tr>
+                <td>${itemNumber}</td>
                 <td>
                     ${product ? product.productName : 'Product Unavailable'}
                     ${variantValue ? `<br><small style="color: #666;">${variantValue}</small>` : ''}
-                    ${item.itemStatus === 'Cancelled' ? '<br><small style="color: #dc2626;">(Cancelled)</small>' : ''}
+                    ${statusLabel}
                 </td>
                 <td style="text-align: center;">${item.quantity}</td>
                 <td style="text-align: right;">₹${item.price.toFixed(2)}</td>
-                <td style="text-align: right; ${item.itemStatus === 'Cancelled' ? 'text-decoration: line-through; color: #999;' : ''}">₹${itemTotal.toFixed(2)}</td>
+                <td style="text-align: right;">₹${itemTotal.toFixed(2)}</td>
             </tr>
         `;
     });
@@ -997,6 +1051,8 @@ function generateInvoiceHTML(order) {
         .status-shipped { background: #e0e7ff; color: #3730a3; }
         .status-delivered { background: #d1fae5; color: #065f46; }
         .status-cancelled { background: #fee2e2; color: #991b1b; }
+        .status-return-request { background: #fef3c7; color: #b45309; }
+        .status-returned { background: #fed7aa; color: #c2410c; }
         @media print {
             body { background: white; padding: 0; }
             .invoice-container { box-shadow: none; }
@@ -1095,7 +1151,7 @@ const searchOrders = catchAsync(async (req, res, next) => {
 
         filter.$or = [
             { orderId: searchRegex },
-            { 'orderdItems.product': { $in: productIds } }
+            { 'orderedItems.product': { $in: productIds } }
         ];
     }
 
@@ -1111,7 +1167,7 @@ const searchOrders = catchAsync(async (req, res, next) => {
         .skip(skip)
         .limit(limit)
         .populate({
-            path: 'orderdItems.product',
+            path: 'orderedItems.product',
             select: 'productName productImages variants'
         });
 

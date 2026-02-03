@@ -75,10 +75,18 @@
 
                                 var salePrice = variant ? variant.salePrice : 0;
                                 var basePrice = variant ? variant.basePrice : 0;
-                                var hasDiscount = basePrice && salePrice < basePrice; var discountPercent=hasDiscount ?
-                                    Math.round((1 - salePrice / basePrice) * 100) : 0; var isOutOfStock=!variant ||
-                                    variant.stock <=0; var isUnavailable=product.status !=='Active' ||
-                                    product.isDeleted; %>
+
+                                // Check for offer
+                                var hasOffer = item.offer && item.offer.hasOffer;
+                                var effectivePrice = hasOffer ? item.offer.offerPrice : salePrice;
+                                var originalPrice = hasOffer ? item.offer.originalPrice : basePrice;
+
+                                var hasDiscount = hasOffer || (basePrice && salePrice < basePrice); var
+                                    discountPercent=hasOffer ? (item.offer.discountType==='percentage' ?
+                                    item.offer.discount : Math.round((1 - effectivePrice / originalPrice) * 100)) :
+                                    (hasDiscount ? Math.round((1 - salePrice / basePrice) * 100) : 0); var
+                                    isOutOfStock=!variant || variant.stock <=0; var isUnavailable=product.status
+                                    !=='Active' || product.isDeleted; %>
                                     <div class="wishlist-card <%= isOutOfStock || isUnavailable ? 'unavailable' : '' %>"
                                         data-product-id="<%= product._id %>"
                                         data-variant-id="<%= variant ? variant._id : '' %>">
@@ -96,9 +104,18 @@
                                                     <div class="stock-badge out-of-stock">Out of Stock</div>
                                                     <% } else if (isUnavailable) { %>
                                                         <div class="stock-badge unavailable">Unavailable</div>
-                                                        <% } else if (hasDiscount) { %>
-                                                            <div class="discount-badge">-<%= discountPercent %>%</div>
-                                                            <% } %>
+                                                        <% } else if (hasOffer) { %>
+                                                            <div class="discount-badge offer-badge">
+                                                                <% if (item.offer.discountType==='percentage' ) { %>
+                                                                    -<%= item.offer.discount %>%
+                                                                        <% } else { %>
+                                                                            -₹<%= item.offer.discount %>
+                                                                                <% } %>
+                                                            </div>
+                                                            <% } else if (hasDiscount) { %>
+                                                                <div class="discount-badge">-<%= discountPercent %>%
+                                                                </div>
+                                                                <% } %>
                                             </div>
                                         </a>
 
@@ -130,16 +147,30 @@
 
                                                             <div class="card-price">
                                                                 <% if (!isOutOfStock && !isUnavailable) { %>
-                                                                    <span class="current-price">₹<%=
-                                                                            Number(salePrice).toFixed(2) %></span>
-                                                                    <% if (hasDiscount) { %>
+                                                                    <% if (hasOffer) { %>
+                                                                        <span class="current-price offer-price">₹<%=
+                                                                                Number(effectivePrice).toFixed(2) %>
+                                                                                </span>
                                                                         <span class="original-price">₹<%=
-                                                                                Number(basePrice).toFixed(2) %></span>
-                                                                        <% } %>
+                                                                                Number(originalPrice).toFixed(2) %>
+                                                                                </span>
+                                                                        <% } else if (hasDiscount) { %>
+                                                                            <span class="current-price">₹<%=
+                                                                                    Number(salePrice).toFixed(2) %>
+                                                                                    </span>
+                                                                            <span class="original-price">₹<%=
+                                                                                    Number(basePrice).toFixed(2) %>
+                                                                                    </span>
                                                                             <% } else { %>
-                                                                                <span class="price-unavailable">Price
-                                                                                    unavailable</span>
+                                                                                <span class="current-price">₹<%=
+                                                                                        Number(salePrice).toFixed(2) %>
+                                                                                        </span>
                                                                                 <% } %>
+                                                                                    <% } else { %>
+                                                                                        <span
+                                                                                            class="price-unavailable">Price
+                                                                                            unavailable</span>
+                                                                                        <% } %>
                                                             </div>
 
                                                             <p class="added-date">Added on <%= new
