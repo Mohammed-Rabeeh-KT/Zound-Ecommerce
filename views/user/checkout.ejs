@@ -153,10 +153,10 @@
                                     <input type="radio" name="paymentMethod" id="razorpay" value="razorpay" checked>
                                 </div>
                                 <div class="payment-content">
-                                    <div class="payment-icon razorpay">
-                                        <img src="/images/razorpay-logo.png" alt="Razorpay"
-                                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                        <span class="material-icons" style="display:none;">credit_card</span>
+                                    <div class="payment-icon razorpay"
+                                        style="background-color: #2B84EA; width: 48px; height: 48px; padding: 6px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                                        <img src="https://razorpay.com/assets/razorpay-glyph.svg" alt="Razorpay"
+                                            style="width: 36px; height: 36px; filter: brightness(0) invert(1);">
                                     </div>
                                     <div class="payment-info">
                                         <h4>Pay with Razorpay</h4>
@@ -461,6 +461,7 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="/js/user/addresses.js"></script>
     <script src="/js/user/checkout.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </body>
 
 </html>

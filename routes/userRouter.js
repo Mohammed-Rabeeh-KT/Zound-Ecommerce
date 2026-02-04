@@ -6,6 +6,7 @@ import productController from '../controllers/user/productController.js'
 import cartController from '../controllers/user/cartController.js'
 import wishlistController from '../controllers/user/wishlistController.js'
 import checkoutController from '../controllers/user/checkoutController.js';
+import paymentController from '../controllers/user/paymentController.js';
 import { authenticateUser, requireUser, requireAdmin } from '../middlewares/authMiddleware.js';
 import uploadProfilePicture from '../middlewares/uploadProfilePicture.js';
 
@@ -85,6 +86,11 @@ router.get('/cart/validate-stock', cartController.validateStock);
 router.get('/checkout', checkoutController.loadCheckout);
 router.post('/checkout/place-order', checkoutController.placeOrder);
 router.get('/orders/confirmation/:orderId', checkoutController.orderConfirmation);
+
+// Payment Routes
+router.post('/create-razorpay-order', paymentController.createRazorpayOrder);
+router.post('/verify-payment', paymentController.verifyPayment);
+router.post('/handle-payment-failure', paymentController.handlePaymentFailure);
 
 // Orders Routes
 router.get('/orders', checkoutController.getOrders);

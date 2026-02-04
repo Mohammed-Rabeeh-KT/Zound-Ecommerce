@@ -381,11 +381,11 @@ const loadCheckout = catchAsync(async (req, res, next) => {
 
 
 
-// PLACE ORDER (COD ONLY) - Without Transactions (for standalone MongoDB)
+// PLACE ORDER - Without Transactions (for standalone MongoDB)
 const placeOrder = catchAsync(async (req, res, next) => {
     try {
         const userId = req.user._id;
-        const { addressId } = req.body;
+        const { addressId, paymentMethod = 'COD', couponCode } = req.body;
 
         // Validate user
         const user = await User.findById(userId);
@@ -489,8 +489,14 @@ const placeOrder = catchAsync(async (req, res, next) => {
         const finalAmount = cartSubtotal + shippingCharge;
 
         // COD restriction check
-        if (finalAmount > 100000) {
+        if (paymentMethod === 'cod' && finalAmount > 100000) {
             return errorResponse(res, STATUS.BAD_REQUEST, 'Cash on Delivery is not available for orders above ₹100000');
+        }
+
+        // Determine payment status based on method
+        let paymentStatus = 'Pending';
+        if (paymentMethod === 'wallet') {
+            paymentStatus = 'Paid';
         }
 
         // Second pass: Deduct stock (after all validations pass)
@@ -515,6 +521,13 @@ const placeOrder = catchAsync(async (req, res, next) => {
             });
         }
 
+        // Map payment method to proper format
+        const paymentMethodMap = {
+            'cod': 'COD',
+            'razorpay': 'Razorpay',
+            'wallet': 'Wallet'
+        };
+
         // Create order
         const order = new Order({
             userId: userId,
@@ -524,8 +537,8 @@ const placeOrder = catchAsync(async (req, res, next) => {
             finalAmount: finalAmount,
             address: address._id,
             status: 'Pending',
-            paymentMethod: 'COD',
-            paymentStatus: 'Pending',
+            paymentMethod: paymentMethodMap[paymentMethod] || 'COD',
+            paymentStatus: paymentStatus,
             couponApplied: false,
             invoiceDate: new Date()
         });
@@ -538,7 +551,9 @@ const placeOrder = catchAsync(async (req, res, next) => {
 
         return successResponse(res, STATUS.CREATED, 'Order placed successfully', {
             orderId: order._id,
-            orderNumber: order.orderId
+            orderNumber: order.orderId,
+            finalAmount: finalAmount,
+            paymentMethod: order.paymentMethod
         });
 
     } catch (error) {
