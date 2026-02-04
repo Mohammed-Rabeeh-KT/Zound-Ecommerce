@@ -798,6 +798,18 @@ const cancelOrderItems = catchAsync(async (req, res, next) => {
 
         await order.save();
 
+        await User.findByIdAndUpdate(userId, {
+            $inc: { wallet: totalRefundAmount },
+            $push: {
+                walletHistory: {
+                    amount: totalRefundAmount,
+                    type: 'Credit',
+                    description: `Refund for cancelled items - Order #${order.orderId}`,
+                    date: new Date()
+                }
+            }
+        });
+
         // Build response message
         let message = '';
         if (order.status === 'Cancelled') {

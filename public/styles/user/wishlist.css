@@ -68,14 +68,17 @@ button {
    Page Layout
    ======================================== */
 
+
+/* Layout matching profile.css */
 .page-container {
     max-width: 1400px;
-    margin: 0 auto;
-    padding: 40px;
+    margin: 40px auto;
+    padding: 0 40px;
     display: grid;
     grid-template-columns: 280px 1fr;
-    gap: 40px;
+    gap: 60px;
     align-items: start;
+    min-height: 80vh;
 }
 
 .main-content {

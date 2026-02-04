@@ -112,4 +112,10 @@ router.post('/wishlist/move-to-cart', wishlistController.moveToCart);
 
 
 
+router.get('/wallet', userController.getWallet);
+router.post('/wallet/add-money', userController.addMoneyToWallet);
+router.post('/wallet/verify-payment', userController.verifyWalletPayment);
+
+
+
 export default router;

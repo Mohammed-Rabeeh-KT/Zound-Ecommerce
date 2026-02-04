@@ -9,6 +9,8 @@ import AppError from "../../utils/AppError.js";
 import { STATUS, MESSAGE } from "../../utils/response.js";
 import nodemailer from "nodemailer";
 import bcrypt from "bcrypt";
+import razorpay from '../../config/razorpay.js';
+import crypto from 'crypto'
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -563,6 +565,81 @@ const deleteAddress = catchAsync(async (req, res) => {
   });
 });
 
+
+//Wallet Page
+const getWallet = catchAsync(async (req, res, next) => {
+  const userId = req.user._id;
+  const user = await User.findById(userId);
+
+  const walletHistory = user.walletHistory ?
+    user.walletHistory.sort((a, b) => new Date(b.date) - new Date(a.date)) : [];
+
+  res.render('user/wallet', {
+    user: user,
+    walletHistory,
+    currentPage: 'wallet'
+  })
+})
+
+
+const addMoneyToWallet = catchAsync(async (req, res, next) => {
+  const { amount } = req.body;
+
+  if (!amount || amount <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid amount'
+    })
+  }
+
+  const order = await razorpay.orders.create({
+    amount: Math.round(amount * 100),
+    currency: 'INR',
+    receipt: `wlt_${Date.now()}`
+  });
+
+
+  res.json({ success: true, order });
+
+})
+
+
+const verifyWalletPayment = catchAsync(async (req, res, next) => {
+  const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
+  const userId = req.user._id;
+
+  // Verify signature
+  const body = razorpay_order_id + '|' + razorpay_payment_id;
+  const expectedSignature = crypto
+    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+    .update(body)
+    .digest('hex');
+
+  if (expectedSignature !== razorpay_signature) {
+    return res.status(400).json({ success: false, message: 'Payment verification failed' });
+  }
+
+  // Get amount from order
+  const order = await razorpay.orders.fetch(razorpay_order_id);
+  const amount = order.amount / 100;
+
+  // Credit wallet
+  await User.findByIdAndUpdate(userId, {
+    $inc: { wallet: amount },
+    $push: {
+      walletHistory: {
+        amount,
+        type: 'Credit',
+        description: 'Money added via Razorpay',
+        date: new Date()
+      }
+    }
+  });
+
+  res.json({ success: true, message: 'Money added successfully' });
+});
+
+
 export default {
   loadHomepage,
   pageNotFound,
@@ -578,5 +655,8 @@ export default {
   getAddress,
   updateAddress,
   setDefaultAddress,
-  deleteAddress
+  deleteAddress,
+  getWallet,
+  addMoneyToWallet,
+  verifyWalletPayment
 };

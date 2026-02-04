@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wallet | ZOUND</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="/styles/user/profile.css">
+    <link rel="stylesheet" href="/styles/user/wallet.css">
+</head>
+
+<body>
+    <div class="page-container">
+        <!-- Sidebar -->
+        <%- include('../partials/user/user-sidebar', { currentPage: 'wallet' }) %>
+
+            <main class="main-content">
+                <header class="page-header">
+                    <h1 class="headline">My Wallet</h1>
+                </header>
+
+                <!-- Wallet Balance Card -->
+                <section class="wallet-card">
+                    <div class="balance-info">
+                        <span class="balance-label">Total Balance</span>
+                        <div class="balance-amount">
+                            <span class="currency-symbol">₹</span>
+                            <%= user.wallet ? user.wallet.toFixed(2) : '0.00' %>
+                        </div>
+                        <div class="balance-status">
+                            <span class="status-dot"></span>
+                            Active Account
+                        </div>
+                    </div>
+
+                    <!-- Add Money Button & Dropdown -->
+                    <div class="wallet-actions">
+                        <button class="add-money-btn" onclick="openAddMoneyModal()">
+                            <span class="material-icons">add_circle</span>
+                            Add Money
+                        </button>
+
+                        <!-- Add Money Dropdown (Blue Card) -->
+                        <div id="addMoneyDropdown" class="add-money-dropdown">
+                            <div class="dropdown-header">
+                                <h3>Add Funds</h3>
+                                <span class="close-icon" onclick="toggleAddMoneyDropdown(event)">&times;</span>
+                            </div>
+
+                            <div class="input-wrapper-blue small">
+                                <span class="currency-symbol">₹</span>
+                                <input type="number" id="addAmount" placeholder="0" oninput="updatePayButton()"
+                                    onclick="event.stopPropagation()">
+                            </div>
+
+                            <div class="quick-amounts-grid compact">
+                                <button class="amount-chip" onclick="setAmount(500, event)">+500</button>
+                                <button class="amount-chip" onclick="setAmount(1000, event)">+1k</button>
+                                <button class="amount-chip" onclick="setAmount(2000, event)">+2k</button>
+                                <button class="amount-chip" onclick="setAmount(5000, event)">+5k</button>
+                            </div>
+
+                            <button class="pay-btn small" onclick="processAddMoney()">
+                                Add <span id="payBtnAmount">₹0</span>
+                            </button>
+
+                            <p class="secure-text small">Secured by Razorpay</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Transaction History -->
+                <section class="transactions-section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <div class="icon-bg">
+                                <span class="material-icons">history</span>
+                            </div>
+                            Transaction History
+                        </div>
+                        <!-- <button class="filter-btn">
+                        <span class="material-icons" style="font-size: 16px; vertical-align: middle;">filter_list</span>
+                        Filter
+                    </button> -->
+                    </div>
+
+                    <% if (walletHistory && walletHistory.length> 0) { %>
+                        <div class="transaction-list">
+                            <% walletHistory.forEach(transaction=> { %>
+                                <div class="transaction-item">
+                                    <div class="t-left">
+                                        <div class="t-icon <%= transaction.type === 'Credit' ? 'credit' : 'debit' %>">
+                                            <span class="material-icons">
+                                                <%= transaction.type==='Credit' ? 'arrow_downward' : 'arrow_upward' %>
+                                            </span>
+                                        </div>
+                                        <div class="t-details">
+                                            <h4>
+                                                <%= transaction.description || (transaction.type==='Credit'
+                                                    ? 'Money Added' : 'Payment' ) %>
+                                            </h4>
+                                            <p>
+                                                <%= new Date(transaction.date).toLocaleDateString('en-US', {
+                                                    day: 'numeric' , month: 'short' , year: 'numeric' , hour: '2-digit'
+                                                    , minute: '2-digit' }) %>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="t-right">
+                                        <span
+                                            class="t-amount <%= transaction.type === 'Credit' ? 'credit' : 'debit' %>">
+                                            <%= transaction.type==='Credit' ? '+' : '-' %>₹<%=
+                                                    transaction.amount.toFixed(2) %>
+                                        </span>
+                                        <span class="t-status">Success</span>
+                                    </div>
+                                </div>
+                                <% }); %>
+                        </div>
+
+                        <%# Pagination (if needed) - Add later %>
+
+                            <% } else { %>
+                                <div class="empty-state">
+                                    <div class="empty-icon">
+                                        <span class="material-icons">account_balance_wallet</span>
+                                    </div>
+                                    <h3>No transactions yet</h3>
+                                    <p>Your wallet transaction history will appear here.</p>
+                                </div>
+                                <% } %>
+                </section>
+            </main>
+    </div>
+    <!-- Add Money Modal (Premium Design) -->
+    <div id="addMoneyModal" class="add-money-modal-overlay">
+        <div class="add-money-modal">
+            <!-- Close Button -->
+            <button class="modal-close-btn" onclick="closeAddMoneyModal()">
+                <span class="material-icons">close</span>
+            </button>
+
+            <!-- Modal Header -->
+            <div class="modal-icon-wrapper">
+                <span class="material-icons">account_balance_wallet</span>
+            </div>
+            <h2 class="modal-title">Add Money</h2>
+            <p class="modal-subtitle">Top up your wallet instantly</p>
+
+            <!-- Amount Input Section -->
+            <div class="amount-input-section">
+                <label class="input-label">Enter Amount</label>
+                <div class="amount-input-wrapper">
+                    <span class="rupee-sign">₹</span>
+                    <input type="number" id="modalAddAmount" class="amount-input" placeholder="0" min="1"
+                        oninput="updateModalPayButton()">
+                </div>
+            </div>
+
+            <!-- Quick Amount Chips -->
+            <div class="quick-amount-chips">
+                <button class="chip" onclick="setModalAmount(500)">₹500</button>
+                <button class="chip" onclick="setModalAmount(1000)">₹1,000</button>
+                <button class="chip" onclick="setModalAmount(2000)">₹2,000</button>
+                <button class="chip" onclick="setModalAmount(5000)">₹5,000</button>
+            </div>
+
+            <!-- Pay Button -->
+            <button class="modal-pay-btn" onclick="processModalAddMoney()">
+                <span class="material-icons">bolt</span>
+                Add <span id="modalPayBtnAmount">₹0</span> to Wallet
+            </button>
+
+            <!-- Security Badge -->
+            <div class="security-badge">
+                <span class="material-icons">verified_user</span>
+                <span>Secured with 256-bit encryption</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const dropdown = document.getElementById('addMoneyDropdown');
+        const amountInput = document.getElementById('addAmount');
+
+        function toggleAddMoneyDropdown(e) {
+            e.stopPropagation();
+            if (dropdown.style.display === 'block') {
+                dropdown.style.display = 'none';
+            } else {
+                dropdown.style.display = 'block';
+                amountInput.focus();
+                updatePayButton();
+            }
+        }
+
+        function setAmount(val, e) {
+            if (e) e.stopPropagation();
+            amountInput.value = val;
+            updatePayButton();
+        }
+
+        function updatePayButton() {
+            const val = amountInput.value || 0;
+            document.getElementById('payBtnAmount').textContent = `₹${val}`;
+        }
+
+        // Close dropdown when clicking outside
+        window.onclick = function (event) {
+            if (!event.target.closest('.add-money-dropdown') && !event.target.closest('.add-money-btn')) {
+                dropdown.style.display = 'none';
+            }
+        }
+
+        // Prevent dropdown click from closing itself
+        dropdown.onclick = function (e) {
+            e.stopPropagation();
+        }
+
+        async function processAddMoney() {
+            const amount = amountInput.value;
+            if (!amount || amount <= 0) {
+                Swal.fire('Error', 'Please enter a valid amount', 'error');
+                return;
+            }
+
+            // Logic to call backend will go here
+            // e.g., createRazorpayOrder(amount)
+            try {
+                const response = await axios.post('/user/wallet/add-money', { amount });
+                if (response.data.success) {
+                    const { order } = response.data;
+                    const options = {
+                        "key": "<%= process.env.RAZORPAY_KEY_ID %>", // Enter the Key ID generated from the Dashboard
+                        "amount": order.amount,
+                        "currency": "INR",
+                        "name": "ZOUND",
+                        "description": "Wallet Recharge",
+                        "order_id": order.id,
+                        "handler": async function (response) {
+                            // Verify payment
+                            const verifyRes = await axios.post('/user/wallet/verify-payment', {
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_signature: response.razorpay_signature
+                            });
+
+                            if (verifyRes.data.success) {
+                                Swal.fire('Success', 'Money added successfully', 'success')
+                                    .then(() => location.reload());
+                            } else {
+                                Swal.fire('Error', 'Payment verification failed', 'error');
+                            }
+                        },
+                        "theme": {
+                            "color": "#002366"
+                        }
+                    };
+                    const rzp1 = new Razorpay(options);
+                    rzp1.open();
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', 'Something went wrong', 'error');
+            }
+        }
+
+        // ========== NEW MODAL FUNCTIONS ==========
+        const addMoneyModalOverlay = document.getElementById('addMoneyModal');
+        const modalAmountInput = document.getElementById('modalAddAmount');
+
+        function openAddMoneyModal() {
+            addMoneyModalOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            modalAmountInput.value = '';
+            updateModalPayButton();
+        }
+
+        function closeAddMoneyModal() {
+            addMoneyModalOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function setModalAmount(val) {
+            modalAmountInput.value = val;
+            updateModalPayButton();
+            // Add active class to clicked chip
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function updateModalPayButton() {
+            const val = modalAmountInput.value || 0;
+            document.getElementById('modalPayBtnAmount').textContent = `₹${Number(val).toLocaleString('en-IN')}`;
+        }
+
+        // Close modal on overlay click
+        addMoneyModalOverlay.addEventListener('click', function (e) {
+            if (e.target === addMoneyModalOverlay) {
+                closeAddMoneyModal();
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeAddMoneyModal();
+            }
+        });
+
+        async function processModalAddMoney() {
+            const amount = modalAmountInput.value;
+            if (!amount || amount <= 0) {
+                Swal.fire('Error', 'Please enter a valid amount', 'error');
+                return;
+            }
+
+            try {
+                const response = await axios.post('/user/wallet/add-money', { amount });
+                if (response.data.success) {
+                    const { order } = response.data;
+                    const options = {
+                        "key": "<%= process.env.RAZORPAY_KEY_ID %>",
+                        "amount": order.amount,
+                        "currency": "INR",
+                        "name": "ZOUND",
+                        "description": "Wallet Recharge",
+                        "order_id": order.id,
+                        "handler": async function (response) {
+                            const verifyRes = await axios.post('/user/wallet/verify-payment', {
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_signature: response.razorpay_signature
+                            });
+
+                            if (verifyRes.data.success) {
+                                Swal.fire('Success', 'Money added successfully!', 'success')
+                                    .then(() => location.reload());
+                            } else {
+                                Swal.fire('Error', 'Payment verification failed', 'error');
+                            }
+                        },
+                        "theme": {
+                            "color": "#002366"
+                        }
+                    };
+                    const rzp1 = new Razorpay(options);
+                    closeAddMoneyModal();
+                    rzp1.open();
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', 'Something went wrong', 'error');
+            }
+        }
+    </script>
+</body>
+
+</html>

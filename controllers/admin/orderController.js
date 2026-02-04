@@ -236,6 +236,19 @@ const handleReturnRequest = catchAsync(async (req, res, next) => {
                     { $inc: { stock: item.quantity } }
                 );
             }
+
+            const refundAmount = item.price * item.quantity;
+            await User.findByIdAndUpdate(order.userId, {
+                $inc: { wallet: refundAmount },
+                $push: {
+                    walletHistory: {
+                        amount: refundAmount,
+                        type: 'Credit',
+                        description: `Refund for returned item - Order #${order.orderId}`,
+                        date: new Date()
+                    }
+                }
+            });
         }
 
     } else {
