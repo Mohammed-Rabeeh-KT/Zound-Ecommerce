@@ -154,42 +154,138 @@ async function handleAddAddress(event) {
     }
 }
 
+// Validation Regex Patterns
+const VALIDATION_PATTERNS = {
+    // Full name: Only letters, spaces, and dots (for initials). Min 2, Max 50 chars
+    fullName: /^[A-Za-z][A-Za-z\s.]{1,49}$/,
+
+    // Address: Letters, numbers, spaces, and common punctuation. Min 5 chars
+    address: /^[A-Za-z0-9\s,.\-\/#()':&]{5,150}$/,
+
+    // Phone: Indian mobile number starting with 6-9, exactly 10 digits
+    phone: /^[6-9]\d{9}$/,
+
+    // City: Letters, spaces, dots, hyphens. Min 2 chars
+    city: /^[A-Za-z][A-Za-z\s.-]{1,49}$/,
+
+    // State: Letters, spaces, dots, hyphens. Min 2 chars
+    state: /^[A-Za-z][A-Za-z\s.-]{1,49}$/,
+
+    // Pincode: Exactly 6 digits, Indian pincode (starts with 1-9)
+    pincode: /^[1-9]\d{5}$/
+};
+
 // Validate Address Form
 function validateAddressForm(data) {
     let isValid = true;
 
-    if (!data.label) {
+    // Label validation
+    if (!data.label || data.label.trim() === '') {
         showFieldError('labelError', 'Please select an address label');
         isValid = false;
     }
 
-    if (!data.fullName || data.fullName.length < 2) {
-        showFieldError('fullNameError', 'Please enter a valid name');
+    // Full Name validation
+    if (!data.fullName) {
+        showFieldError('fullNameError', 'Full name is required');
+        isValid = false;
+    } else if (data.fullName.length < 2) {
+        showFieldError('fullNameError', 'Name must be at least 2 characters');
+        isValid = false;
+    } else if (data.fullName.length > 50) {
+        showFieldError('fullNameError', 'Name cannot exceed 50 characters');
+        isValid = false;
+    } else if (!VALIDATION_PATTERNS.fullName.test(data.fullName)) {
+        showFieldError('fullNameError', 'Name should only contain letters, spaces, and dots');
         isValid = false;
     }
 
-    if (!data.addressLine1 || data.addressLine1.length < 5) {
-        showFieldError('addressLine1Error', 'Please enter a valid address');
+    // Address Line 1 validation
+    if (!data.addressLine1) {
+        showFieldError('addressLine1Error', 'Address is required');
+        isValid = false;
+    } else if (data.addressLine1.length < 5) {
+        showFieldError('addressLine1Error', 'Address must be at least 5 characters');
+        isValid = false;
+    } else if (data.addressLine1.length > 150) {
+        showFieldError('addressLine1Error', 'Address cannot exceed 150 characters');
+        isValid = false;
+    } else if (!VALIDATION_PATTERNS.address.test(data.addressLine1)) {
+        showFieldError('addressLine1Error', 'Address contains invalid characters');
         isValid = false;
     }
 
-    if (!data.phone || !/^[6-9]\d{9}$/.test(data.phone.replace(/\D/g, ''))) {
-        showFieldError('phoneError', 'Please enter a valid 10-digit phone number');
+    // Address Line 2 validation (optional, but if provided must be valid)
+    if (data.addressLine2 && data.addressLine2.length > 0) {
+        if (data.addressLine2.length > 150) {
+            showFieldError('addressLine2Error', 'Address cannot exceed 150 characters');
+            isValid = false;
+        } else if (!VALIDATION_PATTERNS.address.test(data.addressLine2)) {
+            showFieldError('addressLine2Error', 'Address contains invalid characters');
+            isValid = false;
+        }
+    }
+
+    // Phone Number validation
+    const cleanPhone = data.phone.replace(/\D/g, '');
+    if (!data.phone) {
+        showFieldError('phoneError', 'Phone number is required');
+        isValid = false;
+    } else if (!VALIDATION_PATTERNS.phone.test(cleanPhone)) {
+        showFieldError('phoneError', 'Enter a valid 10-digit mobile number starting with 6-9');
         isValid = false;
     }
 
-    if (!data.city || data.city.length < 2) {
-        showFieldError('cityError', 'Please enter a valid city');
+    // Alternative Phone validation (optional, but if provided must be valid)
+    if (data.altPhone && data.altPhone.trim() !== '') {
+        const cleanAltPhone = data.altPhone.replace(/\D/g, '');
+        if (!VALIDATION_PATTERNS.phone.test(cleanAltPhone)) {
+            showFieldError('altPhoneError', 'Enter a valid 10-digit mobile number starting with 6-9');
+            isValid = false;
+        }
+        // Check if alt phone is same as primary phone
+        if (cleanAltPhone === cleanPhone) {
+            showFieldError('altPhoneError', 'Alternative phone must be different from primary phone');
+            isValid = false;
+        }
+    }
+
+    // City validation
+    if (!data.city) {
+        showFieldError('cityError', 'City is required');
+        isValid = false;
+    } else if (data.city.length < 2) {
+        showFieldError('cityError', 'City name must be at least 2 characters');
+        isValid = false;
+    } else if (data.city.length > 50) {
+        showFieldError('cityError', 'City name cannot exceed 50 characters');
+        isValid = false;
+    } else if (!VALIDATION_PATTERNS.city.test(data.city)) {
+        showFieldError('cityError', 'City should only contain letters and spaces');
         isValid = false;
     }
 
-    if (!data.state || data.state.length < 2) {
-        showFieldError('stateError', 'Please enter a valid state');
+    // State validation
+    if (!data.state) {
+        showFieldError('stateError', 'State is required');
+        isValid = false;
+    } else if (data.state.length < 2) {
+        showFieldError('stateError', 'State name must be at least 2 characters');
+        isValid = false;
+    } else if (data.state.length > 50) {
+        showFieldError('stateError', 'State name cannot exceed 50 characters');
+        isValid = false;
+    } else if (!VALIDATION_PATTERNS.state.test(data.state)) {
+        showFieldError('stateError', 'State should only contain letters and spaces');
         isValid = false;
     }
 
-    if (!data.pincode || !/^\d{6}$/.test(data.pincode)) {
-        showFieldError('pincodeError', 'Please enter a valid 6-digit pincode');
+    // Pincode validation
+    if (!data.pincode) {
+        showFieldError('pincodeError', 'Pincode is required');
+        isValid = false;
+    } else if (!VALIDATION_PATTERNS.pincode.test(data.pincode)) {
+        showFieldError('pincodeError', 'Enter a valid 6-digit pincode');
         isValid = false;
     }
 
@@ -263,73 +359,62 @@ async function setDefaultAddress(addressId) {
 }
 
 // Edit Address - Opens form with existing data
-function editAddress(addressId) {
-    // Get the address card data
-    const addressCard = document.querySelector(`.address-card[data-id="${addressId}"]`);
-    if (!addressCard) {
-        console.error('Address card not found');
-        return;
-    }
+async function editAddress(addressId) {
+    try {
+        // Fetch address data from API for reliable data
+        const response = await fetch(`/user/addresses/${addressId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
 
-    // Extract data from the card
-    const label = addressCard.querySelector('.address-label')?.textContent?.trim();
-    const fullName = addressCard.querySelector('.address-name')?.textContent?.trim();
-    const addressTexts = addressCard.querySelectorAll('.address-text');
-    const phoneEl = addressCard.querySelector('.address-phone:not(.alt-phone)');
-    const altPhoneEl = addressCard.querySelector('.address-phone.alt-phone');
+        const data = await response.json();
 
-    // Parse address lines and location
-    let addressLine1 = '';
-    let addressLine2 = '';
-    let cityStatePin = '';
+        if (!data.success || !data.data) {
+            throw new Error(data.message || 'Failed to load address');
+        }
 
-    if (addressTexts.length >= 1) addressLine1 = addressTexts[0]?.textContent?.trim() || '';
-    if (addressTexts.length >= 3) {
-        addressLine2 = addressTexts[1]?.textContent?.trim() || '';
-        cityStatePin = addressTexts[2]?.textContent?.trim() || '';
-    } else if (addressTexts.length >= 2) {
-        cityStatePin = addressTexts[1]?.textContent?.trim() || '';
-    }
+        const address = data.data;
 
-    // Parse city, state, pincode from "City, State - Pincode"
-    let city = '', state = '', pincode = '';
-    if (cityStatePin) {
-        const match = cityStatePin.match(/^(.+),\s*(.+)\s*-\s*(\d{6})$/);
-        if (match) {
-            city = match[1].trim();
-            state = match[2].trim();
-            pincode = match[3].trim();
+        // Set editingAddressId
+        editingAddressId = addressId;
+
+        // Close form if open, then open in edit mode
+        const dropdown = document.getElementById('addressFormDropdown');
+        if (dropdown && dropdown.classList.contains('show')) {
+            dropdown.classList.remove('show');
+        }
+
+        // Populate form fields
+        setTimeout(() => {
+            document.getElementById('addressLabel').value = address.label || '';
+            document.getElementById('fullName').value = address.fullName || '';
+            document.getElementById('addressLine1').value = address.addressLine1 || '';
+            document.getElementById('addressLine2').value = address.addressLine2 || '';
+            document.getElementById('phone').value = address.phone || '';
+            document.getElementById('altPhone').value = address.altPhone || '';
+            document.getElementById('city').value = address.city || '';
+            document.getElementById('state').value = address.state || '';
+            document.getElementById('pincode').value = address.pincode || '';
+
+            // Open form in edit mode
+            toggleAddressForm(true);
+        }, 100);
+
+    } catch (error) {
+        console.error('Edit address error:', error);
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Failed to load address. Please try again.',
+                confirmButtonColor: '#002366'
+            });
+        } else {
+            alert(error.message || 'Failed to load address');
         }
     }
-
-    // Get phone numbers
-    let phone = phoneEl?.textContent?.trim() || '';
-    let altPhone = altPhoneEl?.textContent?.replace('(Alt)', '')?.trim() || '';
-
-    // Set editingAddressId
-    editingAddressId = addressId;
-
-    // Close form if open, then open in edit mode
-    const dropdown = document.getElementById('addressFormDropdown');
-    if (dropdown.classList.contains('show')) {
-        dropdown.classList.remove('show');
-    }
-
-    // Populate form fields
-    setTimeout(() => {
-        document.getElementById('addressLabel').value = label || '';
-        document.getElementById('fullName').value = fullName || '';
-        document.getElementById('addressLine1').value = addressLine1 || '';
-        document.getElementById('addressLine2').value = addressLine2 || '';
-        document.getElementById('phone').value = phone || '';
-        document.getElementById('altPhone').value = altPhone || '';
-        document.getElementById('city').value = city || '';
-        document.getElementById('state').value = state || '';
-        document.getElementById('pincode').value = pincode || '';
-
-        // Open form in edit mode
-        toggleAddressForm(true);
-    }, 100);
 }
 
 // Delete Address

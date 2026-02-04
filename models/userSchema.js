@@ -49,10 +49,10 @@ const userSchema = new Schema({
         type: Boolean
     },
 
-    redeemedUsers: {
+    redeemedUsers: [{
         type: Schema.Types.ObjectId,
         ref: 'User'
-    },
+    }],
 
     searchHistory: [{
         category: {
@@ -99,6 +99,25 @@ const userSchema = new Schema({
         default: 0
     },
 
+    walletHistory: [{
+        amount: {
+            type: Number,
+            required: true
+        },
+        type: {
+            type: String,
+            enum: ['Credit', 'Debit'],
+            required: true
+        },
+        description: {
+            type: String,
+            default: 'Transaction'
+        },
+        date: {
+            type: Date,
+            default: Date.now
+        }
+    }],
     wishlist: {
         type: Schema.Types.ObjectId,
         ref: 'Wishlist'
@@ -120,12 +139,10 @@ const userSchema = new Schema({
     },
 
     role: {
-    type: String,
-    enum: ["user", "admin"],
-    default: "user"
-},
-
-
+        type: String,
+        enum: ["user", "admin"],
+        default: "user"
+    }
 
 },
     {

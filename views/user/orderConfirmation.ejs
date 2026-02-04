@@ -1,0 +1,124 @@
+<link rel="stylesheet" href="/styles/user/orderConfirmation.css">
+
+<div class="order-confirmation-page">
+    <div class="confirmation-container">
+        <!-- Animated Success Icon -->
+        <div class="success-animation">
+            <div class="checkmark-circle">
+                <div class="checkmark-background"></div>
+                <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                    <circle class="checkmark-circle-svg" cx="26" cy="26" r="25" fill="none" />
+                    <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+                </svg>
+            </div>
+            <div class="success-ripple"></div>
+            <div class="success-ripple delay-1"></div>
+            <div class="success-ripple delay-2"></div>
+        </div>
+
+        <!-- Success Message -->
+        <div class="success-message">
+            <h1 class="fade-in-up">Order Placed Successfully!</h1>
+            <p class="success-subtitle fade-in-up delay-1">Thank you for shopping with ZOUND</p>
+        </div>
+
+        <!-- Order Details Card -->
+        <div class="order-card fade-in-up delay-2">
+            <div class="order-header">
+                <div class="order-id-section">
+                    <span class="order-label">Order ID</span>
+                    <span class="order-number">
+                        <%= order.orderId %>
+                    </span>
+                </div>
+                <div class="order-status">
+                    <span class="status-badge <%= order.status.toLowerCase() %>">
+                        <%= order.status %>
+                    </span>
+                </div>
+            </div>
+
+            <div class="order-details">
+                <div class="detail-item">
+                    <div class="detail-icon">
+                        <span class="material-icons">calendar_today</span>
+                    </div>
+                    <div class="detail-content">
+                        <span class="detail-label">Order Date</span>
+                        <span class="detail-value">
+                            <%= new Date(order.createdOn).toLocaleDateString('en-IN', { day: 'numeric' , month: 'long' ,
+                                year: 'numeric' }) %>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-icon">
+                        <span class="material-icons">inventory_2</span>
+                    </div>
+                    <div class="detail-content">
+                        <span class="detail-label">Items</span>
+                        <span class="detail-value">
+                            <%= order.orderedItems.length %> item<%= order.orderedItems.length> 1 ? 's' : '' %>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-icon">
+                        <span class="material-icons">payments</span>
+                    </div>
+                    <div class="detail-content">
+                        <span class="detail-label">Payment Method</span>
+                        <span class="detail-value">Cash on Delivery</span>
+                    </div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-icon">
+                        <span class="material-icons">local_shipping</span>
+                    </div>
+                    <div class="detail-content">
+                        <span class="detail-label">Expected Delivery</span>
+                        <span class="detail-value">3-5 Business Days</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="order-total">
+                <span class="total-label">Total Amount</span>
+                <span class="total-value">₹<%= Number(order.finalAmount).toFixed(2) %></span>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons fade-in-up delay-3">
+            <a href="/user/orders/<%= order.orderId %>" class="btn-primary">
+                <span class="material-icons">receipt_long</span>
+                View Order Details
+            </a>
+            <a href="/user/products" class="btn-secondary">
+                <span class="material-icons">shopping_bag</span>
+                Continue Shopping
+            </a>
+        </div>
+
+        <!-- Footer Links -->
+        <div class="footer-links fade-in-up delay-4">
+            <a href="/user/home">
+                <span class="material-icons">home</span>
+                Home
+            </a>
+            <span class="link-divider"></span>
+            <a href="/user/orders">
+                <span class="material-icons">list_alt</span>
+                My Orders
+            </a>
+            <span class="link-divider"></span>
+            <a href="/user/support">
+                <span class="material-icons">support_agent</span>
+                Need Help?
+            </a>
+        </div>
+    </div>
+</div>

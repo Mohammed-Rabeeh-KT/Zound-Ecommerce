@@ -1,0 +1,1068 @@
+<link rel="stylesheet" href="/styles/user/orderDetails.css">
+
+<div class="order-details-page">
+    <div class="page-container">
+        <!-- Header Section -->
+        <div class="order-header fade-in">
+            <a href="/user/orders" class="back-btn">
+                <span class="material-icons">arrow_back</span>
+                <span>Back to Orders</span>
+            </a>
+            <div class="header-content">
+                <div class="order-id-section">
+                    <span class="order-label">Order</span>
+                    <h1 class="order-id">
+                        <%= order.orderId %>
+                    </h1>
+                </div>
+                <div class="order-meta">
+                    <span class="order-date">
+                        <span class="material-icons">schedule</span>
+                        Placed on <%= new Date(order.createdOn).toLocaleDateString('en-IN', { day: 'numeric' ,
+                            month: 'long' , year: 'numeric' }) %>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Progress Timeline -->
+        <% if (!isCancelled && !isReturned) { %>
+            <div class="progress-section slide-up delay-1">
+                <h3 class="section-title">
+                    <span class="material-icons">timeline</span>
+                    Order Progress
+                </h3>
+                <div class="progress-timeline">
+                    <% const steps=[ { icon: 'pending_actions' , label: 'Pending' , desc: 'Order received' }, {
+                        icon: 'inventory' , label: 'Processing' , desc: 'Preparing your order' }, {
+                        icon: 'local_shipping' , label: 'Shipped' , desc: 'On the way' }, { icon: 'check_circle' ,
+                        label: 'Delivered' , desc: 'Order completed' } ]; %>
+                        <% for (let i=0; i < steps.length; i++) { const step=steps[i]; const isCompleted=i <
+                            currentStepIndex; const isCurrent=i===currentStepIndex; %>
+                            <div
+                                class="timeline-step <%= isCompleted ? 'completed' : '' %> <%= isCurrent ? 'current' : '' %>">
+                                <div class="step-icon">
+                                    <span class="material-icons">
+                                        <%= step.icon %>
+                                    </span>
+                                </div>
+                                <div class="step-content">
+                                    <span class="step-label">
+                                        <%= step.label %>
+                                    </span>
+                                    <span class="step-desc">
+                                        <%= step.desc %>
+                                    </span>
+                                </div>
+                            </div>
+                            <% if (i < steps.length - 1) { %>
+                                <div class="progress-line <%= isCompleted ? 'completed' : '' %>"></div>
+                                <% } %>
+                                    <% } %>
+                </div>
+            </div>
+
+            <% if (order.status==='Delivered' ) { %>
+                <!-- Delivered Status Banner -->
+                <div class="status-alert slide-up delay-1 delivered">
+                    <span class="material-icons">check_circle</span>
+                    <div class="alert-content">
+                        <span class="alert-title">Delivered</span>
+                        <span class="alert-desc">
+                            Your order has been delivered successfully on <%= order.deliveredAt ? new
+                                Date(order.deliveredAt).toLocaleDateString('en-IN', { day: 'numeric' , month: 'long' ,
+                                year: 'numeric' }) : new Date(order.updatedAt ||
+                                order.createdOn).toLocaleDateString('en-IN', { day: 'numeric' , month: 'long' ,
+                                year: 'numeric' }) %>
+                        </span>
+                    </div>
+                </div>
+                <% } %>
+                    <% } else { const returnRequestedCount=order.orderedItems.filter(function(item) { return
+                        item.itemStatus==='Return Requested' ; }).length; const
+                        returnedCount=order.orderedItems.filter(function(item) { return item.itemStatus==='Returned' ;
+                        }).length; const allReturned=(order.status==='Returned' ); let alertClass='returned' ; if
+                        (isCancelled) { alertClass='cancelled' ; } else if (allReturned) {
+                        alertClass='returned-complete' ; } let alertIcon='assignment_return' ; if (isCancelled) {
+                        alertIcon='cancel' ; } else if (allReturned) { alertIcon='check_circle' ; } %>
+                        <div class="status-alert slide-up delay-1 <%= alertClass %>">
+                            <span class="material-icons">
+                                <%= alertIcon %>
+                            </span>
+                            <div class="alert-content">
+                                <span class="alert-title">
+                                    <%= order.status %>
+                                </span>
+                                <span class="alert-desc">
+                                    <% if (isCancelled) { %>
+                                        This order has been cancelled
+                                        <% } else if (allReturned) { %>
+                                            All items have been returned successfully
+                                            <% } else if (returnRequestedCount> 0 && returnedCount > 0) { %>
+                                                <%= returnedCount %> item(s) returned, <%= returnRequestedCount %>
+                                                        pending
+                                                        <% } else if (returnRequestedCount> 0) { %>
+                                                            <%= returnRequestedCount %> return request(s) pending
+                                                                <% } else if (returnedCount> 0) { %>
+                                                                    <%= returnedCount %> item(s) returned
+                                                                        <% } else { %>
+                                                                            Return request is being processed
+                                                                            <% } %>
+                                </span>
+                            </div>
+                        </div>
+                        <% } %>
+
+                            <!-- Main Content Grid -->
+                            <div class="content-grid">
+                                <!-- Left Column -->
+                                <div class="left-column">
+                                    <!-- Ordered Items -->
+                                    <div class="card items-card slide-up delay-2">
+                                        <div class="card-header">
+                                            <h3><span class="material-icons">shopping_bag</span> Order Items</h3>
+                                            <span class="items-count">
+                                                <%= order.orderedItems.length %> item<%= (order.orderedItems.length> 1)
+                                                        ?
+                                                        's' :
+                                                        '' %>
+                                            </span>
+                                        </div>
+                                        <div class="items-list">
+                                            <% for (var i=0; i < order.orderedItems.length; i++) { var
+                                                item=order.orderedItems[i]; var product=item.product; var
+                                                itemImage='/images/placeholder.png' ; var variantValue='' ; if (product
+                                                && product.variants && product.variants.length> 0) {
+                                                var variant = null;
+                                                if (item.variantId) {
+                                                for (var v = 0; v < product.variants.length; v++) { if
+                                                    (product.variants[v]._id.toString()===item.variantId.toString()) {
+                                                    variant=product.variants[v]; break; } } } if (!variant) {
+                                                    variant=product.variants[0]; } if (variant) { if (variant.images &&
+                                                    variant.images.length> 0) { itemImage = variant.images[0]; }
+                                                    variantValue = variant.value || '';
+                                                    }
+                                                    } else if (product && product.productImages &&
+                                                    product.productImages.length
+                                                    > 0) {
+                                                    itemImage = product.productImages[0];
+                                                    }
+                                                    var cancelledClass = (item.itemStatus === 'Cancelled' ||
+                                                    order.status
+                                                    ===
+                                                    'Cancelled') ? 'item-cancelled-row' : '';
+                                                    var returnReqClass = (item.itemStatus === 'Return Requested') ?
+                                                    'item-return-requested-row' : '';
+                                                    var returnedClass = (item.itemStatus === 'Returned') ?
+                                                    'item-returned-row' :
+                                                    '';
+                                                    var returnRejectedClass = (item.itemStatus === 'Return Rejected') ?
+                                                    'item-return-rejected-row' : '';
+                                                    var priceClass = (item.itemStatus === 'Cancelled' || item.itemStatus
+                                                    ===
+                                                    'Returned' || order.status === 'Cancelled') ? 'cancelled-price' :
+                                                    '';
+                                                    var showCancelledBadge = (item.itemStatus === 'Cancelled' ||
+                                                    order.status
+                                                    === 'Cancelled');
+                                                    %>
+                                                    <div
+                                                        class="order-item <%= cancelledClass %> <%= returnReqClass %> <%= returnedClass %> <%= returnRejectedClass %>">
+                                                        <div class="item-image">
+                                                            <img src="<%= itemImage %>"
+                                                                alt="<%= product ? product.productName : 'Product' %>">
+                                                            <span class="item-qty">
+                                                                <%= item.quantity %>
+                                                            </span>
+                                                        </div>
+                                                        <div class="item-info">
+                                                            <h4 class="item-name">
+                                                                <%= product ? product.productName
+                                                                    : 'Product Unavailable' %>
+                                                            </h4>
+                                                            <% if (variantValue) { %>
+                                                                <span class="item-variant">
+                                                                    <%= variantValue %>
+                                                                </span>
+                                                                <% } %>
+                                                                    <div class="item-price-row">
+                                                                        <span class="unit-price">₹<%=
+                                                                                Number(item.price).toFixed(2) %> × <%=
+                                                                                    item.quantity %></span>
+                                                                    </div>
+                                                                    <% if (showCancelledBadge) { %>
+                                                                        <span class="item-cancelled-badge"><span
+                                                                                class="material-icons">cancel</span>
+                                                                            Cancelled</span>
+                                                                        <% } %>
+                                                                            <% if (item.itemStatus==='Return Requested'
+                                                                                ) { %>
+                                                                                <span
+                                                                                    class="item-return-requested-badge"><span
+                                                                                        class="material-icons">pending_actions</span>
+                                                                                    Return Requested</span>
+                                                                                <% } %>
+                                                                                    <% if (item.itemStatus==='Returned'
+                                                                                        ) { %>
+                                                                                        <span
+                                                                                            class="item-returned-badge"><span
+                                                                                                class="material-icons">assignment_return</span>
+                                                                                            Returned</span>
+                                                                                        <% } %>
+                                                                                            <% if
+                                                                                                (item.itemStatus==='Return Rejected'
+                                                                                                ) { %>
+                                                                                                <span
+                                                                                                    class="item-return-rejected-badge"><span
+                                                                                                        class="material-icons">cancel</span>
+                                                                                                    Return
+                                                                                                    Rejected</span>
+                                                                                                <% if
+                                                                                                    (item.returnRejectReason)
+                                                                                                    { %>
+                                                                                                    <div
+                                                                                                        class="rejection-reason-box">
+                                                                                                        <span
+                                                                                                            class="rejection-label"><span
+                                                                                                                class="material-icons">info</span>
+                                                                                                            Reason:</span>
+                                                                                                        <span
+                                                                                                            class="rejection-text">
+                                                                                                            <%= item.returnRejectReason
+                                                                                                                %>
+                                                                                                        </span>
+                                                                                                    </div>
+                                                                                                    <% } %>
+                                                                                                        <% } %>
+                                                        </div>
+                                                        <div class="item-total <%= priceClass %>">
+                                                            ₹<%= Number(item.price * item.quantity).toFixed(2) %>
+                                                        </div>
+                                                    </div>
+                                                    <% } %>
+                                        </div>
+                                    </div>
+
+                                    <!-- Delivery Address -->
+                                    <div class="card address-card slide-up delay-3">
+                                        <div class="card-header">
+                                            <h3>
+                                                <span class="material-icons">location_on</span>
+                                                Delivery Address
+                                            </h3>
+                                        </div>
+                                        <div class="address-content">
+                                            <% if (order.address) { %>
+                                                <div class="address-type">
+                                                    <span
+                                                        class="type-badge <%= order.address.label ? order.address.label.toLowerCase() : 'home' %>">
+                                                        <%= order.address.label || 'Home' %>
+                                                    </span>
+                                                </div>
+                                                <h4 class="address-name">
+                                                    <%= order.address.fullName %>
+                                                </h4>
+                                                <p class="address-line">
+                                                    <%= order.address.addressLine1 %>
+                                                        <% if (order.address.addressLine2) { %>, <%=
+                                                                order.address.addressLine2 %>
+                                                                <% } %>
+                                                </p>
+                                                <p class="address-line">
+                                                    <%= order.address.city %>, <%= order.address.state %> - <%=
+                                                                order.address.pincode %>
+                                                </p>
+                                                <p class="address-phone">
+                                                    <span class="material-icons">phone</span>
+                                                    <%= order.address.phone %>
+                                                        <% if (order.address.altPhone) { %>, <%= order.address.altPhone
+                                                                %>
+                                                                <% } %>
+                                                </p>
+                                                <% } else { %>
+                                                    <p class="no-address">Address information not available</p>
+                                                    <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Right Column -->
+                                <div class="right-column">
+                                    <!-- Order Summary -->
+                                    <div class="card summary-card slide-up delay-2">
+                                        <div class="card-header">
+                                            <h3>
+                                                <span class="material-icons">receipt</span>
+                                                Order Summary
+                                            </h3>
+                                        </div>
+                                        <div class="summary-content">
+                                            <div class="summary-row">
+                                                <span>Subtotal</span>
+                                                <% // Check if all items are cancelled const
+                                                    allCancelled=order.status==='Cancelled' || (order.orderedItems &&
+                                                    order.orderedItems.length> 0 && order.orderedItems.every(item =>
+                                                    item.itemStatus === 'Cancelled'));
+
+                                                    // Calculate original subtotal for display if fully cancelled
+                                                    let displaySubtotal = order.totalPrice;
+                                                    if (allCancelled) {
+                                                    displaySubtotal = 0;
+                                                    order.orderedItems.forEach(item => {
+                                                    displaySubtotal += item.price * item.quantity;
+                                                    });
+                                                    }
+                                                    %>
+                                                    <span>₹<%= Number(displaySubtotal).toFixed(2) %></span>
+                                            </div>
+                                            <% if (order.discount> 0) { %>
+                                                <div class="summary-row discount">
+                                                    <span>Discount</span>
+                                                    <span>-₹<%= Number(order.discount).toFixed(2) %></span>
+                                                </div>
+                                                <% } %>
+                                                    <div class="summary-row">
+                                                        <span>Shipping</span>
+                                                        <span>
+                                                            <%= (order.finalAmount - order.totalPrice + order.discount)>
+                                                                0 ?
+                                                                '₹'
+                                                                + Number(order.finalAmount - order.totalPrice +
+                                                                order.discount).toFixed(2) : 'FREE' %>
+                                                        </span>
+                                                    </div>
+                                                    <div class="summary-divider"></div>
+                                                    <div class="summary-row total">
+                                                        <span>Total</span>
+                                                        <span>₹<%= Number(allCancelled ? displaySubtotal :
+                                                                order.finalAmount).toFixed(2) %></span>
+                                                    </div>
+                                                    <% if (allCancelled) { %>
+                                                        <div
+                                                            style="text-align: right; color: #dc2626; font-size: 0.8rem; margin-top: 4px; font-weight: 500;">
+                                                            (Order Cancelled)
+                                                        </div>
+                                                        <% } %>
+                                        </div>
+                                    </div>
+
+                                    <!-- Payment Info -->
+                                    <% if (!allCancelled) { %>
+                                        <div class="card payment-card slide-up delay-3">
+                                            <div class="card-header">
+                                                <h3>
+                                                    <span class="material-icons">payments</span>
+                                                    Payment Details
+                                                </h3>
+                                            </div>
+                                            <div class="payment-content">
+                                                <div class="payment-method">
+                                                    <div class="method-icon">
+                                                        <span class="material-icons">account_balance_wallet</span>
+                                                    </div>
+                                                    <div class="method-info">
+                                                        <span class="method-label">Payment Method</span>
+                                                        <span class="method-value">
+                                                            <%= order.paymentMethod==='COD' ? 'Cash on Delivery' :
+                                                                order.paymentMethod %>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="payment-status">
+                                                    <span class="status-label">Payment Status</span>
+                                                    <span
+                                                        class="status-badge <%= order.paymentStatus === 'Paid' ? 'paid' : 'pending' %>">
+                                                        <%= order.paymentStatus || 'Pending' %>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <% } %>
+
+                                            <!-- Quick Actions -->
+                                            <div class="card actions-card slide-up delay-4">
+                                                <div class="card-header">
+                                                    <h3>
+                                                        <span class="material-icons">flash_on</span>
+                                                        Quick Actions
+                                                    </h3>
+                                                </div>
+                                                <div class="actions-content">
+                                                    <% if (order.status==='Pending' || order.status==='Processing' ) {
+                                                        %>
+                                                        <button class="action-btn cancel"
+                                                            onclick="cancelOrder('<%= order._id %>')">
+                                                            <span class="material-icons">cancel</span>
+                                                            Cancel Order
+                                                        </button>
+                                                        <% } %>
+                                                            <% if (order.status==='Delivered' ) { %>
+                                                                <button class="action-btn return"
+                                                                    onclick="returnOrder('<%= order._id %>')">
+                                                                    <span
+                                                                        class="material-icons">assignment_return</span>
+                                                                    Return Order
+                                                                </button>
+                                                                <% } %>
+                                                                    <% if (!allCancelled && !isReturned) { %>
+                                                                        <button class="action-btn download"
+                                                                            onclick="downloadInvoice('<%= order._id %>')">
+                                                                            <span class="material-icons">download</span>
+                                                                            Download Invoice
+                                                                        </button>
+                                                                        <% } %>
+                                                                            <a href="/user/support"
+                                                                                class="action-btn help">
+                                                                                <span
+                                                                                    class="material-icons">support_agent</span>
+                                                                                Need Help?
+                                                                            </a>
+                                                </div>
+                                            </div>
+                                </div>
+                            </div>
+
+                            <!-- Footer Actions -->
+                            <div class="footer-actions slide-up delay-5">
+                                <a href="/user/orders" class="btn-secondary">
+                                    <span class="material-icons">list_alt</span>
+                                    View All Orders
+                                </a>
+                                <a href="/user/products" class="btn-primary">
+                                    <span class="material-icons">shopping_bag</span>
+                                    Continue Shopping
+                                </a>
+                            </div>
+    </div>
+</div>
+
+<!-- Cancel Order Modal -->
+<div class="cancel-modal-overlay" id="cancelModal">
+    <div class="cancel-modal">
+        <div class="cancel-modal-header">
+            <div class="modal-icon-wrap">
+                <span class="material-icons">cancel</span>
+            </div>
+            <h2>Cancel Order Items</h2>
+            <p>Select the items you want to cancel from your order</p>
+            <button class="close-modal-btn" onclick="closeCancelModal()">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <div class="cancel-modal-body">
+            <!-- Select All Option -->
+            <div class="select-all-section">
+                <label class="custom-checkbox">
+                    <input type="checkbox" id="selectAllItems" onchange="toggleSelectAll()">
+                    <span class="checkmark"></span>
+                    <span class="checkbox-label">Cancel Entire Order</span>
+                </label>
+                <span class="select-hint">Select all items for full order cancellation</span>
+            </div>
+
+            <div class="items-divider"></div>
+
+            <!-- Products List -->
+            <div class="cancel-items-list" id="cancelItemsList">
+                <% for (let i=0; i < order.orderedItems.length; i++) { const item=order.orderedItems[i]; const
+                    product=item.product; const isItemActive=!item.itemStatus || item.itemStatus==='Active' ; let
+                    itemImage='/images/placeholder.png' ; let variantValue='' ; if (product && product.variants &&
+                    product.variants.length> 0) {
+                    let variant = null;
+                    if (item.variantId) {
+                    variant = product.variants.find(v => v._id.toString() === item.variantId.toString());
+                    }
+                    if (!variant) {
+                    variant = product.variants[0];
+                    }
+                    if (variant) {
+                    if (variant.images && variant.images.length > 0) {
+                    itemImage = variant.images[0];
+                    }
+                    variantValue = variant.value || '';
+                    }
+                    } else if (product && product.productImages && product.productImages.length > 0) {
+                    itemImage = product.productImages[0];
+                    }
+                    %>
+                    <div class="cancel-item <%= isItemActive ? '' : 'item-cancelled' %>" data-item-index="<%= i %>">
+                        <label class="custom-checkbox item-checkbox">
+                            <input type="checkbox" class="item-select" data-item-id="<%= item._id %>"
+                                data-product-id="<%= product ? product._id : '' %>" <%=!isItemActive ? 'disabled' : ''
+                                %>>
+                            <span class="checkmark"></span>
+                        </label>
+                        <div class="cancel-item-image">
+                            <img src="<%= itemImage %>" alt="<%= product ? product.productName : 'Product' %>">
+                        </div>
+                        <div class="cancel-item-info">
+                            <h4 class="cancel-item-name">
+                                <%= product ? product.productName : 'Product Unavailable' %>
+                            </h4>
+                            <% if (variantValue) { %>
+                                <span class="cancel-item-variant">
+                                    <%= variantValue %>
+                                </span>
+                                <% } %>
+                                    <div class="cancel-item-meta">
+                                        <span class="cancel-item-qty">Qty: <%= item.quantity %></span>
+                                        <span class="cancel-item-price">₹<%= Number(item.price *
+                                                item.quantity).toFixed(2) %></span>
+                                    </div>
+                        </div>
+                        <% if (!isItemActive) { %>
+                            <span class="item-status-badge cancelled">Cancelled</span>
+                            <% } %>
+                    </div>
+                    <% } %>
+            </div>
+
+            <!-- Cancellation Reason -->
+            <div class="cancel-reason-section">
+                <label class="reason-label">Reason for Cancellation <span class="required">*</span></label>
+                <select id="cancelReason" class="reason-select">
+                    <option value="" disabled selected>Select a reason</option>
+                    <option value="changed_mind">Changed my mind</option>
+                    <option value="found_better_price">Found better price elsewhere</option>
+                    <option value="ordered_by_mistake">Ordered by mistake</option>
+                    <option value="delivery_time_long">Delivery time is too long</option>
+                    <option value="need_different_product">Need a different product</option>
+                    <option value="duplicate_order">Duplicate order</option>
+                    <option value="other">Other reason</option>
+                </select>
+            </div>
+
+            <!-- Additional Description -->
+            <div class="cancel-description-section">
+                <label class="reason-label">Additional Details <span class="optional">(Optional)</span></label>
+                <textarea id="cancelDescription" class="description-textarea"
+                    placeholder="Please provide any additional details about your cancellation request..."
+                    maxlength="500"></textarea>
+                <span class="char-count"><span id="charCount">0</span>/500</span>
+            </div>
+        </div>
+
+        <div class="cancel-modal-footer">
+            <button class="modal-btn secondary" onclick="closeCancelModal()">
+                <span class="material-icons">arrow_back</span>
+                Keep Items
+            </button>
+            <button class="modal-btn danger" id="confirmCancelBtn" onclick="confirmCancelItems()" disabled>
+                <span class="material-icons">cancel</span>
+                Cancel Selected Items
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Return Order Modal -->
+<div class="return-modal-overlay" id="returnModal">
+    <div class="return-modal">
+        <div class="return-modal-header">
+            <div class="modal-icon-wrap return">
+                <span class="material-icons">assignment_return</span>
+            </div>
+            <h2>Return Order Items</h2>
+            <p>Select the items you want to return from your order</p>
+            <button class="close-modal-btn" onclick="closeReturnModal()">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <div class="return-modal-body">
+            <!-- Select All Option -->
+            <div class="select-all-section return">
+                <label class="custom-checkbox">
+                    <input type="checkbox" id="selectAllReturnItems" onchange="toggleSelectAllReturn()">
+                    <span class="checkmark"></span>
+                    <span class="checkbox-label">Return Entire Order</span>
+                </label>
+                <span class="select-hint">Select all items for full order return</span>
+            </div>
+            <div class="items-divider"></div>
+            <!-- Products List -->
+            <div class="return-items-list" id="returnItemsList">
+                <% for (let i=0; i < order.orderedItems.length; i++) { const item=order.orderedItems[i]; const
+                    product=item.product; const isItemActive=!item.itemStatus || item.itemStatus==='Active' ; const
+                    canReturn=isItemActive && order.status==='Delivered' ; let itemImage='/images/placeholder.png' ; let
+                    variantValue='' ; if (product && product.variants && product.variants.length> 0) {
+                    let variant = null;
+                    if (item.variantId) {
+                    variant = product.variants.find(v => v._id.toString() === item.variantId.toString());
+                    }
+                    if (!variant) {
+                    variant = product.variants[0];
+                    }
+                    if (variant) {
+                    if (variant.images && variant.images.length > 0) {
+                    itemImage = variant.images[0];
+                    }
+                    variantValue = variant.value || '';
+                    }
+                    } else if (product && product.productImages && product.productImages.length > 0) {
+                    itemImage = product.productImages[0];
+                    }
+                    %>
+                    <div class="return-item <%= canReturn ? '' : 'item-disabled' %>" data-item-index="<%= i %>">
+                        <label class="custom-checkbox item-checkbox">
+                            <input type="checkbox" class="return-item-select" data-item-id="<%= item._id %>"
+                                data-product-id="<%= product ? product._id : '' %>" <%=!canReturn ? 'disabled' : '' %>>
+                            <span class="checkmark"></span>
+                        </label>
+                        <div class="return-item-image">
+                            <img src="<%= itemImage %>" alt="<%= product ? product.productName : 'Product' %>">
+                        </div>
+                        <div class="return-item-info">
+                            <h4 class="return-item-name">
+                                <%= product ? product.productName : 'Product Unavailable' %>
+                            </h4>
+                            <% if (variantValue) { %>
+                                <span class="return-item-variant">
+                                    <%= variantValue %>
+                                </span>
+                                <% } %>
+                                    <div class="return-item-meta">
+                                        <span class="return-item-qty">Qty: <%= item.quantity %></span>
+                                        <span class="return-item-price">₹<%= Number(item.price *
+                                                item.quantity).toFixed(2) %></span>
+                                    </div>
+                        </div>
+                        <% if (!canReturn) { %>
+                            <span
+                                class="item-status-badge <%= item.itemStatus ? item.itemStatus.toLowerCase().replace(' ', '-') : '' %>">
+                                <%= item.itemStatus || 'N/A' %>
+                            </span>
+                            <% } %>
+                    </div>
+                    <% } %>
+            </div>
+            <!-- Return Reason (MANDATORY) -->
+            <div class="return-reason-section">
+                <label class="reason-label">Reason for Return <span class="required">*</span></label>
+                <select id="returnReason" class="reason-select">
+                    <option value="" disabled selected>Select a reason</option>
+                    <option value="defective_product">Defective/Damaged Product</option>
+                    <option value="wrong_item">Wrong Item Received</option>
+                    <option value="not_as_described">Product Not As Described</option>
+                    <option value="quality_issue">Quality Not Satisfactory</option>
+                    <option value="size_fit_issue">Size/Fit Issue</option>
+                    <option value="changed_mind">Changed My Mind</option>
+                    <option value="better_price">Found Better Price Elsewhere</option>
+                    <option value="other">Other reason</option>
+                </select>
+            </div>
+            <!-- Additional Description (Mandatory for better context) -->
+            <div class="return-description-section">
+                <label class="reason-label">Please describe the issue <span class="required">*</span></label>
+                <textarea id="returnDescription" class="description-textarea"
+                    placeholder="Please provide details about why you want to return this item..." maxlength="500"
+                    required></textarea>
+                <span class="char-count"><span id="returnCharCount">0</span>/500</span>
+            </div>
+        </div>
+        <div class="return-modal-footer">
+            <button class="modal-btn secondary" onclick="closeReturnModal()">
+                <span class="material-icons">arrow_back</span>
+                Keep Items
+            </button>
+            <button class="modal-btn warning" id="confirmReturnBtn" onclick="confirmReturnItems()" disabled>
+                <span class="material-icons">assignment_return</span>
+                Return Selected Items
+            </button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    // Store order data for JavaScript
+    const orderData = {
+        orderId: '<%= order._id %>',
+        orderDisplayId: '<%= order.orderId %>'
+    };
+
+    // Override cancelOrder to open modal
+    function cancelOrder(orderId) {
+        openCancelModal();
+    }
+
+    function openCancelModal() {
+        document.getElementById('cancelModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        // Reset form
+        document.getElementById('selectAllItems').checked = false;
+        document.getElementById('cancelReason').selectedIndex = 0;
+        document.getElementById('cancelDescription').value = '';
+        document.getElementById('charCount').textContent = '0';
+
+        // Reset all checkboxes
+        const checkboxes = document.querySelectorAll('.item-select:not(:disabled)');
+        checkboxes.forEach(cb => cb.checked = false);
+
+        updateConfirmButtonState();
+    }
+
+    function closeCancelModal() {
+        document.getElementById('cancelModal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    function toggleSelectAll() {
+        const selectAll = document.getElementById('selectAllItems').checked;
+        const checkboxes = document.querySelectorAll('.item-select:not(:disabled)');
+        checkboxes.forEach(cb => cb.checked = selectAll);
+        updateConfirmButtonState();
+    }
+
+    function updateConfirmButtonState() {
+        const selectedItems = document.querySelectorAll('.item-select:checked');
+        const confirmBtn = document.getElementById('confirmCancelBtn');
+        const count = selectedItems.length;
+
+        if (count === 0) {
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<span class="material-icons">cancel</span>Cancel Selected Items';
+        } else {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = `<span class="material-icons">cancel</span>Cancel ${count} Item${count > 1 ? 's' : ''}`;
+        }
+    }
+
+    // Add event listeners for individual checkboxes
+    document.addEventListener('DOMContentLoaded', function () {
+        const itemCheckboxes = document.querySelectorAll('.item-select');
+        itemCheckboxes.forEach(cb => {
+            cb.addEventListener('change', function () {
+                updateConfirmButtonState();
+
+                // Update select all checkbox
+                const allCheckboxes = document.querySelectorAll('.item-select:not(:disabled)');
+                const checkedCheckboxes = document.querySelectorAll('.item-select:checked');
+                document.getElementById('selectAllItems').checked =
+                    allCheckboxes.length > 0 && allCheckboxes.length === checkedCheckboxes.length;
+            });
+        });
+
+        // Character counter for description
+        const descriptionTextarea = document.getElementById('cancelDescription');
+        const charCountSpan = document.getElementById('charCount');
+        if (descriptionTextarea && charCountSpan) {
+            descriptionTextarea.addEventListener('input', function () {
+                charCountSpan.textContent = this.value.length;
+            });
+        }
+    });
+
+    async function confirmCancelItems() {
+        const selectedItems = document.querySelectorAll('.item-select:checked');
+        const reason = document.getElementById('cancelReason').value;
+        const description = document.getElementById('cancelDescription').value.trim();
+
+        if (selectedItems.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'No Items Selected',
+                text: 'Please select at least one item to cancel.',
+                confirmButtonColor: '#002366'
+            });
+            return;
+        }
+
+        if (!reason) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Reason Required',
+                text: 'Please select a reason for cancellation.',
+                confirmButtonColor: '#002366'
+            });
+            return;
+        }
+
+        const itemIds = Array.from(selectedItems).map(cb => cb.dataset.itemId);
+        const selectAllChecked = document.getElementById('selectAllItems').checked;
+        const totalActiveItems = document.querySelectorAll('.item-select:not(:disabled)').length;
+        const isCancelAll = selectAllChecked || itemIds.length === totalActiveItems;
+
+        // Close modal
+        closeCancelModal();
+
+        // Show confirmation
+        const result = await Swal.fire({
+            title: isCancelAll ? 'Cancel Entire Order?' : 'Cancel Selected Items?',
+            html: isCancelAll
+                ? 'Are you sure you want to cancel this entire order? This action cannot be undone.'
+                : `You are about to cancel <strong>${itemIds.length}</strong> item${itemIds.length > 1 ? 's' : ''} from your order.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: isCancelAll ? 'Yes, Cancel Order' : 'Yes, Cancel Items',
+            cancelButtonText: 'No, Keep Them'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch('/user/orders/cancel-items', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        orderId: orderData.orderId,
+                        itemIds: itemIds,
+                        cancelAll: isCancelAll,
+                        reason: reason,
+                        description: description
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: isCancelAll ? 'Order Cancelled!' : 'Items Cancelled!',
+                        text: data.message || 'Your cancellation has been processed successfully.',
+                        confirmButtonColor: '#002366'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Cancellation Failed',
+                        text: data.message || 'Unable to process cancellation. Please try again.',
+                        confirmButtonColor: '#002366'
+                    });
+                }
+            } catch (error) {
+                console.error('Cancel error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Something went wrong. Please try again later.',
+                    confirmButtonColor: '#002366'
+                });
+            }
+        }
+    }
+
+    // Close modal on overlay click
+    document.getElementById('cancelModal').addEventListener('click', function (e) {
+        if (e.target === this) {
+            closeCancelModal();
+        }
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closeCancelModal();
+        }
+    });
+
+    // ===== RETURN ORDER FUNCTIONS =====
+    function returnOrder(orderId) {
+        openReturnModal();
+    }
+
+    function openReturnModal() {
+        const modal = document.getElementById('returnModal');
+        if (!modal) {
+            return;
+        }
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        // Reset form
+        document.getElementById('selectAllReturnItems').checked = false;
+        document.getElementById('returnReason').selectedIndex = 0;
+        document.getElementById('returnDescription').value = '';
+        document.getElementById('returnCharCount').textContent = '0';
+        // Reset all checkboxes
+        const checkboxes = document.querySelectorAll('.return-item-select:not(:disabled)');
+        checkboxes.forEach(cb => cb.checked = false);
+        updateReturnButtonState();
+    }
+
+    function closeReturnModal() {
+        document.getElementById('returnModal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+    function toggleSelectAllReturn() {
+        const selectAll = document.getElementById('selectAllReturnItems').checked;
+        const checkboxes = document.querySelectorAll('.return-item-select:not(:disabled)');
+        checkboxes.forEach(cb => cb.checked = selectAll);
+        updateReturnButtonState();
+    }
+    function updateReturnButtonState() {
+        const selectedItems = document.querySelectorAll('.return-item-select:checked');
+        const confirmBtn = document.getElementById('confirmReturnBtn');
+        const reason = document.getElementById('returnReason').value;
+        const description = document.getElementById('returnDescription').value.trim();
+        const count = selectedItems.length;
+        // Enable button only if items selected AND reason selected AND description provided
+        if (count === 0 || !reason || !description) {
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<span class="material-icons">assignment_return</span>Return Selected Items';
+        } else {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = `<span class="material-icons">assignment_return</span>Return ${count} Item${count > 1 ? 's' : ''}`;
+        }
+    }
+    // Add event listeners for return modal
+    document.addEventListener('DOMContentLoaded', function () {
+        const returnItemCheckboxes = document.querySelectorAll('.return-item-select');
+        returnItemCheckboxes.forEach(cb => {
+            cb.addEventListener('change', function () {
+                updateReturnButtonState();
+                const allCheckboxes = document.querySelectorAll('.return-item-select:not(:disabled)');
+                const checkedCheckboxes = document.querySelectorAll('.return-item-select:checked');
+                document.getElementById('selectAllReturnItems').checked =
+                    allCheckboxes.length > 0 && allCheckboxes.length === checkedCheckboxes.length;
+            });
+        });
+        // Character counter for return description
+        const returnDescTextarea = document.getElementById('returnDescription');
+        const returnCharCountSpan = document.getElementById('returnCharCount');
+        const returnReasonSelect = document.getElementById('returnReason');
+        if (returnDescTextarea && returnCharCountSpan) {
+            returnDescTextarea.addEventListener('input', function () {
+                returnCharCountSpan.textContent = this.value.length;
+                updateReturnButtonState();
+            });
+        }
+        if (returnReasonSelect) {
+            returnReasonSelect.addEventListener('change', function () {
+                updateReturnButtonState();
+            });
+        }
+
+        // Close return modal on overlay click
+        const returnModal = document.getElementById('returnModal');
+        if (returnModal) {
+            returnModal.addEventListener('click', function (e) {
+                if (e.target === this) {
+                    closeReturnModal();
+                }
+            });
+        }
+
+        // Close modals on Escape key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeReturnModal();
+                closeCancelModal();
+            }
+        });
+    });
+
+    async function confirmReturnItems() {
+        const selectedItems = document.querySelectorAll('.return-item-select:checked');
+        const reason = document.getElementById('returnReason').value;
+        const description = document.getElementById('returnDescription').value.trim();
+
+        if (selectedItems.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'No Items Selected',
+                text: 'Please select at least one item to return.',
+                confirmButtonColor: '#002366'
+            });
+            return;
+        }
+
+        if (!reason) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Reason Required',
+                text: 'Please select a reason for return.',
+                confirmButtonColor: '#002366'
+            });
+            return;
+        }
+
+        if (!description) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Description Required',
+                text: 'Please describe why you want to return these items.',
+                confirmButtonColor: '#002366'
+            });
+            return;
+        }
+
+        const itemIds = Array.from(selectedItems).map(cb => cb.dataset.itemId);
+        const selectAllChecked = document.getElementById('selectAllReturnItems').checked;
+        const totalActiveItems = document.querySelectorAll('.return-item-select:not(:disabled)').length;
+        const isReturnAll = selectAllChecked || itemIds.length === totalActiveItems;
+
+        closeReturnModal();
+
+        // Show confirmation
+        const result = await Swal.fire({
+            title: isReturnAll ? 'Return Entire Order?' : 'Return Selected Items?',
+            html: isReturnAll
+                ? 'Are you sure you want to return this entire order? Our team will review your request.'
+                : `You are about to request return for <strong>${itemIds.length}</strong> item${itemIds.length > 1 ? 's' : ''}.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#d97706',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: isReturnAll ? 'Yes, Return Order' : 'Yes, Return Items',
+            cancelButtonText: 'No, Keep Them'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch('/user/orders/return-items', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        orderId: orderData.orderId,
+                        itemIds: itemIds,
+                        returnAll: isReturnAll,
+                        reason: reason,
+                        description: description
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Return Request Submitted!',
+                        text: data.message || 'Your return request has been submitted successfully. We will process it shortly.',
+                        confirmButtonColor: '#002366'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Return Request Failed',
+                        text: data.message || 'Unable to process return request. Please try again.',
+                        confirmButtonColor: '#002366'
+                    });
+                }
+            } catch (error) {
+                console.error('Return error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Something went wrong. Please try again later.',
+                    confirmButtonColor: '#002366'
+                });
+            }
+        }
+    }
+
+    // ===== DOWNLOAD INVOICE FUNCTION =====
+    function downloadInvoice(orderId) {
+        window.open(`/user/orders/${orderData.orderDisplayId}/invoice`, '_blank');
+    }
+
+</script>

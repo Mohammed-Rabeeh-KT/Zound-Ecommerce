@@ -110,51 +110,72 @@ async function clearWishlist() {
 async function addToCartFromWishlist(productId, variantId) {
     const btn = event.target.closest('.add-to-cart-btn');
     const originalContent = btn.innerHTML;
-
     // Show loading state
     btn.classList.add('loading');
-    btn.innerHTML = '<span class="material-icons">sync</span> Adding...';
-
+    btn.innerHTML = '<span class="material-icons">sync</span> Moving...';
     try {
-        const response = await axios.post('/user/cart/add', {
+        const response = await axios.post('/user/wishlist/move-to-cart', {
             productId,
-            variantId: variantId || null,
-            quantity: 1
+            variantId: variantId || null
         });
-
         if (response.data.success) {
-            // Success animation
+            // Success animation on button
             btn.innerHTML = '<span class="material-icons">check</span> Added!';
             btn.style.background = '#10b981';
-
-            // Update cart count in header if exists
+            // Update cart count in header
             updateCartCount(response.data.data?.cartCount);
-
+            // Find and animate removal of the card
+            let card;
+            if (variantId) {
+                card = document.querySelector(`.wishlist-card[data-product-id="${productId}"][data-variant-id="${variantId}"]`);
+            }
+            if (!card) {
+                card = document.querySelector(`.wishlist-card[data-product-id="${productId}"]`);
+            }
             Swal.fire({
                 icon: 'success',
-                title: 'Added to Cart!',
-                text: 'Item has been added to your cart.',
+                title: 'Moved to Cart!',
+                text: 'Item has been added to your cart and removed from wishlist.',
                 timer: 1500,
                 showConfirmButton: false
             });
-
-            // Reset button after delay
-            setTimeout(() => {
-                btn.innerHTML = originalContent;
-                btn.style.background = '';
-                btn.classList.remove('loading');
-            }, 2000);
-
+            // Remove card from wishlist display after animation
+            if (card) {
+                setTimeout(() => {
+                    card.classList.add('removing');
+                    setTimeout(() => {
+                        card.remove();
+                        updateEmptyState();
+                        updateWishlistCount();
+                    }, 300);
+                }, 500);
+            }
         } else {
             btn.innerHTML = originalContent;
             btn.classList.remove('loading');
-            showError(response.data.message || 'Failed to add to cart');
+            showError(response.data.message || 'Failed to move to cart');
         }
     } catch (error) {
-        console.error('Error adding to cart:', error);
+        console.error('Error moving to cart:', error);
         btn.innerHTML = originalContent;
         btn.classList.remove('loading');
-        showError(error.response?.data?.message || 'Something went wrong');
+
+        // Check if user is not logged in
+        if (error.response?.status === 401) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Login Required',
+                text: error.response?.data?.message || 'Please log in to continue',
+                confirmButtonText: 'Login Now',
+                confirmButtonColor: '#002366'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '/user/login';
+                }
+            });
+        } else {
+            showError(error.response?.data?.message || 'Something went wrong');
+        }
     }
 }
 
@@ -228,7 +249,24 @@ async function toggleWishlist(productId, btnElement) {
         }
     } catch (error) {
         console.error('Error toggling wishlist:', error);
-        showError(error.response?.data?.message || 'Please login to add items to wishlist');
+        if (error.response?.status === 401) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Login Required',
+                text: error.response?.data?.message || 'Please login to add items to wishlist',
+                showConfirmButton: true,
+                confirmButtonText: 'Login Now',
+                showCancelButton: true,
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#002366'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '/user/login';
+                }
+            });
+        } else {
+            showError(error.response?.data?.message || 'Something went wrong');
+        }
     }
 }
 

@@ -718,11 +718,13 @@ body {
     margin-bottom: 0;
 }
 
-.feedback-error {
+.feedback-error,
+.feedback-text.error {
     color: #dc2626;
 }
 
-.feedback-success {
+.feedback-success,
+.feedback-text.success {
     color: #16a34a;
 }
 

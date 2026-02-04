@@ -68,14 +68,17 @@ button {
    Page Layout
    ======================================== */
 
+
+/* Layout matching profile.css */
 .page-container {
     max-width: 1400px;
-    margin: 0 auto;
-    padding: 40px;
+    margin: 40px auto;
+    padding: 0 40px;
     display: grid;
     grid-template-columns: 280px 1fr;
-    gap: 40px;
+    gap: 60px;
     align-items: start;
+    min-height: 80vh;
 }
 
 .main-content {
@@ -428,6 +431,28 @@ button {
     font-size: 0.9rem;
     color: var(--text-muted);
     font-style: italic;
+}
+
+/* Offer Price Styles */
+.offer-price {
+    color: var(--royal-blue) !important;
+}
+
+.offer-badge {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    animation: pulse-offer 2s ease-in-out infinite;
+}
+
+@keyframes pulse-offer {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
 }
 
 /* Added Date */

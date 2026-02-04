@@ -1,0 +1,342 @@
+<link rel="stylesheet" href="/styles/user/cart.css">
+
+<main class="cart-container">
+    <div class="cart-header">
+        <h1 class="cart-title">Your Shopping Cart</h1>
+        <% if (cart && cart.items && cart.items.length> 0) { %>
+            <p class="cart-subtitle">You have <span class="item-count" id="itemCount">
+                    <%= cart.items.length %>
+                </span> item<%= cart.items.length> 1 ? 's' : '' %> in your cart</p>
+            <% } %>
+    </div>
+
+    <% if (!cart || !cart.items || cart.items.length===0) { %>
+        <!-- Empty Cart State -->
+        <div class="empty-cart">
+            <div class="empty-cart-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="9" cy="21" r="1"></circle>
+                    <circle cx="20" cy="21" r="1"></circle>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+            </div>
+            <h2 class="empty-title">Your cart is empty</h2>
+            <p class="empty-text">Looks like you haven't added any items to your cart yet.<br>Start shopping to fill it
+                up!</p>
+            <a href="/user/products" class="continue-shopping-btn primary">
+                <span class="material-icons">shopping_bag</span>
+                Continue Shopping
+            </a>
+        </div>
+        <% } else { var hasOutOfStock=false; %>
+            <div class="cart-content">
+                <div class="cart-items-section">
+                    <!-- Cart Table Header -->
+                    <div class="cart-table-header">
+                        <span class="header-product">Product</span>
+                        <span class="header-quantity">Quantity</span>
+                        <span class="header-price">Price</span>
+                        <span class="header-total">Total</span>
+                    </div>
+
+                    <!-- Cart Items -->
+                    <div class="cart-items-list" id="cartItemsList">
+                        <% var hasOutOfStock=false; %>
+                            <% for (var i=0; i < cart.items.length; i++) { %>
+                                <% var item=cart.items[i]; var index=i; var variant=null; if (item.productId &&
+                                    item.productId.variants && item.variantId) { for (var v=0; v <
+                                    item.productId.variants.length; v++) { if (
+                                    item.productId.variants[v]._id.toString()===item.variantId.toString() ) {
+                                    variant=item.productId.variants[v]; break; } } } if (!variant && item.productId &&
+                                    item.productId.variants && item.productId.variants.length> 0) {
+                                    variant = item.productId.variants[0];
+                                    }
+
+                                    var variantImage = "/images/placeholder.png";
+                                    if (variant && variant.images && variant.images.length > 0) {
+                                    variantImage = variant.images[0];
+                                    } else if (
+                                    item.productId &&
+                                    item.productId.productImages &&
+                                    item.productId.productImages.length > 0
+                                    ) {
+                                    variantImage = item.productId.productImages[0];
+                                    }
+
+                                    var isOutOfStock = !variant || variant.stock <= 0; if (isOutOfStock)
+                                        hasOutOfStock=true; var variantPrice=variant ? variant.salePrice : item.price;
+                                        var variantBasePrice=variant ? variant.basePrice : null; var
+                                        hasDiscount=variantBasePrice && variantPrice < variantBasePrice; var maxQty=10;
+                                        if (variant && variant.stock < 10) maxQty=variant.stock; var
+                                        variantColor=variant ? variant.color : null; var variantValue=variant ?
+                                        variant.value : null; var variantSize=variant ? variant.size : null; var
+                                        variantStock=variant ? variant.stock : 0; var isMinQty=item.quantity <=1; var
+                                        isMaxQty=item.quantity>= maxQty;
+                                        %>
+
+
+                                        <div class="cart-item <%= isOutOfStock ? 'out-of-stock-item' : '' %>"
+                                            data-item-id="<%= item.productId._id %>"
+                                            data-variant-id="<%= item.variantId || '' %>" data-index="<%= index %>"
+                                            data-price="<%= item.effectivePrice || variantPrice %>"
+                                            data-base-price="<%= item.offer && item.offer.hasOffer ? item.offer.originalPrice : (variantBasePrice || variantPrice) %>"
+                                            data-effective-price="<%= item.effectivePrice || variantPrice %>"
+                                            data-has-offer="<%= item.offer && item.offer.hasOffer ? 'true' : 'false' %>"
+                                            data-stock="<%= variantStock %>">
+
+                                            <div class="item-product">
+                                                <div class="item-image-wrapper">
+                                                    <img src="<%= variantImage %>"
+                                                        alt="<%= item.productId.productName %>" class="item-image">
+                                                    <% if (isOutOfStock) { %>
+                                                        <div class="out-of-stock-overlay">
+                                                            <span>Out of Stock</span>
+                                                        </div>
+                                                        <% } %>
+                                                </div>
+                                                <div class="item-details">
+                                                    <h3 class="item-name" title="<%= item.productId.productName %>">
+                                                        <%= item.productId.productName %>
+                                                    </h3>
+                                                    <% if (item.productId.brand) { %>
+                                                        <p class="item-brand">
+                                                            <%= item.productId.brand.brandName %>
+                                                        </p>
+                                                        <% } %>
+
+                                                            <div class="item-variant-info">
+                                                                <% if (variantColor) { %>
+                                                                    <span class="variant-detail">
+                                                                        <span class="variant-color-dot"
+                                                                            style="background-color: <%= variantColor %>;"></span>
+                                                                        <%= variantValue || variantColor %>
+                                                                    </span>
+                                                                    <% } %>
+                                                                        <% if (variantSize) { %>
+                                                                            <span class="variant-detail">Size: <%=
+                                                                                    variantSize %></span>
+                                                                            <% } %>
+                                                            </div>
+
+                                                            <% if (isOutOfStock) { %>
+                                                                <p class="out-of-stock-message">
+                                                                    <span class="material-icons">error_outline</span>
+                                                                    This item is currently out of stock
+                                                                </p>
+                                                                <% } %>
+
+                                                                    <button class="remove-item-btn"
+                                                                        onclick="removeFromCart('<%= item.productId._id %>', '<%= item.variantId || '' %>')">
+                                                                        <span
+                                                                            class="material-icons">delete_outline</span>
+                                                                        Remove
+                                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="item-quantity">
+                                                <% if (!isOutOfStock) { %>
+                                                    <div class="quantity-control">
+                                                        <button class="qty-btn minus"
+                                                            onclick="changeQuantity('<%= item.productId._id %>', '<%= item.variantId || '' %>', 'decrement', this)">
+                                                            <span class="material-icons">remove</span>
+                                                        </button>
+                                                        <input type="number" class="qty-input"
+                                                            value="<%= item.quantity %>" min="1" max="<%= maxQty %>"
+                                                            data-product-id="<%= item.productId._id %>"
+                                                            data-variant-id="<%= item.variantId || '' %>" readonly>
+                                                        <button class="qty-btn plus"
+                                                            onclick="changeQuantity('<%= item.productId._id %>', '<%= item.variantId || '' %>', 'increment', this)"
+                                                            data-max-qty="<%= maxQty %>">
+                                                            <span class="material-icons">add</span>
+                                                        </button>
+                                                    </div>
+                                                    <% } else { %>
+                                                        <span class="qty-unavailable">—</span>
+                                                        <% } %>
+                                            </div>
+
+                                            <div class="item-price">
+                                                <% if (!isOutOfStock) { %>
+                                                    <% if (item.offer && item.offer.hasOffer) { %>
+                                                        <span class="offer-price">₹<%=
+                                                                Number(item.offer.offerPrice).toFixed(2) %></span>
+                                                        <span class="original-price">₹<%=
+                                                                Number(item.offer.basePrice).toFixed(2) %></span>
+                                                        <span class="offer-tag">
+                                                            <% if (item.offer.discountType==='percentage' ) { %>
+                                                                <%= item.offer.discount %>% OFF
+                                                                    <% } else { %>
+                                                                        ₹<%= item.offer.discount %> OFF
+                                                                            <% } %>
+                                                        </span>
+                                                        <% } else if (hasDiscount) { %>
+                                                            <span class="original-price">₹<%=
+                                                                    Number(variantBasePrice).toFixed(2) %></span>
+                                                            <span class="sale-price">₹<%=
+                                                                    Number(variantPrice).toFixed(2) %></span>
+                                                            <% } else { %>
+                                                                <span class="regular-price">₹<%=
+                                                                        Number(variantPrice).toFixed(2) %></span>
+                                                                <% } %>
+                                                                    <% } else { %>
+                                                                        <span class="price-unavailable">—</span>
+                                                                        <% } %>
+                                            </div>
+
+                                            <div class="item-total">
+                                                <% if (!isOutOfStock) { %>
+                                                    <span class="total-price"
+                                                        data-item-total="<%= item.effectiveTotalPrice || item.totalPrice %>">
+                                                        ₹<%= Number(item.effectiveTotalPrice ||
+                                                            item.totalPrice).toFixed(2) %>
+                                                    </span>
+                                                    <% } else { %>
+                                                        <span class="total-unavailable">—</span>
+                                                        <% } %>
+                                            </div>
+                                        </div>
+                                        <% } %>
+                    </div>
+
+                    <div class="cart-actions">
+                        <a href="/user/products" class="continue-shopping-link">
+                            <span class="material-icons">arrow_back</span>
+                            Continue Shopping
+                        </a>
+                        <button class="clear-cart-btn" onclick="clearCart()">
+                            <span class="material-icons">delete_sweep</span>
+                            Clear All
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Order Summary Sidebar -->
+                <aside class="order-summary" id="orderSummary">
+                    <h2 class="summary-title">Order Summary</h2>
+
+                    <div class="summary-details">
+                        <div class="summary-row">
+                            <span class="summary-label">Subtotal</span>
+                            <span class="summary-value" id="subtotalValue">₹<%= Number(cartTotal).toFixed(2) %></span>
+                        </div>
+
+                        <% if (savings && savings> 0) { %>
+                            <div class="summary-row savings">
+                                <span class="summary-label">Product Savings</span>
+                                <span class="summary-value" id="savingsValue">-₹<%= Number(savings).toFixed(2) %></span>
+                            </div>
+                            <% } %>
+
+                                <div class="discount-applied-section" id="discountApplied" style="display: none;">
+                                    <div class="summary-row discount">
+                                        <span class="summary-label">
+                                            <span class="discount-tag">
+                                                <span class="material-icons">local_offer</span>
+                                                <span id="discountCodeText">CODE</span>
+                                            </span>
+                                        </span>
+                                        <span class="summary-value discount-value" id="discountValue">-₹0</span>
+                                        <button class="remove-discount-btn" onclick="removeDiscount()">
+                                            <span class="material-icons">close</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="summary-row shipping-row">
+                                    <span class="summary-label">Shipping</span>
+                                    <span class="summary-value shipping-free" id="shippingValue">
+                                        <% if (cartTotal>= 1000) { %>FREE<% } else { %>₹99.00<% } %>
+                                    </span>
+                                </div>
+                    </div>
+
+                    <div class="discount-section">
+                        <label for="discountCode" class="discount-label">Have a coupon code?</label>
+                        <div class="discount-input-wrapper">
+                            <div class="input-icon-wrapper">
+                                <span class="material-icons input-icon">local_offer</span>
+                                <input type="text" id="discountCode" placeholder="Enter coupon code"
+                                    class="discount-input">
+                            </div>
+                            <button class="apply-btn" id="applyDiscountBtn" onclick="applyDiscount()">
+                                <span class="btn-text">Apply</span>
+                                <span class="btn-loader" style="display: none;">
+                                    <span class="material-icons spinning">sync</span>
+                                </span>
+                            </button>
+                        </div>
+                        <p class="discount-error" id="discountError" style="display: none;"></p>
+                    </div>
+
+                    <% var shippingCost=(cartTotal>= 1000) ? 0 : 99; %>
+                        <div class="summary-total">
+                            <span class="total-label">Total</span>
+                            <span class="total-value" id="totalValue">₹<%= Number(cartTotal + shippingCost).toFixed(2)
+                                    %></span>
+                        </div>
+
+                        <% if (hasOutOfStock) { %>
+                            <div class="checkout-warning">
+                                <span class="material-icons">warning</span>
+                                <span>Remove out of stock items to proceed</span>
+                            </div>
+                            <% } %>
+
+                                <button class="checkout-btn" onclick="proceedToCheckout()" <%=hasOutOfStock || (typeof
+                                    hasStockIssues !=='undefined' && hasStockIssues) ? 'disabled' : '' %>>
+                                    <span>Proceed to Checkout</span>
+                                    <span class="material-icons">arrow_forward</span>
+                                </button>
+
+                                <div class="trust-badges">
+                                    <div class="badge">
+                                        <span class="material-icons">lock</span>
+                                        <span>Secure Checkout</span>
+                                    </div>
+                                    <div class="badge">
+                                        <span class="material-icons">local_shipping</span>
+                                        <span>Free Shipping Over ₹1000</span>
+                                    </div>
+                                    <div class="badge">
+                                        <span class="material-icons">autorenew</span>
+                                        <span>Easy Returns</span>
+                                    </div>
+                                </div>
+                </aside>
+            </div>
+            <% } %>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/js/user/cart.js"></script>
+<script>
+    // Handle message from query params and show as SweetAlert toast
+    document.addEventListener('DOMContentLoaded', function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const message = urlParams.get('message');
+
+        if (message && typeof Swal !== 'undefined') {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                }
+            });
+
+            Toast.fire({
+                icon: 'warning',
+                title: message
+            });
+
+            // Remove query param from URL without reload
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
+        }
+    });
+</script>
