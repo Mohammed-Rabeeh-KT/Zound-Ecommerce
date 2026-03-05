@@ -1,0 +1,64 @@
+/* deals.css */
+
+.deals-hero {
+    background-color: #1a2234;
+    color: white;
+    text-align: center;
+    padding: 3rem 1rem 4rem;
+}
+
+.deals-hero-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 1rem;
+    color: #eab308;
+}
+
+.deal-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #f3f4f6;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.deal-image-container {
+    height: 200px;
+    background-color: #f9fafb;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.deal-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.badge-featured {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    background-color: #eab308;
+    color: black;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 999px;
+}
+
+.badge-discount {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background-color: #ef4444;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 999px;
+}

@@ -1,0 +1,73 @@
+/* brands.css */
+
+.hero-banner {
+    background-color: #1a2234;
+    color: white;
+    text-align: center;
+    padding: 4rem 1rem;
+}
+
+.hero-banner h1 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+.hero-banner p {
+    color: #9ca3af;
+    max-width: 42rem;
+    margin: 0 auto;
+    font-size: 0.95rem;
+}
+
+.brand-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.brand-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+}
+
+.brand-logo-container {
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f3f4f6;
+    margin: 1.5rem;
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+.brand-logo-text {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #4b5563;
+    letter-spacing: 1px;
+}
+
+.brand-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 1rem;
+}
+
+.featured-badge {
+    background-color: #eab308;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+    padding: 0.6rem;
+    width: 100%;
+    margin-top: auto;
+}

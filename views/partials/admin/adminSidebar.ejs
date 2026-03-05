@@ -47,9 +47,9 @@
             <i data-lucide="ticket"></i> Coupons
         </a>
 
-        <a href="/admin/support" class="menu-item <%= currentPage === 'support' ? 'active' : '' %>">
+        <!-- <a href="/admin/support" class="menu-item <%= currentPage === 'support' ? 'active' : '' %>">
             <i data-lucide="headset"></i> Support
-        </a>
+        </a> -->
 
         <a href="/admin/referrals" class="menu-item <%= currentPage === 'referrals' ? 'active' : '' %>">
             <i data-lucide="user-plus"></i> Referrals
@@ -82,7 +82,9 @@
                 <%= adminName ? adminName.substring(0,2).toUpperCase() : "AN" %>
             </div>
             <div>
-                <p class="admin-name"><%= adminName || "Admin Name" %></p>
+                <p class="admin-name">
+                    <%= adminName || "Admin Name" %>
+                </p>
                 <p class="admin-email">Administrator</p>
             </div>
         </div>
@@ -98,4 +100,3 @@
 <script>
     lucide.createIcons();
 </script>
-

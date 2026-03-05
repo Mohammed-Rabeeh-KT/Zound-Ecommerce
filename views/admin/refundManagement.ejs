@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Refund Management | ZOUND Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/styles/admin/paymentManagement.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+    <%- include('../partials/admin/adminSidebar', { currentPage: 'payments' , adminName: adminName }) %>
+
+        <div class="main-content">
+            <div class="header-actions">
+                <a href="/admin/payments" class="back-link"><i class="bi bi-arrow-left"></i> Back to Payments</a>
+            </div>
+
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Refund Management</h1>
+                    <p class="page-subtitle">Track and manage customer refund requests</p>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls-bar">
+                <div class="search-wrapper">
+                    <i class="bi bi-search"></i>
+                    <input type="text" placeholder="Search refunds by ID, order, or customer..." value="<%= typeof search !== 'undefined' ? search : '' %>">
+                </div>
+                <div class="actions-wrapper">
+                    <button class="btn-filter">
+                        <i class="bi bi-funnel"></i>
+                        <%= (typeof status !=='undefined' && status) ? status.charAt(0).toUpperCase() + status.slice(1)
+                            : 'All Statuses' %>
+                    </button>
+                    <button class="btn-export"><i class="bi bi-download"></i> Export</button>
+                </div>
+            </div>
+
+            <!-- Info Banner -->
+            <div class="info-banner">
+                <i class="bi bi-info-circle-fill"></i>
+                <div>
+                    <strong>Refunds are processed through Wallet/Gateway.</strong>
+                    Approved refunds will be credited to the user's wallet automatically.
+                </div>
+            </div>
+
+            <!-- Refunds Table -->
+            <div class="table-card">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Refund ID</th>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Payment Method</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (refunds && refunds.length> 0) { %>
+                            <% refunds.forEach(refund=> {
+                                const item = refund.orderedItems;
+                                const amount = item.price * item.quantity;
+                                %>
+                                <tr>
+                                    <td>REF-<%= refund.orderId.split('-')[2] %>
+                                    </td>
+                                    <td><a href="/admin/orders/<%= refund._id %>" class="order-link">
+                                            <%= refund.orderId %>
+                                        </a></td>
+                                    <td>
+                                        <div class="user-info">
+                                            <span class="user-name">
+                                                <%= refund.user ? refund.user.name : 'Unknown' %>
+                                            </span>
+                                            <span class="user-email">
+                                                <%= refund.user ? refund.user.email : '' %>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td><strong>₹<%= amount.toFixed(2) %></strong></td>
+                                    <td>
+                                        <%= new Date(refund.updatedAt).toLocaleDateString('en-IN', { day: '2-digit' ,
+                                            month: 'short' , year: 'numeric' }) %>
+                                    </td>
+                                    <td>
+                                        <%= refund.paymentMethod %>
+                                    </td>
+                                    <td>
+                                        <% let statusClass='pending' ; let statusText=item.itemStatus;
+                                            if(item.itemStatus==='Returned' ) { statusClass='completed' ;
+                                            statusText='Processed' ; } else if(item.itemStatus==='Return Rejected' ) {
+                                            statusClass='failed' ; statusText='Declined' ; } else
+                                            if(item.itemStatus==='Return Requested' ) { statusClass='pending' ;
+                                            statusText='Pending' ; } %>
+                                            <span class="status-badge status-<%= statusClass %>">
+                                                <%= statusText %>
+                                            </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <a href="/admin/orders/<%= refund._id %>" class="btn-icon"
+                                                title="View Order">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <% if (item.itemStatus==='Return Requested' ) { %>
+                                                <button class="btn-icon success"
+                                                    onclick="handleAction('<%= refund._id %>', '<%= item._id %>', 'approve')"
+                                                    title="Approve">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+                                                <button class="btn-icon danger"
+                                                    onclick="handleAction('<%= refund._id %>', '<%= item._id %>', 'reject')"
+                                                    title="Decline">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                                <% } %>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="8" class="empty-state">No refunds found</td>
+                                        </tr>
+                                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Summary Cards -->
+            <h3 class="section-title">Refund Summary</h3>
+            <div class="stats-grid summary-grid">
+                <div class="stat-card">
+                    <span class="stat-label">Total Refunds</span>
+                    <span class="stat-value small">
+                        <%= processedRefunds + pendingRefunds %>
+                    </span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Pending Refunds</span>
+                    <span class="stat-value small">
+                        <%= pendingRefunds %>
+                    </span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Approved/Processed</span>
+                    <span class="stat-value small">
+                        <%= processedRefunds %>
+                    </span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Total Refund Amount</span>
+                    <span class="stat-value small">₹<%= totalRefundAmount.toLocaleString('en-IN') %></span>
+                </div>
+            </div>
+
+            <!-- Integration Box -->
+            <div class="integration-box">
+                <h3>Payment Gateway Integration</h3>
+                <p>This refund management system is integrated with the wallet system. When you approve a refund, it
+                    will be processed to the user's wallet.</p>
+                <div class="integration-actions">
+                    <button class="btn-primary-dark">View Gateway Dashboard</button>
+                    <button class="btn-outline">Sync Refund Status</button>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <% if (totalPages> 1) { %>
+                <div class="pagination-container">
+                    <% if (page> 1) { %>
+                        <a href="?page=<%= page - 1 %><%= typeof search !== 'undefined' && search ? '&search=' + search : '' %><%= typeof status !== 'undefined' && status ? '&status=' + status : '' %>"
+                            class="page-btn"><i class="bi bi-chevron-left"></i></a>
+                        <% } %>
+
+                            <% for(let i=1; i <=totalPages; i++) { %>
+                                <a href="?page=<%= i %><%= typeof search !== 'undefined' && search ? '&search=' + search : '' %><%= typeof status !== 'undefined' && status ? '&status=' + status : '' %>"
+                                    class="page-btn <%= page === i ? 'active' : '' %>">
+                                    <%= i %>
+                                </a>
+                                <% } %>
+
+                                    <% if (page < totalPages) { %>
+                                        <a href="?page=<%= page + 1 %><%= typeof search !== 'undefined' && search ? '&search=' + search : '' %><%= typeof status !== 'undefined' && status ? '&status=' + status : '' %>"
+                                            class="page-btn"><i class="bi bi-chevron-right"></i></a>
+                                        <% } %>
+                </div>
+                <% } %>
+
+        </div>
+
+        <script src="/js/admin/refundManagement.js"></script>
+</body>
+
+</html>

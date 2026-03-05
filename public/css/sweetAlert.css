@@ -1,0 +1,54 @@
+/* Zound Sweet Alert Premium Theme */
+.zound-swal-popup {
+    border-radius: 1rem !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+    background-color: #ffffff !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+.zound-swal-title {
+    color: #1e293b !important;
+    font-weight: 700 !important;
+    font-size: 1.5rem !important;
+}
+
+.zound-swal-confirm {
+    background-color: #002366 !important; /* Premium Royal Blue */
+    color: white !important;
+    border-radius: 9999px !important; /* Full round */
+    padding: 0.75rem 2rem !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 35, 102, 0.2) !important;
+    border: none !important;
+    outline: none !important;
+}
+
+.zound-swal-confirm:hover {
+    background-color: #001a4d !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 8px -1px rgba(0, 35, 102, 0.3) !important;
+}
+
+.zound-swal-cancel {
+    background-color: #f1f5f9 !important; /* Slate 100 */
+    color: #475569 !important; /* Slate 600 */
+    border-radius: 9999px !important;
+    padding: 0.75rem 2rem !important;
+    font-weight: 600 !important;
+    border: 1px solid #e2e8f0 !important;
+    outline: none !important;
+}
+
+.zound-swal-cancel:hover {
+    background-color: #e2e8f0 !important;
+    color: #334155 !important;
+}
+
+/* Toast Styles */
+.zound-toast-popup {
+    background: #ffffff !important;
+    color: #1e293b !important;
+    border-left: 4px solid !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    border-radius: 0.5rem !important;
+}

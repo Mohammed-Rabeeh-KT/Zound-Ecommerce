@@ -1,185 +1,394 @@
-<link rel="stylesheet" href="/styles/user/home.css" />
+<!-- Light Theme Home Page - Premium Royal Blue -->
 
-<div class="max-w-7xl mx-auto px-4 pb-16 space-y-14 font-inter">
+<style>
+  /* Canvas sits behind content */
+  #canvas-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: #ffffff;
+    /* White background */
+    overflow: hidden;
+  }
 
-  <!-- HERO -->
-  <section class="mt-6">
-    <div class="relative bg-black text-white rounded-3xl overflow-hidden
-                min-h-[260px] flex flex-col md:flex-row items-center
-                px-8 md:px-10 py-10 gap-6">
+  /* Minimal Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
 
-      <div class="max-w-xl space-y-4">
-        <p class="text-[11px] tracking-[0.25em] uppercase text-neutral-300">
-          Premium Audio
-        </p>
-        <h1 class="text-3xl md:text-4xl font-semibold leading-tight">
-          Experience Sound,<br class="hidden md:block" /> Redefined.
+  ::-webkit-scrollbar-track {
+    background: #f8fafc;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-up {
+    animation: fadeUp 0.8s ease-out forwards;
+  }
+
+  /* Glassmorphism for Light Theme */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  }
+
+  .text-royal-blue {
+    color: #002366;
+  }
+
+  .bg-royal-blue {
+    background-color: #002366;
+  }
+
+  .border-royal-blue {
+    border-color: #002366;
+  }
+
+  .hover\:bg-royal-blue-dark:hover {
+    background-color: #001a4d;
+  }
+
+  /* Slow Turning Animation */
+  @keyframes slowTurn {
+    0% {
+      transform: perspective(1000px) rotateY(-15deg) translateY(0);
+    }
+
+    100% {
+      transform: perspective(1000px) rotateY(15deg) translateY(-20px);
+    }
+  }
+
+  .animate-slow-turn {
+    animation: slowTurn 5s ease-in-out infinite alternate;
+  }
+</style>
+
+<!-- BACKGROUND ANIMATION CONTAINER -->
+<div id="canvas-container">
+  <canvas id="heroCanvas"></canvas>
+</div>
+
+<div class="relative min-h-screen font-sans text-slate-800 selection:bg-[#002366] selection:text-white">
+
+  <!-- HERO SECTION -->
+  <section class="hero-section relative pt-24 pb-12 lg:pt-32 lg:pb-24 px-6 md:px-12 max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+
+      <div class="space-y-8 animate-fade-up" style="animation-delay: 0.1s;">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-blue-100 bg-blue-50">
+          <span class="w-2 h-2 rounded-full bg-[#002366] animate-pulse"></span>
+          <span class="text-xs font-bold tracking-wider uppercase text-[#002366]">Premium Audio Collection</span>
+        </div>
+
+        <h1 class="hero-title text-5xl md:text-7xl font-bold leading-tight tracking-tight text-[#002366]">
+          Sound, <br>
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#002366] to-blue-500">
+            Redefined.
+          </span>
         </h1>
-        <p class="text-sm md:text-base text-neutral-300 max-w-md">
-          Discover curated headphones, speakers and IEMs crafted for audiophiles.
+
+        <p class="hero-subtitle text-lg text-slate-600 max-w-xl leading-relaxed">
+          Discover a curated selection of high-fidelity headphones and speakers.
+          Crafted for true audiophile who refuses to compromise on clarity.
         </p>
 
-        <button class="mt-2 inline-flex items-center px-5 py-2.5 rounded-full 
-                       bg-yellow-500 text-black text-sm font-semibold hover:opacity-90">
-          Explore the Collection
-          <span class="material-icons text-[16px] ml-1">arrow_forward</span>
-        </button>
-      </div>
-<!-- 
-      <div class="flex-1 flex justify-end">
-        <img src="/images/hero/headphones-hero.png"
-             class="w-56 md:w-72 object-contain" />
-      </div> -->
-
-      <button class="hero-arrow hidden md:flex absolute left-4 top-1/2 
-                     -translate-y-1/2 bg-neutral-900/70 text-white
-                     rounded-full w-9 h-9 items-center justify-center">‹</button>
-
-      <button class="hero-arrow hidden md:flex absolute right-4 top-1/2 
-                     -translate-y-1/2 bg-neutral-900/70 text-white
-                     rounded-full w-9 h-9 items-center justify-center">›</button>
-
-      <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-        <span class="w-2 h-2 rounded-full bg-white"></span>
-        <span class="w-2 h-2 rounded-full bg-neutral-500"></span>
-        <span class="w-2 h-2 rounded-full bg-neutral-500"></span>
-      </div>
-    </div>
-  </section>
-
-  <!-- SHOP BY CATEGORY -->
-  <section class="space-y-4">
-    <div class="flex items-center justify-between">
-      <h2 class="font-semibold text-lg">Shop by category</h2>
-
-      <div class="flex gap-2">
-        <button class="w-8 h-8 rounded-full border flex items-center 
-                       justify-center text-sm hover:bg-neutral-100">‹</button>
-        <button class="w-8 h-8 rounded-full border flex items-center 
-                       justify-center text-sm hover:bg-neutral-100">›</button>
-      </div>
-    </div>
-
-    <div class="flex gap-6 overflow-x-auto pt-2 no-scrollbar">
-      <% categories.forEach(cat => { %>
-        <%- include('../partials/user/category-card', cat) %>
-      <% }) %>
-    </div>
-  </section>
-
-  <!-- SEASONAL SALE -->
-  <section>
-    <div class="bg-gradient-to-r from-blue-100 to-blue-200 rounded-3xl
-                flex flex-col md:flex-row items-center p-6 md:p-10 gap-6">
-
-      <div class="flex-1 flex flex-col md:flex-row items-center gap-6">
-        <div>
-          <p class="text-sm font-semibold text-brandBlue">20% OFF</p>
-          <p class="text-xs text-neutral-600">On select products</p>
-        </div>
-
-        <div class="flex-1">
-          <h3 class="font-semibold text-lg text-brandDark">
-            Seasonal weekly sale 2025
-          </h3>
-          <p class="text-xs text-neutral-700">
-            Use code 
-            <span class="font-semibold bg-white/70 px-2 py-0.5 rounded-full
-                         border text-[11px] uppercase">
-              SALE2025
-            </span>
-            to get the best offer.
-          </p>
+        <div class="flex flex-wrap gap-4 pt-4">
+          <a href="/user/products"
+            class="group relative px-8 py-4 bg-[#002366] text-white font-bold rounded-full overflow-hidden transition-transform hover:scale-105 shadow-lg shadow-blue-900/20">
+            <span class="relative z-10">Explore Collection</span>
+            <!-- Button Hover Effect -->
+            <div
+              class="absolute inset-0 bg-[#001a4d] transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300">
+            </div>
+          </a>
+          <a href="#latest-drops" class="hero-button-link">
+            <button class="hero-button px-8 py-4 border border-slate-200 text-slate-700 rounded-full font-medium hover:bg-slate-50 transition-colors">
+              View New Arrivals
+            </button>
+          </a>
         </div>
       </div>
 
-      <img src="/images/banners/sale-headphones.png"
-           class="w-40 md:w-48 object-contain" />
+      <!-- HERO IMAGE / VISUAL (Interactive 3D Tilt) -->
+      <div class="relative z-10 animate-fade-up perspective-1000">
+        <!-- Interactive Container -->
+        <div id="heroProductContainer"
+          class="relative w-full aspect-square max-w-md mx-auto transition-transform duration-100 ease-out"
+          style="transform-style: preserve-3d;">
+
+          <!-- Sound Wave Background Animation -->
+          <div class="absolute inset-0 flex items-center justify-center z-0">
+            <div class="w-64 h-64 border border-blue-100 rounded-full animate-ping opacity-20"
+              style="animation-duration: 2s;"></div>
+            <div class="absolute w-80 h-80 border border-blue-50 rounded-full animate-ping opacity-10"
+              style="animation-duration: 3s; animation-delay: 0.5s;"></div>
+          </div>
+
+          <!-- Product Image with 3D Depth -->
+          <img id="heroProduct" class="hero-image" src="/images/hero-headphone-premium.png" loading="eager"
+            onerror="this.src='https://assets.bose.com/content/dam/Bose_DAM/Web/consumer_electronics/global/products/headphones/qc45/product_silo_images/QC45_Black_Ecom_01.png'"
+            class="relative z-10 w-full h-full object-contain drop-shadow-2xl" style="transform: translateZ(50px);"
+            alt="Premium Headphone">
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- SERVICE ICON ROW -->
-  <section class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-    <%- include('../partials/user/service-icons') %>
-  </section>
-
-  <!-- TOP SELLING -->
-  <section class="space-y-4">
-    <h2 class="font-semibold text-lg mt-4">Top selling products</h2>
-
-    <div class="flex gap-4 text-xs border-b">
-      <button class="pb-2 border-b-2 border-black font-semibold">Headphones</button>
-      <button class="pb-2 text-neutral-500">IEMs</button>
-      <button class="pb-2 text-neutral-500">Speakers</button>
-      <button class="pb-2 text-neutral-500">Earbuds</button>
-      <button class="pb-2 text-neutral-500">Accessories</button>
-    </div>
-
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-      <% topProducts.forEach(product => { %>
-        <%- include('../partials/user/product-card', { product } ) %>
-      <% }) %>
+  <!-- BRANDS SCROLL (Minimal Light) -->
+  <section class="border-y border-slate-100 bg-white/50 backdrop-blur-sm py-10 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-6">
+      <p class="text-center text-xs text-slate-400 uppercase tracking-[0.2em] mb-8">Trusted by Audiophiles</p>
+      <div
+        class="flex flex-wrap justify-center gap-10 md:gap-16 opacity-60 hover:opacity-100 transition-opacity duration-500">
+        <% if (brands && brands.length> 0) { %>
+          <% brands.slice(0, 6).forEach(brand=> { %>
+            <a href="/user/products?brand=<%= brand.slug %>" class="group">
+              <span
+                class="text-xl md:text-2xl font-bold font-serif italic text-slate-400 group-hover:text-[#002366] transition-colors">
+                <%= brand.brandName %>
+              </span>
+            </a>
+            <% }) %>
+              <% } %>
+      </div>
     </div>
   </section>
 
-  <!-- CURATED BRANDS -->
-  <section class="mt-10 space-y-4 text-center">
-    <h2 class="font-semibold text-lg">Our curated brands</h2>
-    <p class="text-xs text-neutral-600 max-w-xl mx-auto">
-      We partner with the world's most revered audio manufacturers to bring you an unparalleled listening experience.
-    </p>
+  <!-- CATEGORIES GRID -->
+  <section class="py-24 px-6 md:px-12 max-w-7xl mx-auto">
+    <div class="flex justify-between items-end mb-12">
+      <div>
+        <h2 class="text-3xl md:text-4xl font-bold text-[#002366] mb-2">Shop by Category</h2>
+        <p class="text-slate-500 text-sm">Find your perfect sound signature</p>
+      </div>
+      <a href="/user/products"
+        class="hidden md:flex items-center gap-2 text-sm font-semibold text-[#002366] hover:text-blue-700 transition-colors">
+        View All <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
 
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mt-4">
-      <% curatedBrands.forEach(name => { %>
-        <%- include('../partials/user/brand-card', { name }) %>
-      <% }) %>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <% if (categories && categories.length> 0) { %>
+        <% categories.slice(0, 5).forEach(cat=> { %>
+          <a href="/user/products?category=<%= cat.slug %>"
+            class="group relative h-64 md:h-80 rounded-2xl overflow-hidden glass-card transition-all hover:-translate-y-2 hover:shadow-xl hover:shadow-blue-900/10">
+            <img src="<%= cat.image %>" alt="<%= cat.name %>"
+              class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+
+            <div
+              class="absolute inset-0 bg-gradient-to-t from-[#002366]/80 via-transparent to-transparent opacity-80 group-hover:opacity-90 transition-opacity">
+            </div>
+
+            <div
+              class="absolute bottom-0 left-0 w-full p-6 text-center transform translate-y-2 group-hover:translate-y-0 transition-transform">
+              <h3 class="text-lg font-bold text-white mb-1">
+                <%= cat.name %>
+              </h3>
+              <p
+                class="text-[10px] text-blue-100 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity delay-100">
+                Explore</p>
+            </div>
+          </a>
+          <% }) %>
+            <% } %>
     </div>
   </section>
 
-  <!-- SPECIAL OFFERS -->
-  <section class="mt-10 space-y-4">
-    <div class="flex items-center justify-between">
-      <h2 class="font-semibold text-lg">Special offers for you</h2>
-      <button class="text-xs text-neutral-600">View all</button>
-    </div>
-
-    <div class="flex gap-2 text-[11px]">
-      <span class="time-pill-active px-2 py-1 rounded-full">12d</span>
-      <span class="time-pill px-2 py-1 rounded-full">10h</span>
-      <span class="time-pill px-2 py-1 rounded-full">12m</span>
-    </div>
-
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3">
-      <% specialOffers.forEach(product => { %>
-        <%- include('../partials/user/product-card', {product}) %>
-      <% }) %>
-    </div>
-  </section>
-
-  <!-- NEWSLETTER -->
-  <section class="mt-10 w-full">
-    <div class="w-full bg-[#002366] text-white rounded-3xl px-6 md:px-12 py-10
-                flex flex-col md:flex-row items-center justify-between gap-6">
-
-      <div class="space-y-2 max-w-md">
-        <h2 class="text-xl md:text-2xl font-semibold">Join the inner circle</h2>
-        <p class="text-xs text-blue-100">
-          Stay tuned for exclusive releases, special offers, and the latest in high-fidelity audio.
-        </p>
+  <!-- LATEST DROPS -->
+  <section id="latest-drops" class="py-24 bg-slate-50/50">
+    <div class="max-w-7xl mx-auto px-6 md:px-12">
+      <div class="flex flex-col md:flex-row justify-between items-center mb-16 gap-4">
+        <h2 class="text-4xl md:text-5xl font-bold text-[#002366] text-center md:text-left">
+          Latest <span class="italic font-serif text-slate-400">Drops</span>
+        </h2>
+        <div class="flex gap-2">
+          <button
+            class="w-10 h-10 rounded-full border border-slate-200 bg-white text-[#002366] flex items-center justify-center hover:bg-[#002366] hover:text-white transition-all shadow-sm"><i
+              class="bi bi-arrow-left"></i></button>
+          <button
+            class="w-10 h-10 rounded-full border border-slate-200 bg-white text-[#002366] flex items-center justify-center hover:bg-[#002366] hover:text-white transition-all shadow-sm"><i
+              class="bi bi-arrow-right"></i></button>
+        </div>
       </div>
 
-      <form class="w-full md:w-96 flex flex-col sm:flex-row gap-3">
-        <input type="email"
-               class="flex-1 rounded-full px-4 py-2 text-sm text-black outline-none"
-               placeholder="Enter your email address" />
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <% if (latestProducts && latestProducts.length> 0) { %>
+          <% latestProducts.slice(0, 4).forEach(p=> { %>
+            <!-- LIGHT THEME PRODUCT CARD -->
+            <div
+              class="group relative bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-blue-900/10 transition-all duration-500 aspect-[3/4] border border-slate-100">
 
-        <button class="px-5 py-2 rounded-full bg-yellow-400 text-black 
-                       text-sm font-semibold hover:opacity-90">
-          Subscribe
-        </button>
-      </form>
+              <!-- Badge -->
+              <% if (p.offer && p.offer.hasOffer) { %>
+                <div
+                  class="absolute top-4 left-4 z-20 px-3 py-1 bg-[#002366] text-white text-[10px] font-bold uppercase tracking-wider rounded-sm shadow-md">
+                  <%= p.offer.totalDiscountPercent %>% OFF
+                </div>
+                <% } else if (p.primaryVariant && p.primaryVariant.basePrice> p.primaryVariant.salePrice) { %>
+                  <div
+                    class="absolute top-4 left-4 z-20 px-3 py-1 bg-blue-100 text-[#002366] text-[10px] font-bold uppercase tracking-wider rounded-sm">
+                    Sale
+                  </div>
+                  <% } %>
 
+                    <!-- Wishlist Btn -->
+                    <% var inWishlist=false; if (typeof wishlistProductIds !=='undefined' &&
+                      wishlistProductIds.includes(p._id.toString())) { inWishlist=true; } %>
+                      <button
+                        onclick="toggleWishlist('<%= p._id %>', '<%= p.primaryVariant ? p.primaryVariant._id : `` %>', this)"
+                        class="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-white/80 backdrop-blur flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-[#002366] hover:text-white translate-y-2 group-hover:translate-y-0 shadow-md <%= inWishlist ? 'active text-[#002366]' : 'text-slate-400' %>">
+                        <i class="bi <%= inWishlist ? 'bi-heart-fill' : 'bi-heart' %>"></i>
+                      </button>
+
+                      <!-- Image Area -->
+                      <a href="/user/products/<%= p.slug %>" class="block h-2/3 overflow-hidden relative bg-slate-50">
+                        <img src="<%= p.listingImage %>" alt="<%= p.productName %>"
+                          class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 mix-blend-multiply">
+                        <!-- Quick Add Button -->
+                        <div
+                          class="absolute bottom-4 left-0 w-full flex justify-center opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+                          <% if (p.primaryVariant && p.primaryVariant.stock> 0) { %>
+                            <button
+                              onclick="addToCartQuick('<%= p._id %>', '<%= p.primaryVariant._id %>'); event.preventDefault();"
+                              class="px-6 py-2 bg-[#002366] text-white text-sm font-bold rounded-full hover:bg-blue-800 transition-colors shadow-lg">
+                              Add to Cart
+                            </button>
+                            <% } else { %>
+                              <span class="px-6 py-2 bg-slate-200 text-slate-500 text-xs font-bold rounded-full">Out of
+                                Stock</span>
+                              <% } %>
+                        </div>
+                      </a>
+
+                      <!-- Info Area -->
+                      <div class="p-6 h-1/3 flex flex-col justify-between bg-white">
+                        <div>
+                          <p class="text-xs text-slate-400 uppercase tracking-widest mb-1">
+                            <%= p.brand ? p.brand.brandName : 'Brand' %>
+                          </p>
+                          <h3
+                            class="text-base font-bold text-slate-800 line-clamp-1 group-hover:text-[#002366] transition-colors">
+                            <a href="/user/products/<%= p.slug %>">
+                              <%= p.productName %>
+                            </a>
+                          </h3>
+                        </div>
+
+                        <div class="flex items-end gap-3">
+                          <% let price=0; let originalPrice=0; if (p.offer && p.offer.hasOffer) {
+                            price=p.offer.offerPrice; originalPrice=p.offer.basePrice; } else if (p.primaryVariant) {
+                            price=p.primaryVariant.salePrice; originalPrice=p.primaryVariant.basePrice; } %>
+                            <span class="text-lg font-bold text-[#002366]">₹<%= price.toLocaleString() %></span>
+                            <% if (originalPrice> price) { %>
+                              <span class="text-sm text-slate-400 line-through">₹<%= originalPrice.toLocaleString() %>
+                              </span>
+                              <% } %>
+                        </div>
+                      </div>
+            </div>
+            <% }) %>
+              <% } %>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOP SELLERS -->
+  <section class="py-24 max-w-7xl mx-auto px-6 md:px-12">
+    <div class="text-center mb-16 space-y-4">
+      <span class="text-[#002366] text-xs font-bold tracking-[0.3em] uppercase bg-blue-50 px-3 py-1 rounded-full">Best
+        in Class</span>
+      <h2 class="text-4xl md:text-5xl font-bold text-slate-800">Top Selling <span class="text-slate-400">Gear</span>
+      </h2>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <% if (topProducts && topProducts.length> 0) { %>
+        <% topProducts.forEach(p=> { %>
+          <!-- Minimal Product Card (Light) -->
+          <a href="/user/products/<%= p.slug %>" class="group block">
+            <div
+              class="relative aspect-square bg-[#f8fafc] rounded-2xl overflow-hidden mb-4 border border-slate-100 group-hover:border-blue-200 transition-colors shadow-inner">
+              <img src="<%= p.listingImage %>" alt="<%= p.productName %>"
+                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 mix-blend-multiply">
+
+              <% if (p.topSelling) { %>
+                <div class="absolute top-2 left-2 w-2 h-2 bg-[#002366] rounded-full animate-ping"></div>
+                <div class="absolute top-2 left-2 w-2 h-2 bg-[#002366] rounded-full"></div>
+                <% } %>
+            </div>
+
+            <div class="space-y-1">
+              <h3 class="text-sm font-bold text-slate-700 group-hover:text-[#002366] transition-colors truncate">
+                <%= p.productName %>
+              </h3>
+              <% let price=0; if (p.offer && p.offer.hasOffer) price=p.offer.offerPrice; else if (p.primaryVariant)
+                price=p.primaryVariant.salePrice; %>
+                <p class="text-slate-500 text-sm font-medium">₹<%= price.toLocaleString() %>
+                </p>
+            </div>
+          </a>
+          <% }) %>
+            <% } %>
+    </div>
+  </section>
+
+  <!-- NEWSLETTER (Royal Blue Theme) -->
+  <section class="py-24 px-6 md:px-12">
+    <div class="max-w-7xl mx-auto relative rounded-[2rem] overflow-hidden shadow-2xl shadow-blue-900/20">
+      <!-- Newsletter Background -->
+      <div class="absolute inset-0 bg-[#002366]"></div>
+      <div class="absolute inset-0 bg-[url('/images/pattern-noise.png')] opacity-20 mix-blend-overlay"></div>
+      <!-- Decorative Circle -->
+      <div class="absolute -right-20 -top-20 w-96 h-96 bg-blue-500 rounded-full blur-3xl opacity-20"></div>
+
+      <div
+        class="relative z-10 p-12 md:p-20 flex flex-col md:flex-row items-center justify-between gap-12 text-center md:text-left">
+        <div class="max-w-xl space-y-4">
+          <h2 class="text-4xl md:text-5xl font-bold text-white">Join the <span
+              class="italic font-serif text-blue-200">Inner Circle</span></h2>
+          <p class="text-blue-100 text-lg">Subscribe for exclusive access to limited drops and audiophile content.</p>
+        </div>
+
+        <form
+          class="w-full max-w-md bg-white/10 backdrop-blur-md p-2 rounded-full flex border border-white/20 focus-within:bg-white/20 transition-colors">
+          <input type="email" placeholder="Your email address"
+            class="flex-1 px-6 py-4 rounded-full bg-transparent outline-none text-white placeholder-blue-200">
+          <button type="submit"
+            class="px-8 py-4 bg-white text-[#002366] rounded-full font-bold hover:bg-blue-50 transition-colors shadow-lg">
+            Subscribe
+          </button>
+        </form>
+      </div>
     </div>
   </section>
 
 </div>
+
+<script src="/js/user/dynamicBanner.js"></script>
+<script src="/js/user/home.js"></script>

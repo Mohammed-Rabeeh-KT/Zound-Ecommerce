@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wishlist | ZOUND</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="/styles/user/wishlist.css">
+</head>
+
+<body>
+    <div class="page-container">
+        <%- include('../partials/user/user-sidebar', { currentPage: 'wishlist' }) %>
+
+            <main class="main-content">
+                <header class="page-header">
+                    <div class="header-content">
+                        <h1 class="headline">My Wishlist</h1>
+                        <p class="subheadline">
+                            <% if (wishlist && wishlist.products && wishlist.products.length> 0) { %>
+                                You have <span class="count-highlight">
+                                    <%= wishlist.products.length %>
+                                </span> item<%= wishlist.products.length> 1 ? 's' : '' %> saved
+                                    <% } else { %>
+                                        Save your favorite items here
+                                        <% } %>
+                        </p>
+                    </div>
+                    <% if (wishlist && wishlist.products && wishlist.products.length> 0) { %>
+                        <button class="clear-all-btn" onclick="clearWishlist()">
+                            <span class="material-icons">delete_sweep</span>
+                            Clear All
+                        </button>
+                        <% } %>
+                </header>
+
+                <% if (!wishlist || !wishlist.products || wishlist.products.length===0) { %>
+                    <section class="empty-state">
+                        <div class="empty-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                                </path>
+                            </svg>
+                        </div>
+                        <h2 class="empty-title">Your wishlist is empty</h2>
+                        <p class="empty-text">Start adding products you love to your wishlist.<br>They'll be saved here
+                            for easy access!</p>
+                        <a href="/user/products" class="browse-btn">
+                            <span class="material-icons">storefront</span>
+                            Browse Products
+                        </a>
+                    </section>
+                    <% } else { %>
+                        <section class="wishlist-grid">
+                            <% for (var i=0; i < wishlist.products.length; i++) { var item=wishlist.products[i]; var
+                                product=item.productId; if (!product) continue; var variant=null; var
+                                itemVariantId=item.variantId ? item.variantId.toString() : null; if (itemVariantId &&
+                                product.variants) { for (var j=0; j < product.variants.length; j++) { if
+                                (product.variants[j]._id.toString()===itemVariantId) { variant=product.variants[j];
+                                break; } } } if (!variant && product.variants && product.variants.length> 0) {
+                                variant = product.variants[0];
+                                }
+
+                                var productImage = '/images/placeholder.png';
+                                if (variant && variant.images && variant.images.length > 0) {
+                                productImage = variant.images[0];
+                                } else if (product.productImages && product.productImages.length > 0) {
+                                productImage = product.productImages[0];
+                                }
+
+                                var salePrice = variant ? variant.salePrice : 0;
+                                var basePrice = variant ? variant.basePrice : 0;
+
+                                // Check for offer
+                                var hasOffer = item.offer && item.offer.hasOffer;
+                                var effectivePrice = hasOffer ? item.offer.offerPrice : salePrice;
+                                var originalPrice = hasOffer ? item.offer.originalPrice : basePrice;
+
+                                var hasDiscount = hasOffer || (basePrice && salePrice < basePrice); var
+                                    discountPercent=hasOffer ? (item.offer.discountType==='percentage' ?
+                                    item.offer.discount : Math.round((1 - effectivePrice / originalPrice) * 100)) :
+                                    (hasDiscount ? Math.round((1 - salePrice / basePrice) * 100) : 0); var
+                                    isOutOfStock=!variant || variant.stock <=0; var isUnavailable=product.status
+                                    !=='Active' || product.isDeleted; %>
+                                    <div class="wishlist-card <%= isOutOfStock || isUnavailable ? 'unavailable' : '' %>"
+                                        data-product-id="<%= product._id %>"
+                                        data-variant-id="<%= variant ? variant._id : '' %>">
+                                        <button class="remove-btn"
+                                            onclick="removeFromWishlist('<%= product._id %>', '<%= variant ? variant._id : '' %>')"
+                                            title="Remove from wishlist">
+                                            <span class="material-icons">close</span>
+                                        </button>
+
+                                        <a href="/user/products/<%= product.slug %>" class="card-image-link">
+                                            <div class="card-image-wrapper">
+                                                <img src="<%= productImage %>" alt="<%= product.productName %>"
+                                                    class="card-image">
+                                                <% if (isOutOfStock && !isUnavailable) { %>
+                                                    <div class="stock-badge out-of-stock">Out of Stock</div>
+                                                    <% } else if (isUnavailable) { %>
+                                                        <div class="stock-badge unavailable">Unavailable</div>
+                                                        <% } else if (hasOffer) { %>
+                                                            <div class="discount-badge offer-badge">
+                                                                <% if (item.offer.discountType==='percentage' ) { %>
+                                                                    -<%= item.offer.discount %>%
+                                                                        <% } else { %>
+                                                                            -₹<%= item.offer.discount %>
+                                                                                <% } %>
+                                                            </div>
+                                                            <% } else if (hasDiscount) { %>
+                                                                <div class="discount-badge">-<%= discountPercent %>%
+                                                                </div>
+                                                                <% } %>
+                                            </div>
+                                        </a>
+
+                                        <div class="card-info">
+                                            <% if (product.brand) { %>
+                                                <span class="card-brand">
+                                                    <%= product.brand.brandName %>
+                                                </span>
+                                                <% } %>
+
+                                                    <a href="/user/products/<%= product.slug %>"
+                                                        class="card-title-link">
+                                                        <h3 class="card-title">
+                                                            <%= product.productName %>
+                                                        </h3>
+                                                    </a>
+
+                                                    <% if (variant && variant.value) { %>
+                                                        <div class="card-variant">
+                                                            <span class="variant-tag">
+                                                                <% if (variant.color) { %>
+                                                                    <span class="color-dot"
+                                                                        style="background-color: <%= variant.color %>;"></span>
+                                                                    <% } %>
+                                                                        <%= variant.value %>
+                                                            </span>
+                                                        </div>
+                                                        <% } %>
+
+                                                            <div class="card-price">
+                                                                <% if (!isOutOfStock && !isUnavailable) { %>
+                                                                    <% if (hasOffer) { %>
+                                                                        <span class="current-price offer-price">₹<%=
+                                                                                Number(effectivePrice).toFixed(2) %>
+                                                                                </span>
+                                                                        <span class="original-price">₹<%=
+                                                                                Number(originalPrice).toFixed(2) %>
+                                                                                </span>
+                                                                        <% } else if (hasDiscount) { %>
+                                                                            <span class="current-price">₹<%=
+                                                                                    Number(salePrice).toFixed(2) %>
+                                                                                    </span>
+                                                                            <span class="original-price">₹<%=
+                                                                                    Number(basePrice).toFixed(2) %>
+                                                                                    </span>
+                                                                            <% } else { %>
+                                                                                <span class="current-price">₹<%=
+                                                                                        Number(salePrice).toFixed(2) %>
+                                                                                        </span>
+                                                                                <% } %>
+                                                                                    <% } else { %>
+                                                                                        <span
+                                                                                            class="price-unavailable">Price
+                                                                                            unavailable</span>
+                                                                                        <% } %>
+                                                            </div>
+
+                                                            <p class="added-date">Added on <%= new
+                                                                    Date(item.addedOn).toLocaleDateString('en-IN', {
+                                                                    day: 'numeric' , month: 'short' , year: 'numeric' })
+                                                                    %>
+                                                            </p>
+                                        </div>
+
+                                        <div class="card-actions">
+                                            <% if (!isOutOfStock && !isUnavailable) { %>
+                                                <button class="add-to-cart-btn"
+                                                    onclick="addToCartFromWishlist('<%= product._id %>', '<%= variant ? variant._id : '' %>')">
+                                                    <span class="material-icons">shopping_cart</span>
+                                                    Add to Cart
+                                                </button>
+                                                <% } else { %>
+                                                    <button class="add-to-cart-btn disabled" disabled>
+                                                        <span class="material-icons">block</span>
+                                                        <%= isUnavailable ? 'Unavailable' : 'Out of Stock' %>
+                                                    </button>
+                                                    <% } %>
+                                        </div>
+                                    </div>
+                                    <% } %>
+                        </section>
+                        <% } %>
+            </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/js/user/wishlist.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,161 @@
+<!-- Add/Edit Address Form Dropdown Partial -->
+<div class="address-form-dropdown" id="addressFormDropdown">
+    <div class="form-card">
+        <div class="form-header">
+            <h3 class="form-title" id="addressFormTitle">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                Add New Address
+            </h3>
+            <button type="button" class="btn-close-form" onclick="toggleAddressForm()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <form id="addAddressForm" onsubmit="handleAddAddress(event)">
+            <div class="form-grid">
+
+                <!-- Address Label -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <svg class="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z">
+                            </path>
+                            <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                        </svg>
+                        Address Label 
+                    </label>
+                    <select name="label" id="addressLabel" class="form-input" >
+                        <option value="">Select Label</option>
+                        <option value="Home">Home</option>
+                        <option value="Work">Work</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <div class="field-error" id="labelError"></div>
+                </div>
+
+                <!-- Full Name -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <svg class="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        Full Name 
+                    </label>
+                    <input type="text" name="fullName" id="fullName" class="form-input" placeholder="Enter full name" >
+                    <div class="field-error" id="fullNameError"></div>
+                </div>
+
+                <!-- Address Line 1 -->
+                <div class="form-group full-width">
+                    <label class="form-label">
+                        <svg class="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        </svg>
+                        Address Line 1 
+                    </label>
+                    <input type="text" name="addressLine1" id="addressLine1" class="form-input" placeholder="House No, Building, Street" >
+                    <div class="field-error" id="addressLine1Error"></div>
+                </div>
+
+                <!-- Address Line 2 -->
+                <div class="form-group full-width">
+                    <label class="form-label">
+                        <svg class="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        </svg>
+                        Address Line 2
+                    </label>
+                    <input type="text" name="addressLine2" id="addressLine2" class="form-input" placeholder="Apartment, Landmark (Optional)">
+                    <div class="field-error" id="addressLine2Error"></div>
+                </div>
+
+                <!-- Phone Number -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <svg class="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path
+                                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                            </path>
+                        </svg>
+                        Phone Number 
+                    </label>
+                    <input type="tel" name="phone" id="phone" class="form-input" placeholder="+91 XXXXX XXXXX" >
+                    <div class="field-error" id="phoneError"></div>
+                </div>
+
+                <!-- Alternative Phone -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <svg class="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path
+                                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                            </path>
+                        </svg>
+                        Alternative Phone
+                    </label>
+                    <input type="tel" name="altPhone" id="altPhone" class="form-input" placeholder="+91 XXXXX XXXXX (Optional)">
+                    <div class="field-error" id="altPhoneError"></div>
+                </div>
+
+                <!-- City -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <svg class="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="10" r="3"></circle>
+                            <path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"></path>
+                        </svg>
+                        City 
+                    </label>
+                    <input type="text" name="city" id="city" class="form-input" placeholder="Enter city" >
+                    <div class="field-error" id="cityError"></div>
+                </div>
+
+                <!-- State -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <svg class="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        State 
+                    </label>
+                    <input type="text" name="state" id="state" class="form-input" placeholder="Enter state" >
+                    <div class="field-error" id="stateError"></div>
+                </div>
+
+                <!-- Pincode -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <svg class="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                        </svg>
+                        Pincode 
+                    </label>
+                    <input type="text" name="pincode" id="pincode" class="form-input" placeholder="6-digit pincode" maxlength="6" >
+                    <div class="field-error" id="pincodeError"></div>
+                </div>
+
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <button type="button" class="btn btn-outline" onclick="toggleAddressForm()">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="saveAddressBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Save Address
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

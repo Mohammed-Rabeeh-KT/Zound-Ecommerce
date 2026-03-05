@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error <%= statusCode %> - Zound</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f3f4f6;
+        }
+
+        .error-card {
+            max-width: 440px;
+            width: 90%;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            padding: 48px 36px;
+            text-align: center;
+        }
+
+        .error-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            color: #ef4444;
+        }
+
+        .error-code {
+            font-size: 48px;
+            font-weight: 800;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .error-message {
+            font-size: 18px;
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 12px;
+        }
+
+        .error-desc {
+            font-size: 14px;
+            color: #9ca3af;
+            margin-bottom: 28px;
+        }
+
+        .error-btn {
+            display: inline-block;
+            background: #2563eb;
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 12px 28px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .error-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .error-stack {
+            margin-top: 32px;
+            text-align: left;
+            background: #111827;
+            color: #f87171;
+            padding: 16px;
+            border-radius: 8px;
+            overflow: auto;
+            max-height: 240px;
+            font-size: 12px;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="error-card">
+        <svg class="error-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <h1 class="error-code">
+            <%= statusCode %>
+        </h1>
+        <h2 class="error-message">
+            <%= message %>
+        </h2>
+        <p class="error-desc">Oops! Something went wrong.</p>
+        <a href="<%= typeof isAdmin !== 'undefined' && isAdmin ? '/admin/login' : '/user/login' %>" class="error-btn">
+            Go to login
+        </a>
+
+        <% if (error && error.stack) { %>
+            <div class="error-stack">
+                <pre><%= error.stack %></pre>
+            </div>
+            <% } %>
+    </div>
+</body>
+
+</html>

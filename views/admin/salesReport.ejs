@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Report - Zound Admin</title>
+    <link rel="stylesheet" href="/styles/admin/salesReport.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PDF and Excel Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+
+<body>
+    <div class="admin-layout">
+        <%- include('../partials/admin/adminSidebar', { currentPage: 'sales' , adminName: adminName }) %>
+
+            <main class="main-content">
+                <!-- Breadcrumbs -->
+                <nav class="breadcrumbs">
+                    <a href="/admin/dashboard" class="breadcrumb-item">
+                        <i data-lucide="home" class="breadcrumb-icon"></i>
+                        Dashboard
+                    </a>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item active">Sales Report</span>
+                </nav>
+
+                <!-- Page Header -->
+                <header class="content-header">
+                    <div class="header-left">
+                        <h1 class="page-title">Sales Report</h1>
+                        <p class="page-subtitle">Track and analyze your sales performance</p>
+                    </div>
+                </header>
+
+                <!-- Primary Filters Bar -->
+                <div class="filters-card">
+                    <div class="filters-primary">
+                        <div class="filter-item">
+                            <label class="filter-label">Report Type</label>
+                            <select id="reportFilter" class="filter-select">
+                                <option value="daily">Daily (Today)</option>
+                                <option value="weekly">Weekly (This Week)</option>
+                                <option value="monthly" selected>Monthly (This Month)</option>
+                                <option value="yearly">Yearly (This Year)</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+
+                        <button class="btn-filters-toggle" onclick="toggleCustomFilters()">
+                            <i data-lucide="sliders-horizontal"></i>
+                            Filters
+                        </button>
+
+                        <div class="export-buttons">
+                            <button class="btn-export btn-pdf" onclick="downloadPDF()">
+                                <i data-lucide="file-text"></i>
+                                PDF
+                            </button>
+                            <button class="btn-export btn-excel" onclick="downloadExcel()">
+                                <i data-lucide="file-spreadsheet"></i>
+                                Excel
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Custom Filters Panel (Hidden by default) -->
+                    <div id="customFiltersPanel" class="custom-filters-panel" style="display: none;">
+                        <div class="filters-row">
+                            <div class="filter-item" style="position: relative;">
+                                <label class="filter-label">Product</label>
+                                <input type="text" id="productSearch" class="filter-input" placeholder="Search product..." autocomplete="off">
+                                <input type="hidden" id="productFilter">
+                                <div id="productSuggestions" class="autocomplete-suggestions" style="display: none;">
+                                </div>
+                            </div>
+
+                            <div class="filter-item">
+                                <label class="filter-label">Start Date</label>
+                                <input type="date" id="startDate" class="filter-input">
+                            </div>
+
+                            <div class="filter-item">
+                                <label class="filter-label">End Date</label>
+                                <input type="date" id="endDate" class="filter-input">
+                            </div>
+
+                            <div class="filter-item">
+                                <label class="filter-label">Min Units</label>
+                                <input type="number" id="minUnits" class="filter-input" placeholder="e.g. 2" min="0">
+                            </div>
+
+                            <div class="filter-item">
+                                <label class="filter-label">Status</label>
+                                <select id="statusFilter" class="filter-select">
+                                    <option value="">All Status</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Processing">Processing</option>
+                                    <option value="Shipped">Shipped</option>
+                                    <option value="Delivered">Delivered</option>
+                                </select>
+                            </div>
+
+                            <div class="filter-item filter-actions">
+                                <label class="filter-label">&nbsp;</label>
+                                <div class="filter-buttons">
+                                    <button class="btn-apply" onclick="applyFilters()">
+                                        <i data-lucide="filter"></i>
+                                        Apply Filters
+                                    </button>
+                                    <button class="btn-clear" onclick="clearFilters()">Clear</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingState" class="loading-card" style="display: none;">
+                    <div class="loader"></div>
+                    <p>Loading sales data...</p>
+                </div>
+
+                <!-- Stats Cards -->
+                <div id="statsSection" class="stats-section" style="display: none;">
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-icon blue">
+                                <i data-lucide="shopping-bag"></i>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Sales Count</span>
+                                <span class="stat-value" id="salesCount">0</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon purple">
+                                <i data-lucide="indian-rupee"></i>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Order Amount</span>
+                                <span class="stat-value" id="orderAmount">₹0</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon orange">
+                                <i data-lucide="percent"></i>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Offer Discount</span>
+                                <span class="stat-value" id="offerDiscount">₹0</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon pink">
+                                <i data-lucide="ticket"></i>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Coupon Deduction</span>
+                                <span class="stat-value" id="couponDeduction">₹0</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card highlight">
+                            <div class="stat-icon green">
+                                <i data-lucide="wallet"></i>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Net Revenue</span>
+                                <span class="stat-value" id="netRevenue">₹0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div id="chartsSection" class="charts-section" style="display: none;">
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <h3 class="chart-title">Sales Overview</h3>
+                            <div class="chart-container">
+                                <canvas id="salesChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <h3 class="chart-title">Revenue Breakdown</h3>
+                            <div class="chart-container doughnut-container">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <h3 class="chart-title">Payment Methods</h3>
+                            <div class="chart-container doughnut-container">
+                                <canvas id="paymentChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <h3 class="chart-title">Daily Trend</h3>
+                            <div class="chart-container">
+                                <canvas id="trendChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Orders Table -->
+                <div id="tableSection" class="table-card" style="display: none;">
+                    <div class="table-header">
+                        <h3 class="table-title">Order Details</h3>
+                        <span class="order-count" id="orderCountBadge">0 orders</span>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Date</th>
+                                    <th>Customer</th>
+                                    <th class="text-center">Units</th>
+                                    <th>Payment</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Coupon</th>
+                                    <th class="text-right">Amount</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                <!-- Data injected by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="paginationControls" class="pagination-controls"
+                        style="display: none; padding: 1rem; border-top: 1px solid #e2e8f0; justify-content: flex-end; gap: 0.5rem; display: flex;">
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="empty-card" style="display: none;">
+                    <i data-lucide="bar-chart-2" class="empty-icon"></i>
+                    <h3>No Sales Data Found</h3>
+                    <p>There are no delivered orders for the selected period</p>
+                </div>
+
+            </main>
+    </div>
+
+    <script src="/js/admin/salesReport.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

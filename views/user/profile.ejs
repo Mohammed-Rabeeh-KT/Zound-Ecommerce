@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Information | ZOUND</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/styles/user/editProfile.css">
+</head>
+
+<body>
+
+
+    <div class="page-container">
+
+        <%- include('../partials/user/user-sidebar', { currentPage: 'profile' }) %>
+
+            <main class="main-content">
+
+                <header class="page-header">
+                    <h1 class="headline">Personal Information</h1>
+                    <p class="sub-headline">View your account details and stats.</p>
+                </header>
+
+                <section class="premium-card" style="margin-bottom: 32px;">
+
+                    <div class="card-banner">
+                        <div class="banner-gradient"></div>
+                        <div class="user-meta">
+                            <div class="avatar-container" style="cursor: default;">
+                                <div class="avatar-ring" id="avatarRing">
+                                    <% if (user.profile_picture) { %>
+                                        <img src="<%= user.profile_picture %>" alt="Profile" class="avatar-image"
+                                            id="avatarImage">
+                                        <% } else { %>
+                                            <div class="avatar-placeholder" id="avatarPlaceholder"
+                                                style="font-size: 2.5rem; font-weight: 700;">
+                                                <%= user.name.charAt(0).toUpperCase() %>
+                                            </div>
+                                            <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="card-title-row"
+                            style="display: flex; justify-content: space-between; align-items: center;">
+                            <h2 class="section-title">User Details</h2>
+                            <a href="/user/profile/edit" class="btn btn-outline"
+                                style="padding: 10px 20px; font-size: 0.9rem;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                                Edit Profile
+                            </a>
+                        </div>
+
+                        <div class="form-grid">
+
+                            <div class="form-group-card">
+                                <label class="form-label">
+                                    <svg class="form-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                    Full Name
+                                </label>
+                                <div class="form-input" style="cursor: default;">
+                                    <%= user.name %>
+                                </div>
+                            </div>
+
+                            <div class="form-group-card">
+                                <label class="form-label">
+                                    <svg class="form-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path
+                                            d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z">
+                                        </path>
+                                        <polyline points="22,6 12,13 2,6"></polyline>
+                                    </svg>
+                                    Email Address
+                                </label>
+                                <div class="form-input" style="cursor: default;">
+                                    <%= user.email %>
+                                </div>
+                            </div>
+
+                            <div class="form-group-card">
+                                <label class="form-label">
+                                    <svg class="form-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path
+                                            d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                                        </path>
+                                    </svg>
+                                    Phone Number
+                                </label>
+                                <div class="form-input" style="cursor: default;">
+                                    <%= user.phone || 'N/A' %>
+                                </div>
+                            </div>
+
+                            <div class="form-group-card">
+                                <label class="form-label">
+                                    <svg class="form-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    </svg>
+                                    Member Since
+                                </label>
+                                <div class="form-input" style="cursor: default;">
+                                    <%= new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric' ,
+                                        month: 'long' , day: 'numeric' }) %>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+
+                <section class="stats-container">
+
+                    <div class="premium-card stat-card" style="padding: 24px;">
+                        <div class="stat-top">
+                            <div class="stat-icon-wrapper">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                    <line x1="1" y1="10" x2="23" y2="10"></line>
+                                </svg>
+                            </div>
+                            <span class="stat-title">Wallet Balance</span>
+                            <a href="/user/wallet" class="stat-link">See details &rarr;</a>
+                        </div>
+                        <div class="stat-value">
+                            <span class="currency">₹</span>
+                            <%= user.walletBalance || 0 %>
+                        </div>
+                    </div>
+
+                    <div class="premium-card stat-card" style="padding: 24px;">
+                        <div class="stat-top">
+                            <div class="stat-icon-wrapper">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                            </div>
+                            <span class="stat-title">Total Referrals</span>
+                            <a href="/user/profile/referrals" class="stat-link">See details &rarr;</a>
+                        </div>
+                        <div class="stat-value">
+                            <%= user.referralCount || 0 %>
+                        </div>
+                    </div>
+
+                </section>
+
+            </main>
+    </div>
+
+</body>
+
+</html>

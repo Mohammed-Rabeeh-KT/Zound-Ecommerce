@@ -1,0 +1,36 @@
+<div class="min-h-[70vh] flex items-center justify-center px-4">
+  <div class="text-center max-w-md">
+
+    <!-- Unhappy / Broken Page Icon -->
+    <div class="flex justify-center mb-6">
+      <svg width="96" height="96" viewBox="0 0 24 24" fill="none"
+           xmlns="http://www.w3.org/2000/svg"
+           class="text-gray-400">
+        <path d="M4 4H20V20H4V4Z" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M8 9H8.01M16 9H16.01" stroke="currentColor"
+              stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M8 15C9.333 14 14.667 14 16 15"
+              stroke="currentColor" stroke-width="1.5"
+              stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <!-- Title -->
+    <h1 class="text-2xl font-semibold text-gray-900 mb-3">
+      <%= title || "Product Unavailable" %>
+    </h1>
+
+    <!-- Message -->
+    <p class="text-gray-600 mb-6">
+      <%= message || "This item is currently unavailable or has been removed." %>
+    </p>
+
+    <!-- CTA -->
+    <a href="/user/products"
+       class="inline-flex items-center justify-center bg-[#002366] hover:bg-[#001b4d]
+              text-white px-6 py-3 rounded-lg font-medium transition">
+      Browse All Products
+    </a>
+
+  </div>
+</div>

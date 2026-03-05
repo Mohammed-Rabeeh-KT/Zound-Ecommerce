@@ -1,0 +1,78 @@
+/* support.css */
+
+.support-hero {
+    background-color: #1a2234;
+    color: white;
+    text-align: center;
+    padding: 3rem 1rem 5rem;
+}
+
+.contact-block {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #f3f4f6;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.contact-block:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.icon-circle {
+    width: 60px;
+    height: 60px;
+    background-color: #fef9c3;
+    color: #eab308;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+}
+
+.icon-circle svg {
+    width: 28px;
+    height: 28px;
+}
+
+.faq-accordion .faq-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    background: white;
+    overflow: hidden;
+}
+
+.faq-header {
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #374151;
+}
+
+.faq-header:hover {
+    background-color: #f9fafb;
+}
+
+.faq-content {
+    display: none;
+    padding: 0 1.5rem 1.5rem;
+    color: #6b7280;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.resource-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    background: white;
+}

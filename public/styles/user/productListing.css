@@ -214,8 +214,8 @@ body {
 }
 
 .clear-filters.visible {
-  opacity: 1;
-  pointer-events: auto;
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .filter-section {
@@ -405,10 +405,10 @@ body {
 }
 
 .apply-filters-btn:disabled {
-  background: #c7cbd4;
-  cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
+    background: #c7cbd4;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
 }
 
 .apply-filters-btn:hover {
@@ -642,6 +642,17 @@ body {
     stroke: #ffffff;
 }
 
+/* Wishlist Active State */
+.card-btn.secondary.active,
+.card-btn.secondary.active:hover {
+    background: #ef4444;
+}
+
+.card-btn.secondary.active svg {
+    stroke: #ffffff;
+    fill: #ffffff;
+}
+
 .product-card {
     background: #FFFFFF;
     border-radius: 12px;
@@ -673,25 +684,70 @@ body {
 
 .badge {
     position: absolute;
-    top: 12px;
-    right: 12px;
     padding: 0.375rem 0.75rem;
     border-radius: 6px;
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    z-index: 10;
 }
 
 .badge-featured {
-    background: #002366;
+    top: 12px;
+    left: 12px;
+    background: linear-gradient(135deg, #002366 0%, #003399 100%);
     color: #FFFFFF;
 }
 
 .badge-sale {
-    background: #dc2626;
+    top: 12px;
+    right: 12px;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
     color: #FFFFFF;
-    top: 48px;
+}
+
+/* OFFER BADGE - Upper Right with animation */
+.badge-offer {
+    top: 12px;
+    right: 12px;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    animation: pulse-badge 2s infinite;
+}
+
+@keyframes pulse-badge {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Clickable Card Link */
+.product-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.product-card-link:hover .product-card {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 35, 102, 0.15);
+}
+
+.product-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
 

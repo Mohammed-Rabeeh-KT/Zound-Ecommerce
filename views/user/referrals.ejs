@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Referrals | ZOUND</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="/styles/user/profile.css">
+    <link rel="stylesheet" href="/styles/user/referral.css">
+</head>
+
+<body>
+    <div class="page-container">
+        <!-- Sidebar -->
+        <%- include('../partials/user/user-sidebar', { currentPage: 'referrals' }) %>
+
+            <main class="main-content">
+                <header class="page-header">
+                    <h1 class="headline">Referral Program</h1>
+                    <p class="subheadline">Invite friends and earn rewards together</p>
+                </header>
+
+                <div class="referral-banner">
+                    <div class="banner-content">
+                        <div class="icon-wrapper">
+                            <span class="material-icons">share</span>
+                        </div>
+                        <div class="text-content">
+                            <h3>Your Referral Link</h3>
+                            <p>Share with friends and earn rewards</p>
+                        </div>
+                    </div>
+                    <div class="link-box">
+                        <input type="text" value="<%= process.env.BASE_URL || 'http://localhost:2222' %>/user/signup?ref=<%= referralCode %>"
+                            readonly id="referralLink">
+                        <button class="copy-btn" onclick="copyReferralLink()">
+                            <span class="material-icons">content_copy</span>
+                            Copy
+                        </button>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">
+                            <span class="material-icons">groups</span>
+                        </div>
+                        <div class="stat-info">
+                            <span class="label">Total Referrals</span>
+                            <span class="value">
+                                <%= stats.total %>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">
+                            <span class="material-icons">person_add_alt</span>
+                        </div>
+                        <div class="stat-info">
+                            <span class="label">Successful</span>
+                            <span class="value">
+                                <%= stats.successful %>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange">
+                            <span class="material-icons">access_time</span>
+                        </div>
+                        <div class="stat-info">
+                            <span class="label">Pending</span>
+                            <span class="value">
+                                <%= stats.pending %>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purple">
+                            <span class="material-icons">paid</span>
+                        </div>
+                        <div class="stat-info">
+                            <span class="label">Total Earned</span>
+                            <span class="value">₹<%= stats.earned.toLocaleString() %></span>
+                        </div>
+                    </div>
+                </div>
+
+                <section class="recent-referrals">
+                    <h2 class="section-title">Recent Referrals</h2>
+
+                    <div class="referral-list">
+                        <% if(referees && referees.length> 0) { %>
+                            <% referees.forEach(referee=> { %>
+                                <div class="referral-item">
+                                    <div class="user-avatar">
+                                        <%= referee.name ? referee.name.substring(0,2).toUpperCase() : 'NA' %>
+                                    </div>
+                                    <div class="referral-details">
+                                        <h4>
+                                            <%= referee.name %>
+                                        </h4>
+                                        <span class="date">
+                                            <%= new Date(referee.createdAt).toLocaleDateString() %>
+                                        </span>
+                                    </div>
+                                    <div class="referral-status <%= referee.redeemed ? 'completed' : 'pending' %>">
+                                        <span class="badge">
+                                            <%= referee.redeemed ? 'Completed' : 'Pending' %>
+                                        </span>
+                                        <span class="amount">₹<%= referee.rewardAmount %></span>
+                                    </div>
+                                </div>
+                                <% }); %>
+                                    <% } else { %>
+                                        <div class="empty-state"
+                                            style="text-align: center; padding: 2rem; color: #64748b;">
+                                            <p>No referrals yet. Share your link to start earning!</p>
+                                        </div>
+                                        <% } %>
+                    </div>
+                </section>
+
+                <section class="how-it-works">
+                    <h2 class="section-title">How It Works</h2>
+                    <div class="steps-grid">
+                        <div class="step-card">
+                            <div class="step-icon">
+                                <span class="material-icons">card_giftcard</span>
+                            </div>
+                            <div class="step-content">
+                                <h3>Share Your Link</h3>
+                                <p>Send your unique referral link to friends via email, social media, or messaging apps.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="step-card">
+                            <div class="step-icon">
+                                <span class="material-icons">person_add</span>
+                            </div>
+                            <div class="step-content">
+                                <h3>Friend Signs Up</h3>
+                                <p>Your friend creates a Zound account using your referral link and makes their first
+                                    purchase.</p>
+                            </div>
+                        </div>
+                        <div class="step-card">
+                            <div class="step-icon">
+                                <span class="material-icons">monetization_on</span>
+                            </div>
+                            <div class="step-content">
+                                <h3>Both Get Rewards</h3>
+                                <p>You earn ₹<%= config.referrerReward %> credit and your friend gets ₹<%=
+                                            config.refereeReward %> off their first order.</p>
+                            </div>
+                        </div>
+                        <div class="step-card">
+                            <div class="step-icon">
+                                <span class="material-icons">verified</span>
+                            </div>
+                            <div class="step-content">
+                                <h3>No Limits</h3>
+                                <p>Refer unlimited friends and earn rewards for each successful referral.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="terms-box">
+                        <p><strong>Terms:</strong> Rewards are credited within 24 hours of successful referral. Referral
+                            must be a new Zound customer. Credits expire after 12 months.</p>
+                    </div>
+                </section>
+            </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function copyReferralLink() {
+            const copyText = document.getElementById("referralLink");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(copyText.value);
+
+            Swal.fire({
+                title: 'Copied!',
+                text: 'Referral link copied to clipboard',
+                icon: 'success',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+        }
+    </script>
+</body>
+
+</html>

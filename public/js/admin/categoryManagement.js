@@ -1,4 +1,4 @@
-import { showSuccess, showError } from "/js/swalUtils.js";
+import { showSuccess, showError } from "/utils/swalUtils.js";
 
 /* ------------------------
    Lightweight front-end catchAsync
@@ -121,9 +121,8 @@ async function loadCategories(page = 1) {
     const search = searchInput ? searchInput.value.trim() : "";
     const status = statusSelect ? statusSelect.value : "";
 
-    const url = `/admin/categories/data?page=${page}&search=${encodeURIComponent(search)}&status=${encodeURIComponent(status)}`;
-    const res = await fetch(url);
-    const json = await res.json();
+    const url = `/api/admin/categories/data?page=${page}&search=${encodeURIComponent(search)}&status=${encodeURIComponent(status)}`;
+    const { data: json } = await axios.get(url);
 
     if (!json || !json.success) {
         showError((json && json.message) ? json.message : "Failed to load categories");
@@ -215,28 +214,86 @@ function renderPagination(total, page, limit) {
 async function submitAddCategory(e) {
     e.preventDefault();
     const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    let originalBtnText = '';
+
+    // Clear previous errors
+    const nameErrEl = document.getElementById('addCategoryNameError');
+    const descErrEl = document.getElementById('addCategoryDescError');
+    if (nameErrEl) nameErrEl.style.display = 'none';
+    if (descErrEl) descErrEl.style.display = 'none';
+
+    // Convert FormData to a plain JavaScript object
     const formData = new FormData(form);
-    const statusEl = document.getElementById("addCategoryStatus");
-    formData.set("isListed", statusEl && statusEl.checked ? "on" : "off");
+    const data = Object.fromEntries(formData.entries());
 
-    const res = await fetch("/admin/categories/add", { method: "POST", body: formData });
-    const json = await res.json();
+    // Validation
+    const nameEmpty = !data.name || !data.name.trim();
+    const descEmpty = !data.description || !data.description.trim();
 
-    if (!json || !json.success) {
-        showError((json && json.message) ? json.message : "Failed to add category");
+    if (nameEmpty && descEmpty) {
+        showError("Please fill all input fields");
+        if (nameErrEl) { nameErrEl.innerText = "Category Name is required"; nameErrEl.style.display = "block"; }
+        if (descErrEl) { descErrEl.innerText = "Description is required"; descErrEl.style.display = "block"; }
         return;
     }
-    const modal = document.getElementById("addCategoryModal");
-    if (modal) modal.classList.remove("active");
-    showSuccess("Category added");
-    safeCall(loadCategories, 1);
+
+    let hasError = false;
+    if (nameEmpty) {
+        if (nameErrEl) { nameErrEl.innerText = "Category Name is required"; nameErrEl.style.display = "block"; }
+        hasError = true;
+    }
+    if (descEmpty) {
+        if (descErrEl) { descErrEl.innerText = "Description is required"; descErrEl.style.display = "block"; }
+        hasError = true;
+    }
+    if (hasError) return;
+
+    try {
+        // Disable submit button to prevent double submission
+        if (submitBtn) {
+            originalBtnText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+        }
+
+        // Handle the checkbox status
+        const statusEl = document.getElementById("addCategoryStatus");
+        data.isListed = statusEl && statusEl.checked ? "on" : "off";
+
+        const res = await axios.post("/api/admin/categories/add", data);
+        const json = res.data;
+
+        if (!json || !json.success) {
+            const errorMsg = json?.message || 'Failed to add category';
+            throw new Error(errorMsg);
+        }
+
+        // Success - reset form and update UI
+        form.reset();
+        const modal = document.getElementById("addCategoryModal");
+        if (modal) modal.classList.remove("active");
+
+        showSuccess(json.message || "Category added successfully");
+        safeCall(loadCategories, 1);
+    } catch (error) {
+        console.error('Error adding category:', error);
+        const errMsg = error.response?.data?.message || error.message || "Failed to add category. Please try again.";
+        showError(errMsg);
+    } finally {
+        // Re-enable submit button
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText || 'Add Category';
+        }
+    }
 }
 
 /* ============================
    Edit category
    ============================ */
 function openEditModal(btn) {
-    if (!btn) return;   
+    if (!btn) return;
     const id = btn.dataset.id;
     const name = btn.dataset.name || "";
     const description = btn.dataset.description || "";
@@ -262,17 +319,53 @@ async function submitEditCategory(e) {
     const statusEl = document.getElementById("editCategoryStatus");
     formData.set("isListed", statusEl && statusEl.checked ? "on" : "off");
 
-    const res = await fetch(`/admin/categories/update/${id}`, { method: "PATCH", body: formData });
-    const json = await res.json();
+    // convert to plain object and send JSON so req.body is defined on server
+    const payload = Object.fromEntries(formData.entries());
 
-    if (!json || !json.success) {
-        showError((json && json.message) ? json.message : "Failed to update");
+    // Clear previous errors
+    const nameErrEl = document.getElementById('editCategoryNameError');
+    const descErrEl = document.getElementById('editCategoryDescError');
+    if (nameErrEl) nameErrEl.style.display = 'none';
+    if (descErrEl) descErrEl.style.display = 'none';
+
+    // Validation
+    const nameEmpty = !payload.name || !payload.name.trim();
+    const descEmpty = !payload.description || !payload.description.trim();
+
+    if (nameEmpty && descEmpty) {
+        showError("Please fill all input fields");
+        if (nameErrEl) { nameErrEl.innerText = "Category Name is required"; nameErrEl.style.display = "block"; }
+        if (descErrEl) { descErrEl.innerText = "Description is required"; descErrEl.style.display = "block"; }
         return;
     }
-    const modal = document.getElementById("editCategoryModal");
-    if (modal) modal.classList.remove("active");
-    showSuccess("Category updated");
-    safeCall(loadCategories, 1);
+
+    let hasError = false;
+    if (nameEmpty) {
+        if (nameErrEl) { nameErrEl.innerText = "Category Name is required"; nameErrEl.style.display = "block"; }
+        hasError = true;
+    }
+    if (descEmpty) {
+        if (descErrEl) { descErrEl.innerText = "Description is required"; descErrEl.style.display = "block"; }
+        hasError = true;
+    }
+    if (hasError) return;
+
+    try {
+        const { data: json } = await axios.patch(`/api/admin/categories/update/${id}`, payload);
+
+        if (!json || !json.success) {
+            showError((json && json.message) ? json.message : "Failed to update");
+            return;
+        }
+        const modal = document.getElementById("editCategoryModal");
+        if (modal) modal.classList.remove("active");
+        showSuccess("Category updated");
+        safeCall(loadCategories, 1);
+    } catch (error) {
+        console.error('Error updating category:', error);
+        const errMsg = error.response?.data?.message || error.message || "Failed to update category. Please try again.";
+        showError(errMsg);
+    }
 }
 
 /* ============================
@@ -315,26 +408,30 @@ function openToggleModal(btn) {
 async function toggleStatusConfirm() {
     if (!currentToggleId) { showError("No category selected"); return; }
 
-    const res = await fetch(`/admin/categories/toggle-status/${currentToggleId}`, { method: "PATCH" });
-    const json = await res.json();
+    try {
+        const { data: json } = await axios.patch(`/api/admin/categories/toggle-status/${currentToggleId}`);
 
-    const modal = document.getElementById("toggleModal");
-    if (modal) modal.classList.remove("active");
+        const modal = document.getElementById("toggleModal");
+        if (modal) modal.classList.remove("active");
 
-    if (!json || !json.success) {
-        showError((json && json.message) ? json.message : "Action failed");
-        return;
+        if (!json || !json.success) {
+            showError((json && json.message) ? json.message : "Action failed");
+            return;
+        }
+
+        showSuccess(json.message || "Action successful");
+        safeCall(loadCategories, 1);
+    } catch (error) {
+        console.error('Error toggling category status:', error);
+        showError(error.response?.data?.message || "Failed to conditionally toggle category.");
     }
-
-    showSuccess(json.message || "Action successful");
-    safeCall(loadCategories, 1);
 }
 
 /* ============================
    Description popup
    ============================ */
 window.openDescription = function (text) {
-   const decoded = text
+    const decoded = text
         .replace(/&amp;/g, "&")
         .replace(/&quot;/g, '"')
         .replace(/&#39;/g, "'")

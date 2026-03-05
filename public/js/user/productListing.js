@@ -69,7 +69,7 @@ if (clearFiltersBtn) {
             checkbox.checked = false;
         });
 
-       /* Reset price slider + inputs */
+        /* Reset price slider + inputs */
         minRange.value = minInput.value = MIN_PRICE;
         maxRange.value = maxInput.value = MAX_PRICE;
 
@@ -83,7 +83,7 @@ if (clearFiltersBtn) {
         // Clear search
         if (searchInput) searchInput.value = '';
 
-         /*Clear active filter chips */
+        /*Clear active filter chips */
         activeFiltersContainer.innerHTML = '';
 
         /* Reset heading instantly */
@@ -183,19 +183,18 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 document.querySelectorAll(
-  'input[type="checkbox"], input[type="range"], input[type="number"], select'
+    'input[type="checkbox"], input[type="range"], input[type="number"], select'
 ).forEach(el => {
-  el.addEventListener('change', updateFilterActionsUI);
-  el.addEventListener('input', updateFilterActionsUI);
+    el.addEventListener('change', updateFilterActionsUI);
+    el.addEventListener('input', updateFilterActionsUI);
 });
 
 
 function hasActiveFilters() {
     const hasCategory = document.querySelectorAll('input[name="category"]:checked').length > 0;
     const hasBrand = document.querySelectorAll('input[name="brand"]:checked').length > 0;
-    const hasPresetPrice = document.querySelectorAll('input[name="priceRange"]:checked')
-        .length > 0 &&
-        !document.querySelector('input[name="priceRange"][value="all"]')?.checked;
+    const hasPresetPrice = document.querySelectorAll('.price-preset:checked').length > 0;
+
 
     const hasPriceRange =
         Number(minInput.value) > MIN_PRICE ||
@@ -252,7 +251,7 @@ if (pagination) {
 //             params.set('page', page);
 //         }
 
-//         const res = await axios.get(`/user/products?${params.toString()}`, {
+//         const res = await axios.get(`/api/user/products?${params.toString()}`, {
 //             headers: { 'X-Requested-With': 'XMLHttpRequest' }
 //         });
 
@@ -556,6 +555,7 @@ document.querySelectorAll('.price-preset').forEach(cb => {
             minRange.value = minInput.value = cb.dataset.min;
             maxRange.value = maxInput.value = cb.dataset.max;
             updateSliderFill();
+            updateFilterActionsUI();
 
         }
     });
@@ -587,3 +587,112 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = `/user/products?${params.toString()}`;
     });
 });
+
+// =============================================
+// WISHLIST FUNCTIONALITY
+// =============================================
+
+// Toggle wishlist (add/remove) with variant support
+async function toggleWishlist(productId, variantId, btnElement) {
+    const isInWishlist = btnElement.classList.contains('active');
+    const icon = btnElement.querySelector('svg');
+
+    try {
+        if (isInWishlist) {
+            // Remove from wishlist
+            let removeUrl = `/api/user/wishlist/remove/${productId}`;
+            if (variantId) {
+                removeUrl += `?variantId=${variantId}`;
+            }
+            const response = await axios.delete(removeUrl);
+            if (response.data.success) {
+                btnElement.classList.remove('active');
+                if (icon) icon.style.fill = 'none';
+                showToast('Removed from wishlist', 'success');
+            } else {
+                showToast(response.data.message || 'Failed to remove', 'error');
+            }
+        } else {
+            // Add to wishlist with variant
+            const response = await axios.post('/api/user/wishlist/add', {
+                productId,
+                variantId: variantId || null
+            });
+            if (response.data.success) {
+                btnElement.classList.add('active');
+                if (icon) icon.style.fill = '#ef4444';
+                showToast('Added to wishlist!', 'success');
+            } else {
+                showToast(response.data.message || 'Failed to add', 'error');
+            }
+        }
+    } catch (error) {
+        console.error('Error toggling wishlist:', error);
+        if (error.response?.status === 401) {
+            showToast('Please login to add to wishlist', 'warning');
+            setTimeout(() => {
+                window.location.href = '/user/login';
+            }, 1500);
+        } else {
+            showToast(error.response?.data?.message || 'Something went wrong', 'error');
+        }
+    }
+}
+
+// Show toast notification
+function showToast(message, type = 'success') {
+    // Check if SweetAlert2 is available
+    if (typeof Swal !== 'undefined') {
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'bottom-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        Toast.fire({
+            icon: type,
+            title: message
+        });
+    } else {
+        // Fallback to simple alert
+        alert(message);
+    }
+}
+
+// Client-side cart logic helper for the shop page
+if (typeof addToCartQuick === 'undefined') {
+    window.addToCartQuick = function (productId, variantId) {
+        axios.post('/api/user/cart/add', {
+            productId, variantId, quantity: 1
+        }).then(res => {
+            Swal.fire({
+                icon: 'success',
+                title: 'Added to Cart',
+                text: 'Item added successfully',
+                toast: true,
+                position: 'bottom-end',
+                showConfirmButton: false,
+                timer: 1500,
+                confirmButtonColor: '#002366'
+            });
+            const countBadge = document.getElementById('cart-count');
+            if (countBadge) countBadge.innerText = parseInt(countBadge.innerText || 0) + 1;
+        }).catch(err => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops',
+                text: err.response?.data?.message || 'Failed to add item',
+                toast: true,
+                position: 'bottom-end',
+                showConfirmButton: false,
+                timer: 1500
+            });
+        });
+    }
+}

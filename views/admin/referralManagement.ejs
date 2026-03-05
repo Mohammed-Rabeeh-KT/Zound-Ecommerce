@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Referral Management | ZOUND Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/styles/admin/offerManagement.css">
+    <!-- Reuse Offer Management CSS for consistency, plus inline overrides -->
+    <style>
+        :root {
+            --primary: #002366;
+            --secondary: #64748b;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-light: #f8fafc;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-light);
+        }
+
+        .main-content {
+            padding: 2rem;
+            margin-left: 260px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-details h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+            color: #0f172a;
+        }
+
+        .stat-details p {
+            margin: 0;
+            color: var(--secondary);
+            font-size: 0.875rem;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #334155;
+            font-size: 0.9rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.95rem;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 35, 102, 0.1);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* Table Styles */
+        .referral-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .referral-table th {
+            text-align: left;
+            padding: 1rem;
+            background: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .referral-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+            font-size: 0.95rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            background: #e2e8f0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-completed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-pending {
+            background: #ffedd5;
+            color: #9a3412;
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('../partials/admin/adminSidebar', { currentPage: 'referrals' }) %>
+
+        <div class="main-content">
+            <header class="page-header">
+                <div>
+                    <h1 class="page-title">Referral Management</h1>
+                    <p style="color: #64748b; margin-top: 0.25rem;">Manage program settings and view referrals</p>
+                </div>
+                <div class="date-display">
+                    <%= new Date().toLocaleDateString('en-US', { weekday: 'long' , year: 'numeric' , month: 'long' ,
+                        day: 'numeric' }) %>
+                </div>
+            </header>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #eff6ff; color: #3b82f6;">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3>
+                            <%= stats.total %>
+                        </h3>
+                        <p>Total Referrals</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #f0fdf4; color: #22c55e;">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3>
+                            <%= stats.successful %>
+                        </h3>
+                        <p>Successful</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #fff7ed; color: #f97316;">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3>
+                            <%= stats.pending %>
+                        </h3>
+                        <p>Pending</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #f3e8ff; color: #a855f7;">
+                        <i class="bi bi-gift"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3>₹<%= stats.rewards.toLocaleString() %>
+                        </h3>
+                        <p>Rewards Distributed</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <!-- Referral List -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Recent Referrals</h2>
+                        <button class="btn-outline"
+                            style="border: 1px solid #e2e8f0; background: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">
+                            View All
+                        </button>
+                    </div>
+                    <table class="referral-table">
+                        <thead>
+                            <tr>
+                                <th>Referrer</th>
+                                <th>Referred User</th>
+                                <th>Date</th>
+                                <th>Reward</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (referrals && referrals.length> 0) { %>
+                                <% referrals.forEach(item=> { %>
+                                    <tr>
+                                        <td>
+                                            <div class="user-info">
+                                                <div class="avatar">
+                                                    <%= item.referrer.name ?
+                                                        item.referrer.name.substring(0,2).toUpperCase() : 'NA' %>
+                                                </div>
+                                                <span>
+                                                    <%= item.referrer.name || 'Unknown' %>
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <%= item.referee.name %>
+                                        </td>
+                                        <td>
+                                            <%= new Date(item.date).toLocaleDateString() %>
+                                        </td>
+                                        <td>₹<%= item.reward %>
+                                        </td>
+                                        <td>
+                                            <span
+                                                class="status-badge <%= item.status === 'Completed' ? 'status-completed' : 'status-pending' %>">
+                                                <%= item.status %>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <% }) %>
+                                        <% } else { %>
+                                            <tr>
+                                                <td colspan="5" style="text-align: center; color: #64748b;">No referrals
+                                                    found.</td>
+                                            </tr>
+                                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Configuration Form -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Program Settings</h2>
+                    </div>
+                    <form action="/admin/referrals/config" method="POST">
+                        <div class="form-group">
+                            <label class="form-label">Referrer Reward (₹)</label>
+                            <input type="number" name="referrerReward" class="form-input" value="<%= config.referrerReward %>" >
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Referee Reward (₹)</label>
+                            <input type="number" name="refereeReward" class="form-input" value="<%= config.refereeReward %>" >
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-input">
+                                <option value="active" <%=config.status==='active' ? 'selected' : '' %>>Active</option>
+                                <option value="paused" <%=config.status==='paused' ? 'selected' : '' %>>Paused</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Program Description</label>
+                            <textarea name="description" class="form-input" rows="3" placeholder="e.g. Invite your friends and earn rewards!"><%= config.description %></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+</body>
+
+</html>

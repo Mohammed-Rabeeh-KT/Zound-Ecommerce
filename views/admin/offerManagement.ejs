@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offer Management | ZOUND Premium</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <link rel="stylesheet" href="/styles/admin/offerManagement.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+    <%- include('../partials/admin/adminSidebar', { currentPage: 'offers' , adminName: adminName, adminEmail: adminEmail
+        }) %>
+
+        <div class="main-content">
+            <div class="content-header">
+                <div>
+                    <h1 class="page-title">Offers</h1>
+                    <p class="page-subtitle">Create and manage product, category, and brand discounts</p>
+                </div>
+                <button id="addOfferBtn" class="add-btn" onclick="openAddModal()">
+                    <i class="bi bi-plus-lg"></i> Add New Offer
+                </button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs-container">
+                <button class="tab-btn active" onclick="switchTab('all')">
+                    <i class="bi bi-grid"></i> All Offers
+                </button>
+                <button class="tab-btn" onclick="switchTab('product')">
+                    <i class="bi bi-tag"></i> Product
+                </button>
+                <button class="tab-btn" onclick="switchTab('category')">
+                    <i class="bi bi-layers"></i> Category
+                </button>
+                <button class="tab-btn" onclick="switchTab('brand')">
+                    <i class="bi bi-award"></i> Brand
+                </button>
+                <button class="tab-btn" onclick="switchTab('scheduled')">
+                    <i class="bi bi-clock"></i> Scheduled
+                </button>
+            </div>
+
+            <!-- All Offers Section -->
+            <div id="all-offers" class="tab-content active">
+                <div class="offers-table-container">
+                    <div class="table-header">
+                        <div class="search-box">
+                            <i class="bi bi-search search-icon"></i>
+                            <input type="text" placeholder="Search all offers..." onkeyup="filterTable('allTable', this.value)">
+                        </div>
+                        <div class="filter-badges">
+                            <span class="filter-badge">
+                                <%= (typeof productOffers !=='undefined' ? productOffers.length : 0) + (typeof
+                                    categoryOffers !=='undefined' ? categoryOffers.length : 0) + (typeof brandOffers
+                                    !=='undefined' ? brandOffers.length : 0) %> Total
+                            </span>
+                        </div>
+                    </div>
+                    <table class="custom-table" id="allTable">
+                        <thead>
+                            <tr>
+                                <th>Offer Name</th>
+                                <th>Type</th>
+                                <th>Applied To</th>
+                                <th>Discount</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% const allOffers=[]; if (typeof productOffers !=='undefined' ) { productOffers.forEach(o=>
+                                allOffers.push({...o, type: 'Product', appliedTo: o.productName}));
+                                }
+                                if (typeof categoryOffers !== 'undefined') {
+                                categoryOffers.forEach(o => allOffers.push({...o, type: 'Category', appliedTo:
+                                o.categoryName}));
+                                }
+                                if (typeof brandOffers !== 'undefined') {
+                                brandOffers.forEach(o => allOffers.push({...o, type: 'Brand', appliedTo: o.brandName}));
+                                }
+                                %>
+                                <% if (allOffers.length> 0) { %>
+                                    <% allOffers.forEach(offer=> {
+                                        const now = new Date();
+                                        const startDate = new Date(offer.startOn || offer.createdAt);
+                                        const endDate = new Date(offer.expireOn);
+                                        const isDateActive = startDate <= now && endDate> now;
+                                            const isScheduled = startDate > now;
+                                            const isExpired = endDate < now; const isActive=isDateActive &&
+                                                offer.isActive !==false; %>
+                                                <tr>
+                                                    <td class="offer-name">
+                                                        <%= offer.name %>
+                                                    </td>
+                                                    <td><span class="type-badge type-<%= offer.type.toLowerCase() %>">
+                                                            <%= offer.type %>
+                                                        </span></td>
+                                                    <td>
+                                                        <%= offer.appliedTo %>
+                                                    </td>
+                                                    <td>
+                                                        <span class="discount-badge">
+                                                            <% if (offer.discountType==='percentage' ) { %>
+                                                                <%= offer.discountValue %>% OFF
+                                                                    <% } else { %>
+                                                                        ₹<%= offer.discountValue %> OFF
+                                                                            <% } %>
+                                                        </span>
+                                                    </td>
+                                                    <td class="duration">
+                                                        <span class="date-range">
+                                                            <%= startDate.toLocaleDateString('en-IN', {day: '2-digit' ,
+                                                                month: 'short' }) %> - <%=
+                                                                    endDate.toLocaleDateString('en-IN', {day: '2-digit'
+                                                                    , month: 'short' , year: '2-digit' }) %>
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <% if (isScheduled) { %>
+                                                            <span class="status-badge status-scheduled">Scheduled</span>
+                                                            <% } else if (isExpired) { %>
+                                                                <span class="status-badge status-expired">Expired</span>
+                                                                <% } else if (isActive) { %>
+                                                                    <span
+                                                                        class="status-badge status-active">Active</span>
+                                                                    <% } else { %>
+                                                                        <span
+                                                                            class="status-badge status-inactive">Inactive</span>
+                                                                        <% } %>
+                                                    </td>
+
+                                                    <td class="actions-cell">
+                                                        <div class="action-buttons">
+                                                            <!-- Toggle Switch -->
+                                                            <label class="toggle-switch"
+                                                                title="<%= isExpired ? 'Offer expired' : (offer.isActive ? 'Deactivate' : 'Activate') %>">
+                                                                <input type="checkbox" <%=offer.isActive ? 'checked' : '' %>
+                                                                <%= isExpired ? 'disabled' : '' %>
+                                                                    onchange="toggleOfferStatus('<%= offer._id %>', '<%=
+                                                                            offer.type.toLowerCase() %>', '<%=
+                                                                                endDate.toISOString() %>', event)"
+                                                                                >
+                                                                                <span class="toggle-slider"></span>
+                                                            </label>
+
+                                                            <!-- Edit Button -->
+                                                            <button class="action-btn btn-edit"
+                                                                onclick="openEditModal('<%= offer._id %>', '<%= offer.type.toLowerCase() %>', '<%= offer.name %>', '<%= offer.discountType %>', '<%= offer.discountValue %>', '<%= startDate.toISOString().split('T')[0] %>', '<%= endDate.toISOString().split('T')[0] %>')"
+                                                                title="Edit">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </button>
+
+                                                            <!-- Delete Button -->
+                                                            <button class="action-btn btn-delete"
+                                                                onclick="deleteOffer('<%= offer._id %>', '<%= offer.type.toLowerCase() %>')"
+                                                                title="Delete">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+
+                                                </tr>
+                                                <% }) %>
+                                                    <% } else { %>
+                                                        <tr>
+                                                            <td colspan="7" class="empty-state">
+                                                                <i class="bi bi-inbox"
+                                                                    style="font-size: 40px; opacity: 0.3;"></i>
+                                                                <p>No offers found.</p>
+                                                            </td>
+                                                        </tr>
+                                                        <% } %>
+                        </tbody>
+                    </table>
+                    <div id="pagination-all" class="pagination-controls"
+                        style="display: none; padding: 1rem; border-top: 1px solid #e2e8f0; justify-content: flex-end; gap: 0.5rem; display: flex;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Offers Section -->
+            <div id="product-offers" class="tab-content">
+                <div class="offers-table-container">
+                    <div class="table-header">
+                        <div class="search-box">
+                            <i class="bi bi-search search-icon"></i>
+                            <input type="text" placeholder="Search product offers..." onkeyup="filterTable('productTable', this.value)">
+                        </div>
+                    </div>
+                    <table class="custom-table" id="productTable">
+                        <thead>
+                            <tr>
+                                <th>Offer Name</th>
+                                <th>Product</th>
+                                <th>Discount</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (typeof productOffers !=='undefined' && productOffers.length> 0) { %>
+                                <% productOffers.forEach(offer=> {
+                                    const now = new Date();
+                                    const startDate = new Date(offer.startOn || offer.createdAt);
+                                    const endDate = new Date(offer.expireOn);
+                                    const isActive = startDate <= now && endDate> now;
+                                        const isScheduled = startDate > now;
+                                        const isExpired = endDate < now; %>
+                                            <tr>
+                                                <td class="offer-name">
+                                                    <%= offer.name %>
+                                                </td>
+                                                <td>
+                                                    <%= offer.productName %>
+                                                </td>
+                                                <td>
+                                                    <span class="discount-badge">
+                                                        <% if (offer.discountType==='percentage' ) { %>
+                                                            <%= offer.discountValue %>% OFF
+                                                                <% } else { %>
+                                                                    ₹<%= offer.discountValue %> OFF
+                                                                        <% } %>
+                                                    </span>
+                                                </td>
+                                                <td class="duration">
+                                                    <%= startDate.toLocaleDateString('en-IN', {day: '2-digit' ,
+                                                        month: 'short' }) %> - <%= endDate.toLocaleDateString('en-IN',
+                                                            {day: '2-digit' , month: 'short' }) %>
+                                                </td>
+                                                <td>
+                                                    <% if (isScheduled) { %>
+                                                        <span class="status-badge status-scheduled">Scheduled</span>
+                                                        <% } else if (isActive) { %>
+                                                            <span class="status-badge status-active">Active</span>
+                                                            <% } else { %>
+                                                                <span class="status-badge status-expired">Expired</span>
+                                                                <% } %>
+                                                </td>
+                                                <td class="actions-cell">
+                                                    <div class="action-buttons">
+                                                        <!-- Toggle Switch -->
+                                                        <label class="toggle-switch"
+                                                            title="<%= isExpired ? 'Offer expired' : (isActive ? 'Deactivate' : 'Activate') %>">
+                                                            <input type="checkbox" <%=offer.isActive !==false ? 'checked' : '' %>
+                                                            <%= isExpired ? 'disabled' : '' %>
+                                                                onchange="toggleOfferStatus('<%= offer._id %>',
+                                                                    'product', '<%= endDate.toISOString() %>', event)">
+                                                                        <span class="toggle-slider"></span>
+                                                        </label>
+
+                                                        <!-- Edit Button -->
+                                                        <button class="action-btn btn-edit"
+                                                            onclick="openEditModal('<%= offer._id %>', 'product', '<%= offer.name %>', '<%= offer.discountType %>', '<%= offer.discountValue %>', '<%= startDate.toISOString().split('T')[0] %>', '<%= endDate.toISOString().split('T')[0] %>')"
+                                                            title="Edit">
+                                                            <i class="bi bi-pencil-square"></i>
+                                                        </button>
+
+                                                        <!-- Delete Button -->
+                                                        <button class="action-btn btn-delete"
+                                                            onclick="deleteOffer('<%= offer._id %>', 'product')"
+                                                            title="Delete">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <% }) %>
+                                                <% } else { %>
+                                                    <tr>
+                                                        <td colspan="6" class="empty-state">No product offers found.
+                                                        </td>
+                                                    </tr>
+                                                    <% } %>
+                        </tbody>
+                    </table>
+                    <div id="pagination-product" class="pagination-controls"
+                        style="display: none; padding: 1rem; border-top: 1px solid #e2e8f0; justify-content: flex-end; gap: 0.5rem; display: flex;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Offers Section -->
+            <div id="category-offers" class="tab-content">
+                <div class="offers-table-container">
+                    <div class="table-header">
+                        <div class="search-box">
+                            <i class="bi bi-search search-icon"></i>
+                            <input type="text" placeholder="Search category offers..." onkeyup="filterTable('categoryTable', this.value)">
+                        </div>
+                    </div>
+                    <table class="custom-table" id="categoryTable">
+                        <thead>
+                            <tr>
+                                <th>Offer Name</th>
+                                <th>Category</th>
+                                <th>Discount</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (typeof categoryOffers !=='undefined' && categoryOffers.length> 0) { %>
+                                <% categoryOffers.forEach(offer=> {
+                                    const now = new Date();
+                                    const startDate = new Date(offer.startOn || offer.createdAt);
+                                    const endDate = new Date(offer.expireOn);
+                                    const isActive = startDate <= now && endDate> now;
+                                        const isScheduled = startDate > now;
+                                        const isExpired = endDate < now; %>
+                                            <tr>
+                                                <td class="offer-name">
+                                                    <%= offer.name %>
+                                                </td>
+                                                <td>
+                                                    <%= offer.categoryName %>
+                                                </td>
+                                                <td>
+                                                    <span class="discount-badge">
+                                                        <% if (offer.discountType==='percentage' ) { %>
+                                                            <%= offer.discountValue %>% OFF
+                                                                <% } else { %>
+                                                                    ₹<%= offer.discountValue %> OFF
+                                                                        <% } %>
+                                                    </span>
+                                                </td>
+                                                <td class="duration">
+                                                    <%= startDate.toLocaleDateString('en-IN', {day: '2-digit' ,
+                                                        month: 'short' }) %> - <%= endDate.toLocaleDateString('en-IN',
+                                                            {day: '2-digit' , month: 'short' }) %>
+                                                </td>
+                                                <td>
+                                                    <% if (isScheduled) { %>
+                                                        <span class="status-badge status-scheduled">Scheduled</span>
+                                                        <% } else if (isActive) { %>
+                                                            <span class="status-badge status-active">Active</span>
+                                                            <% } else { %>
+                                                                <span class="status-badge status-expired">Expired</span>
+                                                                <% } %>
+                                                </td>
+                                                <td class="actions-cell">
+                                                    <div class="action-buttons">
+                                                        <!-- Toggle Switch -->
+                                                        <label class="toggle-switch"
+                                                            title="<%= isExpired ? 'Offer expired' : (isActive ? 'Deactivate' : 'Activate') %>">
+                                                            <input type="checkbox" <%=offer.isActive !==false ? 'checked' : '' %>
+                                                            <%= isExpired ? 'disabled' : '' %>
+                                                                onchange="toggleOfferStatus('<%= offer._id %>',
+                                                                    'category', '<%= endDate.toISOString() %>', event)">
+                                                                        <span class="toggle-slider"></span>
+                                                        </label>
+
+                                                        <!-- Edit Button -->
+                                                        <button class="action-btn btn-edit"
+                                                            onclick="openEditModal('<%= offer._id %>', 'category', '<%= offer.name %>', '<%= offer.discountType %>', '<%= offer.discountValue %>', '<%= startDate.toISOString().split('T')[0] %>', '<%= endDate.toISOString().split('T')[0] %>')"
+                                                            title="Edit">
+                                                            <i class="bi bi-pencil-square"></i>
+                                                        </button>
+
+                                                        <!-- Delete Button -->
+                                                        <button class="action-btn btn-delete"
+                                                            onclick="deleteOffer('<%= offer._id %>', 'category')"
+                                                            title="Delete">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <% }) %>
+                                                <% } else { %>
+                                                    <tr>
+                                                        <td colspan="6" class="empty-state">No category offers found.
+                                                        </td>
+                                                    </tr>
+                                                    <% } %>
+                        </tbody>
+                    </table>
+                    <div id="pagination-category" class="pagination-controls"
+                        style="display: none; padding: 1rem; border-top: 1px solid #e2e8f0; justify-content: flex-end; gap: 0.5rem; display: flex;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Brand Offers Section -->
+            <div id="brand-offers" class="tab-content">
+                <div class="offers-table-container">
+                    <div class="table-header">
+                        <div class="search-box">
+                            <i class="bi bi-search search-icon"></i>
+                            <input type="text" placeholder="Search brand offers..." onkeyup="filterTable('brandTable', this.value)">
+                        </div>
+                    </div>
+                    <table class="custom-table" id="brandTable">
+                        <thead>
+                            <tr>
+                                <th>Offer Name</th>
+                                <th>Brand</th>
+                                <th>Discount</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (typeof brandOffers !=='undefined' && brandOffers.length> 0) { %>
+                                <% brandOffers.forEach(offer=> {
+                                    const now = new Date();
+                                    const startDate = new Date(offer.startOn || offer.createdAt);
+                                    const endDate = new Date(offer.expireOn);
+                                    const isActive = startDate <= now && endDate> now;
+                                        const isScheduled = startDate > now;
+                                        const isExpired = endDate < now; %>
+                                            <tr>
+                                                <td class="offer-name">
+                                                    <%= offer.name %>
+                                                </td>
+                                                <td>
+                                                    <%= offer.brandName %>
+                                                </td>
+                                                <td>
+                                                    <span class="discount-badge">
+                                                        <% if (offer.discountType==='percentage' ) { %>
+                                                            <%= offer.discountValue %>% OFF
+                                                                <% } else { %>
+                                                                    ₹<%= offer.discountValue %> OFF
+                                                                        <% } %>
+                                                    </span>
+                                                </td>
+                                                <td class="duration">
+                                                    <%= startDate.toLocaleDateString('en-IN', {day: '2-digit' ,
+                                                        month: 'short' }) %> - <%= endDate.toLocaleDateString('en-IN',
+                                                            {day: '2-digit' , month: 'short' }) %>
+                                                </td>
+                                                <td>
+                                                    <% if (isScheduled) { %>
+                                                        <span class="status-badge status-scheduled">Scheduled</span>
+                                                        <% } else if (isActive) { %>
+                                                            <span class="status-badge status-active">Active</span>
+                                                            <% } else { %>
+                                                                <span class="status-badge status-expired">Expired</span>
+                                                                <% } %>
+                                                </td>
+                                                <td class="actions-cell">
+                                                    <div class="action-buttons">
+                                                        <!-- Toggle Switch -->
+                                                        <label class="toggle-switch"
+                                                            title="<%= isExpired ? 'Offer expired' : (isActive ? 'Deactivate' : 'Activate') %>">
+                                                            <input type="checkbox" <%=offer.isActive !==false ? 'checked' : '' %>
+                                                            <%= isExpired ? 'disabled' : '' %>
+                                                                onchange="toggleOfferStatus('<%= offer._id %>', 'brand',
+                                                                    '<%= endDate.toISOString() %>', event)">
+                                                                        <span class="toggle-slider"></span>
+                                                        </label>
+
+                                                        <!-- Edit Button -->
+                                                        <button class="action-btn btn-edit"
+                                                            onclick="openEditModal('<%= offer._id %>', 'brand', '<%= offer.name %>', '<%= offer.discountType %>', '<%= offer.discountValue %>', '<%= startDate.toISOString().split('T')[0] %>', '<%= endDate.toISOString().split('T')[0] %>')"
+                                                            title="Edit">
+                                                            <i class="bi bi-pencil-square"></i>
+                                                        </button>
+
+                                                        <!-- Delete Button -->
+                                                        <button class="action-btn btn-delete"
+                                                            onclick="deleteOffer('<%= offer._id %>', 'brand')"
+                                                            title="Delete">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <% }) %>
+                                                <% } else { %>
+                                                    <tr>
+                                                        <td colspan="6" class="empty-state">No brand offers found.</td>
+                                                    </tr>
+                                                    <% } %>
+                        </tbody>
+                    </table>
+                    <div id="pagination-brand" class="pagination-controls"
+                        style="display: none; padding: 1rem; border-top: 1px solid #e2e8f0; justify-content: flex-end; gap: 0.5rem; display: flex;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scheduled Offers Section -->
+            <div id="scheduled-offers" class="tab-content">
+                <div class="offers-table-container">
+                    <div class="table-header">
+                        <div class="search-box">
+                            <i class="bi bi-search search-icon"></i>
+                            <input type="text" placeholder="Search scheduled offers..." onkeyup="filterTable('scheduledTable', this.value)">
+                        </div>
+                        <div class="scheduled-info">
+                            <i class="bi bi-info-circle"></i>
+                            <span>Offers that will start in the future</span>
+                        </div>
+                    </div>
+                    <table class="custom-table" id="scheduledTable">
+                        <thead>
+                            <tr>
+                                <th>Offer Name</th>
+                                <th>Type</th>
+                                <th>Applied To</th>
+                                <th>Discount</th>
+                                <th>Starts On</th>
+                                <th>Ends On</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% const scheduledOffers=allOffers.filter(o=> new Date(o.startOn || o.createdAt) > new
+                                Date());
+                                %>
+                                <% if (scheduledOffers.length> 0) { %>
+                                    <% scheduledOffers.forEach(offer=> { %>
+                                        <tr>
+                                            <td class="offer-name">
+                                                <%= offer.name %>
+                                            </td>
+                                            <td><span class="type-badge type-<%= offer.type.toLowerCase() %>">
+                                                    <%= offer.type %>
+                                                </span></td>
+                                            <td>
+                                                <%= offer.appliedTo %>
+                                            </td>
+                                            <td>
+                                                <span class="discount-badge">
+                                                    <% if (offer.discountType==='percentage' ) { %>
+                                                        <%= offer.discountValue %>% OFF
+                                                            <% } else { %>
+                                                                ₹<%= offer.discountValue %> OFF
+                                                                    <% } %>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <i class="bi bi-calendar" style="margin-right: 6px; opacity: 0.5;"></i>
+                                                <%= new Date(offer.startOn ||
+                                                    offer.createdAt).toLocaleDateString('en-IN', {day: '2-digit' ,
+                                                    month: 'short' , year: 'numeric' }) %>
+                                            </td>
+                                            <td>
+                                                <%= new Date(offer.expireOn).toLocaleDateString('en-IN', {day: '2-digit'
+                                                    , month: 'short' , year: 'numeric' }) %>
+                                            </td>
+                                            <td align="right">
+                                                <button class="action-btn btn-delete"
+                                                    onclick="deleteOffer('<%= offer._id %>', '<%= offer.type.toLowerCase() %>')"
+                                                    title="Delete">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <% }) %>
+                                            <% } else { %>
+                                                <tr>
+                                                    <td colspan="7" class="empty-state">
+                                                        <i class="bi bi-calendar-event"
+                                                            style="font-size: 40px; opacity: 0.3;"></i>
+                                                        <p>No scheduled offers. Set a future start date when creating an
+                                                            offer.</p>
+                                                    </td>
+                                                </tr>
+                                                <% } %>
+                        </tbody>
+                    </table>
+                    <div id="pagination-scheduled" class="pagination-controls"
+                        style="display: none; padding: 1rem; border-top: 1px solid #e2e8f0; justify-content: flex-end; gap: 0.5rem; display: flex;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADD OFFER MODAL (Product) -->
+            <div class="modal-overlay" id="productOfferModal">
+                <div class="modal-container">
+                    <div class="modal-header">
+                        <h2 class="modal-title" id="productModalTitle">Add Product Offer</h2>
+                        <button type="button" class="close-btn" onclick="closeModal('productOfferModal')">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+                        <form id="addProductOfferForm">
+                            <span class="section-label">Offer Details</span>
+
+                            <div class="form-group">
+                                <label class="form-label">Offer Name</label>
+                                <input type="text" name="name" class="form-input" placeholder="e.g. Summer Sale" >
+                            </div>
+
+                            <div class="form-group" style="position: relative;">
+                                <label class="form-label">Select Product</label>
+                                <input type="text" id="productSearch" class="form-input" placeholder="Search and select product..." oninput="searchProducts(this.value)">
+                                <input type="hidden" name="productId" id="selectedProductId" >
+                                <div id="productSuggestions" class="autocomplete-suggestions" style="display: none;">
+                                </div>
+                            </div>
+
+                            <span class="section-label" style="margin-top: 24px;">Discount Settings</span>
+
+                            <div class="form-group">
+                                <label class="form-label">Discount Type</label>
+                                <div class="discount-type-toggle">
+                                    <button type="button" class="discount-type-btn active"
+                                        onclick="selectDiscountType(this, 'percentage', 'product')">Percentage
+                                        (%)</button>
+                                    <button type="button" class="discount-type-btn"
+                                        onclick="selectDiscountType(this, 'fixed', 'product')">Fixed Amount (₹)</button>
+                                </div>
+                                <input type="hidden" name="discountType" id="productDiscountType" value="percentage">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" id="productDiscountLabel">Discount Value (%)</label>
+                                <input type="number" name="discountValue" class="form-input" min="1" max="99" placeholder="e.g. 20" >
+                            </div>
+
+                            <span class="section-label" style="margin-top: 24px;">Schedule</span>
+
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Start Date</label>
+                                    <input type="date" name="startOn" class="form-input" >
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">End Date</label>
+                                    <input type="date" name="expireOn" class="form-input" >
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" onclick="closeModal('productOfferModal')"
+                            class="btn-secondary">Cancel</button>
+                        <button type="button" onclick="submitOffer('product')" class="btn-primary">Create Offer</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADD OFFER MODAL (Category) -->
+            <div class="modal-overlay" id="categoryOfferModal">
+                <div class="modal-container">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Add Category Offer</h2>
+                        <button type="button" class="close-btn" onclick="closeModal('categoryOfferModal')">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+                        <form id="addCategoryOfferForm">
+                            <span class="section-label">Offer Details</span>
+
+                            <div class="form-group">
+                                <label class="form-label">Offer Name</label>
+                                <input type="text" name="name" class="form-input" placeholder="e.g. Headphones Sale" >
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Select Category</label>
+                                <select name="categoryId" id="categorySelect" style="display:none;" >
+                                    <option value="">Select Category</option>
+                                    <% if (typeof categories !=='undefined' ) { %>
+                                        <% categories.forEach(cat=> { %>
+                                            <option value="<%= cat._id %>">
+                                                <%= cat.name %>
+                                            </option>
+                                            <% }) %>
+                                                <% } %>
+                                </select>
+                            </div>
+
+                            <span class="section-label" style="margin-top: 24px;">Discount Settings</span>
+
+                            <div class="form-group">
+                                <label class="form-label">Discount Type</label>
+                                <div class="discount-type-toggle">
+                                    <button type="button" class="discount-type-btn active"
+                                        onclick="selectDiscountType(this, 'percentage', 'category')">Percentage
+                                        (%)</button>
+                                    <button type="button" class="discount-type-btn"
+                                        onclick="selectDiscountType(this, 'fixed', 'category')">Fixed Amount
+                                        (₹)</button>
+                                </div>
+                                <input type="hidden" name="discountType" id="categoryDiscountType" value="percentage">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" id="categoryDiscountLabel">Discount Value (%)</label>
+                                <input type="number" name="discountValue" class="form-input" min="1" placeholder="e.g. 20" >
+                            </div>
+
+                            <span class="section-label" style="margin-top: 24px;">Schedule</span>
+
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Start Date</label>
+                                    <input type="date" name="startOn" class="form-input" >
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">End Date</label>
+                                    <input type="date" name="expireOn" class="form-input" >
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" onclick="closeModal('categoryOfferModal')"
+                            class="btn-secondary">Cancel</button>
+                        <button type="button" onclick="submitOffer('category')" class="btn-primary">Create
+                            Offer</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADD OFFER MODAL (Brand) -->
+            <div class="modal-overlay" id="brandOfferModal">
+                <div class="modal-container">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Add Brand Offer</h2>
+                        <button type="button" class="close-btn" onclick="closeModal('brandOfferModal')">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+                        <form id="addBrandOfferForm">
+                            <span class="section-label">Offer Details</span>
+
+                            <div class="form-group">
+                                <label class="form-label">Offer Name</label>
+                                <input type="text" name="name" class="form-input" placeholder="e.g. Sony Brand Sale" >
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Select Brand</label>
+                                <select name="brandId" id="brandSelect" style="display:none;" >
+                                    <option value="">Select Brand</option>
+                                    <% if (typeof brands !=='undefined' ) { %>
+                                        <% brands.forEach(brand=> { %>
+                                            <option value="<%= brand._id %>">
+                                                <%= brand.brandName %>
+                                            </option>
+                                            <% }) %>
+                                                <% } %>
+                                </select>
+                            </div>
+
+                            <span class="section-label" style="margin-top: 24px;">Discount Settings</span>
+
+                            <div class="form-group">
+                                <label class="form-label">Discount Type</label>
+                                <div class="discount-type-toggle">
+                                    <button type="button" class="discount-type-btn active"
+                                        onclick="selectDiscountType(this, 'percentage', 'brand')">Percentage
+                                        (%)</button>
+                                    <button type="button" class="discount-type-btn"
+                                        onclick="selectDiscountType(this, 'fixed', 'brand')">Fixed Amount (₹)</button>
+                                </div>
+                                <input type="hidden" name="discountType" id="brandDiscountType" value="percentage">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" id="brandDiscountLabel">Discount Value (%)</label>
+                                <input type="number" name="discountValue" class="form-input" min="1" placeholder="e.g. 20" >
+                            </div>
+
+                            <span class="section-label" style="margin-top: 24px;">Schedule</span>
+
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Start Date</label>
+                                    <input type="date" name="startOn" class="form-input" >
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">End Date</label>
+                                    <input type="date" name="expireOn" class="form-input" >
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" onclick="closeModal('brandOfferModal')"
+                            class="btn-secondary">Cancel</button>
+                        <button type="button" onclick="submitOffer('brand')" class="btn-primary">Create Offer</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EDIT OFFER MODAL -->
+            <div class="modal-overlay" id="editOfferModal">
+                <div class="modal-container">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Edit Offer</h2>
+                        <button type="button" class="close-btn" onclick="closeModal('editOfferModal')">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+                        <form id="editOfferForm">
+                            <input type="hidden" name="offerId" id="editOfferId">
+                            <input type="hidden" name="offerType" id="editOfferType">
+
+                            <span class="section-label">Offer Details</span>
+
+                            <div class="form-group">
+                                <label class="form-label">Offer Name</label>
+                                <input type="text" name="name" id="editOfferName" class="form-input" >
+                            </div>
+
+                            <span class="section-label" style="margin-top: 24px;">Discount Settings</span>
+
+                            <div class="form-group">
+                                <label class="form-label">Discount Type</label>
+                                <div class="discount-type-toggle">
+                                    <button type="button" class="discount-type-btn" id="editPercentageBtn"
+                                        onclick="selectEditDiscountType('percentage')">Percentage (%)</button>
+                                    <button type="button" class="discount-type-btn" id="editFixedBtn"
+                                        onclick="selectEditDiscountType('fixed')">Fixed Amount (₹)</button>
+                                </div>
+                                <input type="hidden" name="discountType" id="editDiscountType">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" id="editDiscountLabel">Discount Value</label>
+                                <input type="number" name="discountValue" id="editDiscountValue" class="form-input" min="1" >
+                            </div>
+
+                            <span class="section-label" style="margin-top: 24px;">Schedule</span>
+
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Start Date</label>
+                                    <input type="date" name="startOn" id="editStartDate" class="form-input" >
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">End Date</label>
+                                    <input type="date" name="expireOn" id="editEndDate" class="form-input" >
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" onclick="closeModal('editOfferModal')"
+                            class="btn-secondary">Cancel</button>
+                        <button type="button" onclick="submitEditOffer()" class="btn-primary">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+
+            <script src="/js/admin/offerManagement.js"></script>
+</body>
+
+</html>

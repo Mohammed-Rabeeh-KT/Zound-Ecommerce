@@ -9,26 +9,30 @@ import cookieParser from 'cookie-parser';
 import passport from 'passport';
 import './config/passport.js';
 import expressEjsLayouts from 'express-ejs-layouts';
-import AppError from "./utils/AppError.js";
 
-import globalErrorHandler from "./middlewares/globalErrorHandler.js";
-import userRouter from './routes/userRouter.js';
-import authRouter from './routes/authRouter.js';
-import adminRouter from './routes/adminRouter.js';
-import { authenticateUser } from './middlewares/authMiddleware.js';
 
+import globalErrorHandler from "./middlewares/core/globalErrorHandler.js";
+import userSsrRouter from './routes/user/user.ssr.routes.js';
+import userApiRouter from './routes/user/user.api.routes.js';
+import adminSsrRouter from './routes/admin/admin.ssr.routes.js';
+import adminApiRouter from './routes/admin/admin.api.routes.js';
+import { authenticateUser } from './middlewares/auth/authMiddleware.js';
+import cacheControlMiddleware from './middlewares/core/cacheControlMiddleware.js';
+import localsMiddleware from './middlewares/auth/localsMiddleware.js';
+import notFoundMiddleware from './middlewares/core/notFoundMiddleware.js';
+import layoutMiddleware from './middlewares/core/layoutMiddleware.js';
+import emailNormalizer from './middlewares/core/emailNormalizer.js';
 
 // Get __dirname equivalent in ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config();
-db();
+await db();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
 
 app.use(session({
   secret: process.env.SESSION_SECRET,
@@ -40,42 +44,30 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-
-// Prevent caching for authenticated pages
-app.use((req, res, next) => {
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
-  next();
-});
+app.use(cacheControlMiddleware);
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/utils', express.static(path.join(__dirname, 'utils')));
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(expressEjsLayouts);
-app.set("layout", "layout");
+
+// Layout Decision Middleware
+app.use(layoutMiddleware);
+app.use(emailNormalizer);
 
 app.use(authenticateUser);
+app.use(localsMiddleware);
 
-app.use((req, res, next) => {
-    // res.locals makes these variables available in ALL EJS templates automatically
-    res.locals.user = req.user || null; 
-    res.locals.cartCount = req.session?.cartCount || 0; // Or fetch from your database if you have that logic
-    res.locals.searchQuery = req.query.search || '';
-    next();
-});
-
-app.use('/auth', authRouter);
-app.use('/user', userRouter);
-app.use('/admin',authenticateUser,adminRouter);
+// app.use('/auth', authRouter);
+app.use('/user', userSsrRouter);
+app.use('/api/user', userApiRouter);
+app.use('/admin', adminSsrRouter);
+app.use('/api/admin', adminApiRouter);
 
 
-app.use((req, res, next) => {
-    next(new AppError(`Page not found`, 404));
-});
-
-
+// app.use(notFoundMiddleware);
 app.use(globalErrorHandler);
 
 
@@ -85,4 +77,3 @@ app.listen(PORT, () => {
 })
 
 export default app;
-

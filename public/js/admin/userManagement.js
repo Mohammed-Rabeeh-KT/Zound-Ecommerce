@@ -3,7 +3,7 @@ import {
     showError,
     showWarning,
     confirmAction
-} from "/js/swalUtils.js";
+} from "/utils/swalUtils.js";
 
 document.addEventListener("DOMContentLoaded", () => {
     loadUsers(1);
@@ -13,15 +13,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Live search
     searchInput.addEventListener("input", () => {
-        clearIcon.style.display = searchInput.value ?"block" : "none";
+        clearIcon.style.display = searchInput.value ? "block" : "none";
         loadUsers(1);
     });
 });
 async function loadUsers(page) {
     const search = document.querySelector(".search-input").value;
 
-    const res = await fetch(`/admin/users/data?page=${page}&search=${search}`);
-    const data = await res.json();
+    const res = await axios.get(`/api/admin/users/data?page=${page}&search=${search}`);
+    const data = res.data;
 
     renderTable(data.users, data.currentPage, data.usersPerPage);
     renderPagination(data.totalUsers, data.currentPage, data.usersPerPage);
@@ -78,7 +78,7 @@ function renderPagination(total, page, limit) {
 
     const totalPages = Math.ceil(total / limit);
 
-        if (totalPages <= 1) {
+    if (totalPages <= 1) {
         container.style.display = "none";
         return;
     }
@@ -113,33 +113,25 @@ function renderPagination(total, page, limit) {
 
 async function blockUser(id) {
     confirmAction("Block this user?", async () => {
-
-        const res = await fetch(`/admin/users/block/${id}`, { method: "PATCH" });
-
-        if (!res.ok) {
-            const data = await res.json().catch(() => ({}));
-            showError(data.message || "Failed to block user");
-            return;
+        try {
+            await axios.patch(`/api/admin/users/block/${id}`);
+            showSuccess("User blocked successfully");
+            loadUsers(1);
+        } catch (err) {
+            showError(err.response?.data?.message || "Failed to block user");
         }
-
-        showSuccess("User blocked successfully");
-        loadUsers(1);
     });
 }
 
 async function unblockUser(id) {
     confirmAction("Unblock this user?", async () => {
-
-        const res = await fetch(`/admin/users/unblock/${id}`, { method: "PATCH" });
-
-        if (!res.ok) {
-            const data = await res.json().catch(() => ({}));
-            showError(data.message || "Failed to unblock user");
-            return;
+        try {
+            await axios.patch(`/api/admin/users/unblock/${id}`);
+            showSuccess("User unblocked successfully");
+            loadUsers(1);
+        } catch (err) {
+            showError(err.response?.data?.message || "Failed to unblock user");
         }
-
-        showSuccess("User unblocked successfully");
-        loadUsers(1);
     });
 }
 
@@ -153,7 +145,7 @@ function clearSearch() {
 
 document.addEventListener("click", (e) => {
 
-     // CLEAR SEARCH ICON CLICKED
+    // CLEAR SEARCH ICON CLICKED
     const clearIcon = e.target.closest("#clearSearchIcon");
     if (clearIcon) {
         clearSearch();

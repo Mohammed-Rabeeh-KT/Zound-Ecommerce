@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,214 +9,326 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
     <div class="admin-layout">
-        
+
         <!-- INCLUDE SIDEBAR PARTIAL -->
-        <%- include('../partials/admin/adminSidebar', { 
-            currentPage: 'dashboard',
-            adminName: adminName,
-            adminEmail: adminEmail
-        }) %>
+        <%- include('../partials/admin/adminSidebar', { currentPage: 'dashboard' , adminName: adminName, adminEmail:
+            adminEmail }) %>
 
-        <!-- MAIN CONTENT -->
-        <main class="main-content">
-            
-            <!-- HEADER -->
-            <header class="content-header">
-                <div>
-                    <h1 class="page-title">Dashboard</h1>
-                    <p class="page-subtitle">Welcome back! Here is your store overview</p>
+            <!-- MAIN CONTENT -->
+            <main class="main-content">
+
+                <!-- HEADER -->
+                <header class="content-header">
+                    <div>
+                        <h1 class="page-title">Dashboard</h1>
+                        <p class="page-subtitle">Welcome back! Here is your store overview</p>
+                    </div>
+                </header>
+
+                <!-- STATS CARDS -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <p class="stat-label">Total Revenue</p>
+                            <h2 class="stat-value">₹<%= totalRevenue.toLocaleString('en-IN') %>
+                            </h2>
+                            <p class="stat-change <%= revenueChange >= 0 ? 'positive' : 'negative' %>">
+                                <span class="material-symbols-outlined">
+                                    <%= revenueChange>= 0 ? 'arrow_upward' : 'arrow_downward' %>
+                                </span>
+                                <%= Math.abs(revenueChange).toFixed(1) %>%
+                            </p>
+                        </div>
+                        <div class="stat-icon revenue-icon">
+                            <span class="material-symbols-outlined">currency_rupee</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <p class="stat-label">Total Orders</p>
+                            <h2 class="stat-value">
+                                <%= totalOrders.toLocaleString('en-IN') %>
+                            </h2>
+                            <p class="stat-change <%= ordersChange >= 0 ? 'positive' : 'negative' %>">
+                                <span class="material-symbols-outlined">
+                                    <%= ordersChange>= 0 ? 'arrow_upward' : 'arrow_downward' %>
+                                </span>
+                                <%= Math.abs(ordersChange).toFixed(1) %>%
+                            </p>
+                        </div>
+                        <div class="stat-icon orders-icon">
+                            <span class="material-symbols-outlined">shopping_cart</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <p class="stat-label">Active Users</p>
+                            <h2 class="stat-value">
+                                <%= activeUsers.toLocaleString('en-IN') %>
+                            </h2>
+                            <p class="stat-change <%= usersChange >= 0 ? 'positive' : 'negative' %>">
+                                <span class="material-symbols-outlined">
+                                    <%= usersChange>= 0 ? 'arrow_upward' : 'arrow_downward' %>
+                                </span>
+                                <%= Math.abs(usersChange).toFixed(1) %>%
+                            </p>
+                        </div>
+                        <div class="stat-icon users-icon">
+                            <span class="material-symbols-outlined">group</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <p class="stat-label">Conversion Rate</p>
+                            <h2 class="stat-value">
+                                <%= conversionRate.toFixed(2) %>%
+                            </h2>
+                            <p class="stat-change <%= conversionChange >= 0 ? 'positive' : 'negative' %>">
+                                <span class="material-symbols-outlined">
+                                    <%= conversionChange>= 0 ? 'arrow_upward' : 'arrow_downward' %>
+                                </span>
+                                <%= Math.abs(conversionChange).toFixed(1) %>%
+                            </p>
+                        </div>
+                        <div class="stat-icon conversion-icon">
+                            <span class="material-symbols-outlined">percent</span>
+                        </div>
+                    </div>
                 </div>
-            </header>
 
-            <!-- STATS CARDS -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-content">
-                        <p class="stat-label">Total Revenue</p>
-                        <h2 class="stat-value">₹<%= totalRevenue.toLocaleString('en-IN') %></h2>
-                        <p class="stat-change <%= revenueChange >= 0 ? 'positive' : 'negative' %>">
-                            <span class="material-symbols-outlined"><%= revenueChange >= 0 ? 'arrow_upward' : 'arrow_downward' %></span>
-                            <%= Math.abs(revenueChange).toFixed(1) %>%
-                        </p>
+                <!-- CHARTS -->
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Sales Overview</h3>
+                            <div class="chart-filter-group">
+                                <button class="chart-filter-btn" data-filter="daily" onclick="changeChartFilter('daily')">Daily</button>
+                                <button class="chart-filter-btn" data-filter="weekly" onclick="changeChartFilter('weekly')">Weekly</button>
+                                <button class="chart-filter-btn active" data-filter="monthly" onclick="changeChartFilter('monthly')">Monthly</button>
+                                <button class="chart-filter-btn" data-filter="yearly" onclick="changeChartFilter('yearly')">Yearly</button>
+                            </div>
+                        </div>
+                        <canvas id="salesChart"></canvas>
                     </div>
-                    <div class="stat-icon revenue-icon">
-                        <span class="material-symbols-outlined">currency_rupee</span>
+
+                    <div class="chart-card">
+                        <h3 class="chart-title">Sales by Category</h3>
+                        <canvas id="categoryChart"></canvas>
                     </div>
                 </div>
 
-                <div class="stat-card">
-                    <div class="stat-content">
-                        <p class="stat-label">Total Orders</p>
-                        <h2 class="stat-value"><%= totalOrders.toLocaleString('en-IN') %></h2>
-                        <p class="stat-change <%= ordersChange >= 0 ? 'positive' : 'negative' %>">
-                            <span class="material-symbols-outlined"><%= ordersChange >= 0 ? 'arrow_upward' : 'arrow_downward' %></span>
-                            <%= Math.abs(ordersChange).toFixed(1) %>%
-                        </p>
+                <!-- BEST SELLING SECTION -->
+                <div class="best-selling-section">
+                    <!-- Tab Navigation -->
+                    <div class="best-selling-tabs">
+                        <button class="best-tab active" data-tab="products" onclick="switchBestSellingTab('products')">
+                            <span class="material-symbols-outlined">inventory_2</span>
+                            Top 10 Products
+                        </button>
+                        <button class="best-tab" data-tab="categories" onclick="switchBestSellingTab('categories')">
+                            <span class="material-symbols-outlined">category</span>
+                            Top 10 Categories
+                        </button>
+                        <button class="best-tab" data-tab="brands" onclick="switchBestSellingTab('brands')">
+                            <span class="material-symbols-outlined">storefront</span>
+                            Top 10 Brands
+                        </button>
                     </div>
-                    <div class="stat-icon orders-icon">
-                        <span class="material-symbols-outlined">shopping_cart</span>
+
+                    <!-- TAB: Best Selling Products -->
+                    <div class="best-selling-content active" id="tab-products">
+                        <div class="best-selling-card">
+                            <h3 class="best-selling-title">
+                                <span class="material-symbols-outlined">emoji_events</span>
+                                Best Selling Products
+                            </h3>
+                            <div class="table-wrapper">
+                                <table class="best-table">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Product</th>
+                                            <th>Units Sold</th>
+                                            <th>Revenue</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% if (bestSellingProducts && bestSellingProducts.length > 0) { %>
+                                            <% bestSellingProducts.forEach((product, index) => { %>
+                                                <tr>
+                                                    <td>
+                                                        <span class="rank-badge rank-<%= index + 1 %>"><%= index + 1 %></span>
+                                                    </td>
+                                                    <td>
+                                                        <div class="product-cell">
+                                                            <img src="<%= product.productImage || '/images/placeholder.png' %>" alt="<%= product.productName %>" class="product-thumb">
+                                                            <span class="product-name-text"><%= product.productName %></span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="qty-cell"><%= product.totalQuantity %></td>
+                                                    <td class="revenue-cell">₹<%= Number(product.totalRevenue).toLocaleString('en-IN') %></td>
+                                                </tr>
+                                            <% }) %>
+                                        <% } else { %>
+                                            <tr>
+                                                <td colspan="4" class="no-data">No sales data available</td>
+                                            </tr>
+                                        <% } %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: Best Selling Categories -->
+                    <div class="best-selling-content" id="tab-categories">
+                        <div class="best-selling-card">
+                            <h3 class="best-selling-title">
+                                <span class="material-symbols-outlined">emoji_events</span>
+                                Best Selling Categories
+                            </h3>
+                            <div class="table-wrapper">
+                                <table class="best-table">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Category</th>
+                                            <th>Units Sold</th>
+                                            <th>Revenue</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% if (bestSellingCategories && bestSellingCategories.length > 0) { %>
+                                            <% bestSellingCategories.forEach((cat, index) => { %>
+                                                <tr>
+                                                    <td>
+                                                        <span class="rank-badge rank-<%= index + 1 %>"><%= index + 1 %></span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="category-name-text"><%= cat.categoryName %></span>
+                                                    </td>
+                                                    <td class="qty-cell"><%= cat.totalQuantity %></td>
+                                                    <td class="revenue-cell">₹<%= Number(cat.totalRevenue).toLocaleString('en-IN') %></td>
+                                                </tr>
+                                            <% }) %>
+                                        <% } else { %>
+                                            <tr>
+                                                <td colspan="4" class="no-data">No sales data available</td>
+                                            </tr>
+                                        <% } %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: Best Selling Brands -->
+                    <div class="best-selling-content" id="tab-brands">
+                        <div class="best-selling-card">
+                            <h3 class="best-selling-title">
+                                <span class="material-symbols-outlined">emoji_events</span>
+                                Best Selling Brands
+                            </h3>
+                            <div class="table-wrapper">
+                                <table class="best-table">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Brand</th>
+                                            <th>Units Sold</th>
+                                            <th>Revenue</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% if (bestSellingBrands && bestSellingBrands.length > 0) { %>
+                                            <% bestSellingBrands.forEach((brand, index) => { %>
+                                                <tr>
+                                                    <td>
+                                                        <span class="rank-badge rank-<%= index + 1 %>"><%= index + 1 %></span>
+                                                    </td>
+                                                    <td>
+                                                        <div class="product-cell">
+                                                            <img src="<%= brand.brandLogo || '/images/placeholder.png' %>" alt="<%= brand.brandName %>" class="product-thumb">
+                                                            <span class="product-name-text"><%= brand.brandName %></span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="qty-cell"><%= brand.totalQuantity %></td>
+                                                    <td class="revenue-cell">₹<%= Number(brand.totalRevenue).toLocaleString('en-IN') %></td>
+                                                </tr>
+                                            <% }) %>
+                                        <% } else { %>
+                                            <tr>
+                                                <td colspan="4" class="no-data">No sales data available</td>
+                                            </tr>
+                                        <% } %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="stat-card">
-                    <div class="stat-content">
-                        <p class="stat-label">Active Users</p>
-                        <h2 class="stat-value"><%= activeUsers.toLocaleString('en-IN') %></h2>
-                        <p class="stat-change <%= usersChange >= 0 ? 'positive' : 'negative' %>">
-                            <span class="material-symbols-outlined"><%= usersChange >= 0 ? 'arrow_upward' : 'arrow_downward' %></span>
-                            <%= Math.abs(usersChange).toFixed(1) %>%
-                        </p>
-                    </div>
-                    <div class="stat-icon users-icon">
-                        <span class="material-symbols-outlined">group</span>
-                    </div>
-                </div>
+                <!-- RECENT ORDERS TABLE -->
+                <div class="orders-card">
+                    <h3 class="orders-title">Recent Orders</h3>
 
-                <div class="stat-card">
-                    <div class="stat-content">
-                        <p class="stat-label">Conversion Rate</p>
-                        <h2 class="stat-value"><%= conversionRate.toFixed(2) %>%</h2>
-                        <p class="stat-change <%= conversionChange >= 0 ? 'positive' : 'negative' %>">
-                            <span class="material-symbols-outlined"><%= conversionChange >= 0 ? 'arrow_upward' : 'arrow_downward' %></span>
-                            <%= Math.abs(conversionChange).toFixed(1) %>%
-                        </p>
-                    </div>
-                    <div class="stat-icon conversion-icon">
-                        <span class="material-symbols-outlined">percent</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- CHARTS -->
-            <div class="charts-grid">
-                <div class="chart-card">
-                    <h3 class="chart-title">Sales Overview</h3>
-                    <canvas id="salesChart"></canvas>
-                </div>
-
-                <div class="chart-card">
-                    <h3 class="chart-title">Sales by Category</h3>
-                    <canvas id="categoryChart"></canvas>
-                </div>
-            </div>
-
-            <!-- RECENT ORDERS TABLE -->
-            <div class="orders-card">
-                <h3 class="orders-title">Recent Orders</h3>
-                
-                <div class="table-wrapper">
-                    <table class="orders-table">
-                        <thead>
-                            <tr>
-                                <th>Order ID</th>
-                                <th>Customer</th>
-                                <th>Product</th>
-                                <th>Amount</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% if (recentOrders && recentOrders.length > 0) { %>
-                                <% recentOrders.forEach(order => { %>
-                                    <tr>
-                                        <td class="order-id">#<%= order.orderId %></td>
-                                        <td><%= order.customerName %></td>
-                                        <td><%= order.productName %></td>
-                                        <td class="order-amount">₹<%= order.finalAmount.toLocaleString('en-IN') %></td>
-                                        <td>
-                                            <span class="status-badge status-<%= order.status.toLowerCase().replace(' ', '-') %>">
-                                                <%= order.status %>
-                                            </span>
-                                        </td>
-                                    </tr>
-                                <% }) %>
-                            <% } else { %>
+                    <div class="table-wrapper">
+                        <table class="orders-table">
+                            <thead>
                                 <tr>
-                                    <td colspan="5" class="no-data">No orders found</td>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Product</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
                                 </tr>
-                            <% } %>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <% if (recentOrders && recentOrders.length> 0) { %>
+                                    <% recentOrders.forEach(order=> { %>
+                                        <tr>
+                                            <td class="order-id">#<%= order.orderId %>
+                                            </td>
+                                            <td>
+                                                <%= order.customerName %>
+                                            </td>
+                                            <td>
+                                                <%= order.productName %>
+                                            </td>
+                                            <td class="order-amount">₹<%= order.finalAmount.toLocaleString('en-IN') %>
+                                            </td>
+                                            <td>
+                                                <span
+                                                    class="status-badge status-<%= order.status.toLowerCase().replace(' ', '-') %>">
+                                                    <%= order.status %>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <% }) %>
+                                            <% } else { %>
+                                                <tr>
+                                                    <td colspan="5" class="no-data">No orders found</td>
+                                                </tr>
+                                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
 
-        </main>
+            </main>
     </div>
 
     <script>
-        // Sales Overview Chart
-        const salesCtx = document.getElementById('salesChart').getContext('2d');
-        const salesData = <%- JSON.stringify(salesChartData) %>;
-        
-        new Chart(salesCtx, {
-            type: 'line',
-            data: {
-                labels: salesData.labels,
-                datasets: [{
-                    data: salesData.values,
-                    borderColor: '#2c5aa0',
-                    backgroundColor: 'transparent',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    pointRadius: 4,
-                    pointBackgroundColor: '#2c5aa0',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return '₹' + value.toLocaleString('en-IN');
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        // Category Chart
-        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-        const categoryData = <%- JSON.stringify(categoryChartData) %>;
-        
-        new Chart(categoryCtx, {
-            type: 'bar',
-            data: {
-                labels: categoryData.labels,
-                datasets: [{
-                    data: categoryData.values,
-                    backgroundColor: ['#4c8bf5', '#5094f7', '#6ba3f8', '#7caef9', '#a0c4fb'],
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return '₹' + value.toLocaleString('en-IN');
-                            }
-                        }
-                    }
-                }
-            }
-        });
+        window.salesData = <%- JSON.stringify(salesChartData) %>;
+        window.categoryData = <%- JSON.stringify(categoryChartData) %>;
     </script>
+    <script src="/js/admin/dashboard.js"></script>
 </body>
+
 </html>

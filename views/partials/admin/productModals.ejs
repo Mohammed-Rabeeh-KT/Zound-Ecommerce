@@ -334,15 +334,14 @@
                 <!-- Product Name (Full Width) -->
                 <div class="form-group">
                     <label class="form-label">Product Name</label>
-                    <input type="text" name="productName" class="form-input" required
-                        placeholder="e.g. Sony WH-1000XM5">
+                    <input type="text" name="productName" class="form-input" placeholder="e.g. Sony WH-1000XM5">
                 </div>
 
                 <!-- Category & Brand (Side by Side) -->
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label">Category</label>
-                        <select name="category" id="categorySelect" required>
+                        <select name="category" id="categorySelect" >
                             <option value="">Select Category</option>
                             <% if(locals.categories) { %>
                                 <% categories.forEach(cat=> { %>
@@ -355,7 +354,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Brand</label>
-                        <select name="brand" id="brandSelect" required>
+                        <select name="brand" id="brandSelect" >
                             <option value="">Select Brand</option>
                             <% if(locals.brands) { %>
                                 <% brands.forEach(brand=> { %>
@@ -370,12 +369,12 @@
 
                 <div class="form-group">
                     <label class="form-label">Description</label>
-                    <textarea name="description" class="form-textarea" rows="4" required></textarea>
+                    <textarea name="description" class="form-textarea" rows="4" ></textarea>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Status</label>
-                    <select name="status" class="form-select" required>
+                    <select name="status" class="form-select" >
                         <option value="Active">Active</option>
                         <option value="Inactive">Inactive</option>
                     </select>
@@ -449,8 +448,7 @@
                 <div class="form-group" style="margin-bottom: 20px;">
                     <label class="form-label" style="margin-bottom: 8px; display: block; font-weight: 500;">Variant Type
                         *</label>
-                    <input type="text" name="v_type" class="form-input" placeholder="e.g., Color, Size, Storage"
-                        required style="width: 100%;">
+                    <input type="text" name="v_type" class="form-input" placeholder="e.g., Color, Size, Storage" style="width: 100%;">
                 </div>
 
                 <!-- Variant Value -->
@@ -458,8 +456,7 @@
                     <label class="form-label" style="margin-bottom: 8px; display: block; font-weight: 500;">Variant
                         Value *</label>
                     <div style="display:flex; gap:10px; align-items:center;">
-                        <input type="text" name="v_value" class="form-input" placeholder="e.g., Black, XL, 128GB"
-                            required style="flex: 1;">
+                        <input type="text" name="v_value" class="form-input" placeholder="e.g., Black, XL, 128GB" style="flex: 1;">
                         <div id="colorPreview"
                             style="width:36px; height:36px; border-radius:8px; border:1px solid var(--border); display:none;">
                         </div>
@@ -483,8 +480,7 @@
                             Files</button>
                     </div>
 
-                    <input type="file" id="variantImageInput" accept="image/*" multiple style="display:none"
-                        onchange="handleVariantImageSelect(this)">
+                    <input type="file" id="variantImageInput" accept="image/*" multiple style="display:none" onchange="handleVariantImageSelect(this)">
 
                     <div class="upload-preview-grid" id="variantPreviewContainer" style="margin-top:15px;">
                         <!-- Variant Images Grid -->
@@ -496,15 +492,13 @@
                     <div class="form-group">
                         <label class="form-label" style="margin-bottom: 8px; display: block; font-weight: 500;">Base
                             Price *</label>
-                        <input type="number" name="v_basePrice" class="form-input" placeholder="0.00" required
-                            oninput="calculateFromPrice()" step="0.01" min="0" style="width: 100%;">
+                        <input type="number" name="v_basePrice" class="form-input" placeholder="0.00" oninput="calculateFromPrice()" step="0.01" min="0" style="width: 100%;">
                     </div>
                     <div class="form-group">
                         <label class="form-label" style="margin-bottom: 8px; display: block; font-weight: 500;">Selling
                             Price
                             *</label>
-                        <input type="number" name="v_salePrice" class="form-input" placeholder="0.00" required
-                            oninput="calculateFromPrice()" step="0.01" min="0" style="width: 100%;">
+                        <input type="number" name="v_salePrice" class="form-input" placeholder="0.00" oninput="calculateFromPrice()" step="0.01" min="0" style="width: 100%;">
                     </div>
                 </div>
 
@@ -513,9 +507,7 @@
                     <label class="form-label" style="margin-bottom: 8px; display: block; font-weight: 500;">Offer
                         Percentage</label>
                     <div style="position:relative;">
-                        <input type="number" name="v_offer" class="form-input" placeholder="0"
-                            oninput="calculateFromDiscount()" step="0.01" min="0" max="100"
-                            style="width: 100%; padding-right: 40px;">
+                        <input type="number" name="v_offer" class="form-input" placeholder="0" oninput="calculateFromDiscount()" step="0.01" min="0" max="100" style="width: 100%; padding-right: 40px;">
                         <span
                             style="position:absolute; right:15px; top:50%; transform: translateY(-50%); color:var(--text-light); font-weight: 500;">%</span>
                     </div>
@@ -525,8 +517,7 @@
                 <div class="form-group" style="margin-bottom: 20px;">
                     <label class="form-label" style="margin-bottom: 8px; display: block; font-weight: 500;">Stock
                         *</label>
-                    <input type="number" name="v_stock" class="form-input" placeholder="0" required min="0"
-                        style="width: 100%;">
+                    <input type="number" name="v_stock" class="form-input" placeholder="0" min="0" style="width: 100%;">
                 </div>
 
                 <!-- Variant Status -->

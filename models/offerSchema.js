@@ -18,18 +18,28 @@ const offerSchema = new Schema(
         discount_type: {
             type: String,
             enum: ["percentage", "fixed"],
+            default: "percentage",
             required: true
         },
-
-        valid: {
-            type: Date,
-            required: true
-        },
-
         apply_for: {
             type: String,
-            enum: ["category", "product"],
+            enum: ["category", "product", "brand"],
             required: true
+        },
+        productId: {
+            type: Schema.Types.ObjectId,
+            ref: 'Product',
+            default: null
+        },
+        categoryId: {
+            type: Schema.Types.ObjectId,
+            ref: 'Category',
+            default: null
+        },
+        brandId: {
+            type: Schema.Types.ObjectId,
+            ref: 'Brand',
+            default: null
         },
 
         starts_at: {
@@ -42,6 +52,12 @@ const offerSchema = new Schema(
             required: true
         },
 
+        min_purchase_amount: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
+
         isActive: {
             type: Boolean,
             default: true
@@ -49,6 +65,12 @@ const offerSchema = new Schema(
     },
     { timestamps: true }
 );
+
+offerSchema.index({ productId: 1 });
+offerSchema.index({ categoryId: 1 });
+offerSchema.index({ brandId: 1 });
+offerSchema.index({ ends_at: 1 });
+offerSchema.index({ starts_at: 1 });
 
 const Offer = mongoose.model("Offer", offerSchema);
 export default Offer;

@@ -1,4 +1,4 @@
-import { showSuccess, showError } from "/js/swalUtils.js";
+import { showSuccess, showError } from "/utils/swalUtils.js";
 
 const catchAsync = (fn) => (...args) => fn(...args).catch((err) => {
     console.error(err);
@@ -59,13 +59,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (closeBtn) {
             const modalId = closeBtn.getAttribute("data-close");
             document.getElementById(modalId)?.classList.remove("active");
-            
+
             // If closing cropper, destroy instance
             if (modalId === 'cropperModal' && cropper) {
                 cropper.destroy();
                 cropper = null;
                 // Clear input if cancelled so user can re-select same file
-                if (currentInput) currentInput.value = ""; 
+                if (currentInput) currentInput.value = "";
             }
             return;
         }
@@ -132,9 +132,8 @@ async function loadBrands(page = 1) {
     const search = document.getElementById("searchInput")?.value.trim() || "";
     const status = document.getElementById("statusSelect")?.value || "";
 
-    const url = `/admin/brands/data?page=${page}&search=${encodeURIComponent(search)}&status=${encodeURIComponent(status)}`;
-    const res = await fetch(url);
-    const json = await res.json();
+    const url = `/api/admin/brands/data?page=${page}&search=${encodeURIComponent(search)}&status=${encodeURIComponent(status)}`;
+    const { data: json } = await axios.get(url);
 
     if (!json.success) return showError(json.message);
 
@@ -180,11 +179,11 @@ function renderPagination(total, page, limit) {
         return;
     }
     container.style.display = "flex";
-    
+
     // Simple pagination logic
-    if(page > 1) container.innerHTML += `<button class="page-btn" data-page="${page-1}">Prev</button>`;
-    for(let i=1; i<=totalPages; i++) container.innerHTML += `<button class="page-btn ${i===page?'active':''}" data-page="${i}">${i}</button>`;
-    if(page < totalPages) container.innerHTML += `<button class="page-btn" data-page="${page+1}">Next</button>`;
+    if (page > 1) container.innerHTML += `<button class="page-btn" data-page="${page - 1}">Prev</button>`;
+    for (let i = 1; i <= totalPages; i++) container.innerHTML += `<button class="page-btn ${i === page ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    if (page < totalPages) container.innerHTML += `<button class="page-btn" data-page="${page + 1}">Next</button>`;
 }
 
 /* ============================
@@ -192,30 +191,46 @@ function renderPagination(total, page, limit) {
    ============================ */
 async function submitAddBrand(e) {
     e.preventDefault();
+    
+    // Clear previous errors
+    clearInlineErrors();
+    
     const formData = new FormData(e.target);
     const statusEl = e.target.querySelector("input[name='isListed']");
     formData.set("isListed", statusEl && statusEl.checked ? "on" : "off");
 
-    const res = await fetch("/admin/brands", { method: "POST", body: formData });
-    const json = await res.json();
+    try {
+        const { data: json } = await axios.post("/api/admin/brands", formData);
 
-    if (!json.success) return showError(json.message);
-    document.getElementById("addBrandModal").classList.remove("active");
-    showSuccess("Brand added");
-    safeCall(loadBrands, 1);
+        if (!json.success) {
+            // Show inline errors based on the error message
+            showInlineError(json.message);
+            return showError(json.message);
+        }
+        
+        document.getElementById("addBrandModal").classList.remove("active");
+        showSuccess("Brand added");
+        safeCall(loadBrands, 1);
+    } catch (error) {
+        console.error('Error adding brand:', error);
+        
+        // Show inline errors for validation failures
+        const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Something went wrong';
+        showInlineError(errorMessage);
+        showError(errorMessage);
+    }
 }
 
 async function openEditModal(id) {
-    const res = await fetch(`/admin/brands/${id}`);
-    const json = await res.json();
+    const { data: json } = await axios.get(`/api/admin/brands/${id}`);
     if (!json.success) return showError("Error fetching brand");
 
     const brand = json.data;
     document.getElementById("editBrandId").value = brand._id;
     document.getElementById("editBrandName").value = brand.brandName;
-    
+
     const statusEl = document.getElementById("editBrandStatus");
-    if(statusEl) statusEl.checked = brand.isListed;
+    if (statusEl) statusEl.checked = brand.isListed;
 
     const dropZone = document.querySelector("#editBrandDropZone");
     const thumb = dropZone.querySelector(".drop-zone-thumb");
@@ -235,18 +250,34 @@ async function openEditModal(id) {
 
 async function submitEditBrand(e) {
     e.preventDefault();
+    // Clear previous errors
+    clearInlineErrors();
+    // Rest of your code remains the same
     const id = document.getElementById("editBrandId").value;
     const formData = new FormData(e.target);
     const statusEl = document.getElementById("editBrandStatus");
     formData.set("isListed", statusEl && statusEl.checked ? "on" : "off");
 
-    const res = await fetch(`/admin/brands/update/${id}`, { method: "PATCH", body: formData });
-    const json = await res.json();
+    try {
+        const { data: json } = await axios.patch(`/api/admin/brands/update/${id}`, formData);
 
-    if (!json.success) return showError(json.message);
-    document.getElementById("editBrandModal").classList.remove("active");
-    showSuccess("Brand updated");
-    safeCall(loadBrands, 1);
+        if (!json.success) {
+            // Show inline errors based on the error message
+            showInlineError(json.message);
+            return showError(json.message);
+        }
+        
+        document.getElementById("editBrandModal").classList.remove("active");
+        showSuccess("Brand updated");
+        safeCall(loadBrands, 1);
+    } catch (error) {
+        console.error('Error updating brand:', error);
+        
+        // Show inline errors for validation failures
+        const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Something went wrong';
+        showInlineError(errorMessage);
+        showError(errorMessage);
+    }
 }
 
 /* ============================
@@ -270,7 +301,7 @@ function setupDropZone(zoneSelector, inputSelector) {
         e.preventDefault();
         dropZone.classList.add("drop-zone--over");
     });
-    
+
     ["dragleave", "dragend"].forEach(type => {
         dropZone.addEventListener(type, () => dropZone.classList.remove("drop-zone--over"));
     });
@@ -300,12 +331,12 @@ function handleFileSelect(file, zoneSelector, inputElement) {
     reader.onload = (e) => {
         const image = document.getElementById('imageToCrop');
         image.src = e.target.result;
-        
+
         // Open Cropper Modal
         document.getElementById("cropperModal").classList.add("active");
 
         // Initialize Cropper
-        if(cropper) cropper.destroy();
+        if (cropper) cropper.destroy();
         cropper = new Cropper(image, {
             aspectRatio: 1, // Force square for logos (optional)
             viewMode: 1,
@@ -363,15 +394,12 @@ function updateThumbnail(dropZone, file) {
 /* ============================
    Toggle & Icons
    ============================ */
-// ... (Your existing Toggle Status logic and Icons here - no changes needed) ...
-// Ensure toggleStatusConfirm, openToggleModal, and icons are present as in previous code.
 
-let currentToggleId = null;
 function openToggleModal(btn) {
     currentToggleId = btn.dataset.id;
     const isListed = btn.dataset.status === "true";
     document.getElementById("toggleBrandName").innerText = btn.dataset.name;
-    
+
     const titleEl = document.getElementById("toggleModalTitle");
     const confirmBtn = document.getElementById("confirmToggleBtn");
     const iconEl = document.getElementById("toggleModalIcon");
@@ -391,11 +419,10 @@ function openToggleModal(btn) {
 }
 
 async function toggleStatusConfirm() {
-    if(!currentToggleId) return;
-    const res = await fetch(`/admin/brands/${currentToggleId}/toggle`, { method: "PATCH" });
-    const json = await res.json();
+    if (!currentToggleId) return;
+    const { data: json } = await axios.patch(`/api/admin/brands/${currentToggleId}/toggle`);
     document.getElementById("toggleModal").classList.remove("active");
-    if(!json.success) return showError("Action failed");
+    if (!json.success) return showError("Action failed");
     showSuccess(json.message);
     safeCall(loadBrands, 1);
 }
@@ -421,3 +448,97 @@ function greenListModalIcon() {
         <path d="M8 12L11 15L16 9" stroke="#1dbf4f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`;
 }
+
+/* ============================
+   Inline Error Handling
+   ============================ */
+function clearInlineErrors() {
+    // Clear all inline error messages
+    const errorElements = document.querySelectorAll('.error-message');
+    errorElements.forEach(element => {
+        element.style.display = 'none';
+        element.textContent = '';
+    });
+}
+
+function showInlineError(errorMessage) {
+    // Clear previous errors first
+    clearInlineErrors();
+    
+    // Show error based on message content
+    if (errorMessage.toLowerCase().includes('brand name') || errorMessage.toLowerCase().includes('name')) {
+        const nameError = document.getElementById('addBrandNameError') || document.getElementById('editBrandNameError');
+        if (nameError) {
+            nameError.textContent = errorMessage;
+            nameError.style.display = 'block';
+        }
+    }
+    
+    if (errorMessage.toLowerCase().includes('logo') || errorMessage.toLowerCase().includes('image')) {
+        const logoError = document.getElementById('addBrandLogoError') || document.getElementById('editBrandLogoError');
+        if (logoError) {
+            logoError.textContent = errorMessage;
+            logoError.style.display = 'block';
+        }
+    }
+    
+    // For duplicate errors, show under name field
+    if (errorMessage.toLowerCase().includes('already exists') || errorMessage.toLowerCase().includes('duplicate')) {
+        const nameError = document.getElementById('addBrandNameError') || document.getElementById('editBrandNameError');
+        if (nameError) {
+            nameError.textContent = errorMessage;
+            nameError.style.display = 'block';
+        }
+    }
+}
+
+// Clear inline errors when user starts typing
+document.addEventListener('DOMContentLoaded', () => {
+    // Add brand form
+    const addNameInput = document.getElementById('addBrandNameInput') || document.querySelector('#addBrandForm input[name="brandName"]');
+    const addLogoInput = document.getElementById('addBrandFile');
+    
+    if (addNameInput) {
+        addNameInput.addEventListener('input', () => {
+            const nameError = document.getElementById('addBrandNameError');
+            if (nameError) {
+                nameError.style.display = 'none';
+                nameError.textContent = '';
+            }
+        });
+    }
+    
+    if (addLogoInput) {
+        addLogoInput.addEventListener('change', () => {
+            const logoError = document.getElementById('addBrandLogoError');
+            if (logoError) {
+                logoError.style.display = 'none';
+                logoError.textContent = '';
+            }
+        });
+    }
+    
+    // Edit brand form
+    const editNameInput = document.getElementById('editBrandName');
+    const editLogoInput = document.getElementById('editBrandFile');
+    
+    if (editNameInput) {
+        editNameInput.addEventListener('input', () => {
+            const nameError = document.getElementById('editBrandNameError');
+            if (nameError) {
+                nameError.style.display = 'none';
+                nameError.textContent = '';
+            }
+        });
+    }
+    
+    if (editLogoInput) {
+        editLogoInput.addEventListener('change', () => {
+            const logoError = document.getElementById('editBrandLogoError');
+            if (logoError) {
+                logoError.style.display = 'none';
+                logoError.textContent = '';
+            }
+        });
+    }
+});

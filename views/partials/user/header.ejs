@@ -9,19 +9,18 @@
     <!-- Primary Nav Links -->
     <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-neutral-700">
       <a href="/user/products" class="hover:text-black">Products</a>
-      <a href="/brands" class="hover:text-black">Brands</a>
-      <a href="/deals" class="hover:text-black">Deals</a>
-      <a href="/support" class="hover:text-black">Support</a>
+      <a href="/user/brands" class="hover:text-black">Brands</a>
+      <a href="/user/deals" class="hover:text-black">Deals</a>
+      <a href="/user/support" class="hover:text-black">Support</a>
     </nav>
 
     <!-- Right Side Controls -->
     <div class="flex items-center gap-4">
 
       <!-- Search -->
-      <form id="globalSearchForm" class="hidden md:flex items-center border rounded-full px-3 py-2 bg-neutral-50 w-52">
+      <form id="globalSearchForm" action="/user/products" method="GET" class="hidden md:flex items-center border rounded-full px-3 py-2 bg-neutral-50 w-52">
 
-        <input id="searchInput" name="search" class="flex-1 bg-transparent text-sm outline-none"
-          placeholder="Search products..." autocomplete="off" value="<%= searchQuery || '' %>" />
+        <input id="searchInput" name="search" class="flex-1 bg-transparent text-sm outline-none" placeholder="Search products..." autocomplete="off" value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>" />
 
         <button type="submit">
           <span class="material-icons text-neutral-600 text-[18px]">search</span>
@@ -33,15 +32,21 @@
         <!-- Logged-in view -->
 
         <!-- Wishlist -->
-        <a href="/wishlist" class="p-2 rounded-full border bg-white hover:bg-neutral-100">
+        <a href="/user/wishlist" class="relative p-2 rounded-full border bg-white hover:bg-neutral-100">
           <span class="material-icons text-neutral-700 text-[20px]">favorite_border</span>
+
+          <% if (typeof wishlistCount !=='undefined' && wishlistCount> 0) { %>
+            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full px-1">
+              <%= wishlistCount %>
+            </span>
+            <% } %>
         </a>
 
         <!-- Cart -->
-        <a href="/cart" class="relative p-2 rounded-full border bg-white hover:bg-neutral-100">
+        <a href="/user/cart" class="relative p-2 rounded-full border bg-white hover:bg-neutral-100">
           <span class="material-icons text-neutral-700 text-[20px]">shopping_cart</span>
 
-          <% if (cartCount && cartCount> 0) { %>
+          <% if (typeof cartCount !=='undefined' && cartCount> 0) { %>
             <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full px-1">
               <%= cartCount %>
             </span>
@@ -101,10 +106,10 @@
           <!-- Guest view -->
 
           <!-- Cart -->
-          <a href="/cart" class="relative p-2 rounded-full border bg-white hover:bg-neutral-100">
+          <a href="/user/cart" class="relative p-2 rounded-full border bg-white hover:bg-neutral-100">
             <span class="material-icons text-neutral-700 text-[20px]">shopping_cart</span>
 
-            <% if (cartCount && cartCount> 0) { %>
+            <% if (typeof cartCount !=='undefined' && cartCount> 0) { %>
               <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full px-1">
                 <%= cartCount %>
               </span>
@@ -157,7 +162,7 @@
     }).then((result) => {
       if (result.isConfirmed) {
 
-        axios.post('/user/logout')
+        axios.post('/api/user/logout')
           .then(() => {
             Swal.fire({
               title: "Logged Out",

@@ -1,0 +1,364 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coupon Management | ZOUND Premium</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/styles/admin/couponManagement.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <!-- Sidebar Partial -->
+    <%- include('../partials/admin/adminSidebar', { currentPage: 'coupons' , adminName: adminName, adminEmail:
+        adminEmail }) %>
+
+        <div class="main-content">
+            <!-- Header -->
+            <div class="content-header">
+                <div>
+                    <h1 class="page-title">Coupons</h1>
+                    <p class="page-subtitle">Create and manage discount coupons for your store</p>
+                </div>
+                <button id="addCouponBtn" class="add-btn" onclick="openAddModal()">
+                    <i class="bi bi-plus-lg"></i> Create Coupon
+                </button>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-icon active">
+                        <i class="bi bi-ticket-perforated"></i>
+                    </div>
+                    <div class="stat-info">
+                        <p class="stat-number">
+                            <%= typeof activeCoupons !=='undefined' ? activeCoupons : 0 %>
+                        </p>
+                        <p class="stat-label">Active Coupons</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon used">
+                        <i class="bi bi-check2-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <p class="stat-number">
+                            <%= typeof totalUsage !=='undefined' ? totalUsage : 0 %>
+                        </p>
+                        <p class="stat-label">Total Usage</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon savings">
+                        <i class="bi bi-currency-rupee"></i>
+                    </div>
+                    <div class="stat-info">
+                        <p class="stat-number">&#8377;<%= typeof totalSavings !=='undefined' ?
+                                totalSavings.toLocaleString() : 0 %>
+                        </p>
+                        <p class="stat-label">Total Savings</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon expired">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div class="stat-info">
+                        <p class="stat-number">
+                            <%= typeof expiredCoupons !=='undefined' ? expiredCoupons : 0 %>
+                        </p>
+                        <p class="stat-label">Expired</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs-container">
+                <button class="tab-btn active" onclick="switchTab('all')">
+                    <i class="bi bi-grid"></i> All Coupons
+                </button>
+                <button class="tab-btn" onclick="switchTab('active')">
+                    <i class="bi bi-check-circle"></i> Active
+                </button>
+                <button class="tab-btn" onclick="switchTab('inactive')">
+                    <i class="bi bi-x-circle"></i> Inactive
+                </button>
+            </div>
+
+            <!-- Coupons Table -->
+            <div class="coupons-table-container">
+                <div class="table-header">
+                    <div class="search-box">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" id="searchInput" placeholder="Search coupons..." onkeyup="filterCoupons(this.value)">
+                    </div>
+                    <div class="filter-badges">
+                        <span class="filter-badge">
+                            <%= typeof coupons !=='undefined' ? coupons.length : 0 %> Total
+                        </span>
+                    </div>
+                </div>
+
+                <table class="custom-table" id="couponsTable">
+                    <thead>
+                        <tr>
+                            <th>Coupon Code</th>
+                            <th>Discount</th>
+                            <th>Min Purchase</th>
+                            <th>Usage</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (typeof coupons !=='undefined' && coupons.length> 0) { %>
+                            <% coupons.forEach(coupon=> {
+                                const now = new Date();
+                                const startDate = new Date(coupon.startDate);
+                                const endDate = new Date(coupon.endDate);
+                                const isDateActive = startDate <= now && endDate> now;
+                                    const isScheduled = startDate > now;
+                                    const isExpired = endDate < now; const isActive=isDateActive && coupon.isActive;
+                                        const isUsageFull=coupon.usageLimit !==null && coupon.usedCount>=
+                                        coupon.usageLimit;
+                                        %>
+                                        <!-- Add data-active for filtering -->
+                                        <tr data-active="<%= coupon.isActive %>"
+                                            data-status="<%= isScheduled ? 'scheduled' : (isExpired || isUsageFull ? 'expired' : (isActive ? 'active' : 'inactive')) %>">
+                                            <td>
+                                                <div class="coupon-code-cell">
+                                                    <span class="coupon-code">
+                                                        <%= coupon.code %>
+                                                    </span>
+                                                    <button class="copy-btn" onclick="copyCode('<%= coupon.code %>')"
+                                                        title="Copy code">
+                                                        <i class="bi bi-clipboard"></i>
+                                                    </button>
+                                                </div>
+                                                <% if (coupon.description) { %>
+                                                    <p class="coupon-description">
+                                                        <%= coupon.description %>
+                                                    </p>
+                                                    <% } %>
+                                            </td>
+                                            <td>
+                                                <span class="discount-badge">
+                                                    <% if (coupon.discountType==='percentage' ) { %>
+                                                        <%= coupon.discountValue %>% OFF
+                                                            <% } else { %>
+                                                                &#8377;<%= coupon.discountValue %> OFF
+                                                                    <% } %>
+                                                </span>
+                                                <% if (coupon.maxDiscount) { %>
+                                                    <p class="max-discount">Max: &#8377;<%= coupon.maxDiscount %>
+                                                    </p>
+                                                    <% } %>
+                                            </td>
+                                            <td>
+                                                <% if (coupon.minPurchase> 0) { %>
+                                                    &#8377;<%= coupon.minPurchase.toLocaleString() %>
+                                                        <% } else { %>
+                                                            <span class="no-minimum">No minimum</span>
+                                                            <% } %>
+                                            </td>
+                                            <td>
+                                                <div class="usage-cell">
+                                                    <span class="usage-count">
+                                                        <%= coupon.usedCount %>
+                                                    </span>
+                                                    <span class="usage-limit">/ <%= coupon.usageLimit !==null ?
+                                                            coupon.usageLimit : '∞' %></span>
+                                                </div>
+                                                <% if (coupon.usageLimit !==null) { %>
+                                                    <div class="usage-bar">
+                                                        <div class="usage-fill"
+                                                            style="width: <%= Math.min((coupon.usedCount / coupon.usageLimit) * 100, 100) %>%">
+                                                        </div>
+                                                    </div>
+                                                    <% } %>
+                                            </td>
+                                            <td class="duration">
+                                                <span class="date-range">
+                                                    <%= startDate.toLocaleDateString('en-IN', {day: '2-digit' ,
+                                                        month: 'short' }) %> -
+                                                        <%= endDate.toLocaleDateString('en-IN', {day: '2-digit' ,
+                                                            month: 'short' , year: '2-digit' }) %>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <% if (isScheduled) { %>
+                                                    <span class="status-badge status-scheduled">Scheduled</span>
+                                                    <% } else if (isExpired) { %>
+                                                        <span class="status-badge status-expired">Expired</span>
+                                                        <% } else if (isUsageFull) { %>
+                                                            <span class="status-badge status-expired">Limit
+                                                                Reached</span>
+                                                            <% } else if (isActive) { %>
+                                                                <span class="status-badge status-active">Active</span>
+                                                                <% } else { %>
+                                                                    <span
+                                                                        class="status-badge status-inactive">Inactive</span>
+                                                                    <% } %>
+                                            </td>
+                                            <td class="actions-cell">
+                                                <div class="action-buttons">
+                                                    <!-- Toggle Switch -->
+                                                    <label class="toggle-switch"
+                                                        title="<%= isExpired ? 'Coupon expired' : (coupon.isActive ? 'Deactivate' : 'Activate') %>">
+                                                        <input type="checkbox" <%=coupon.isActive ? 'checked' : '' %>
+                                                        <%= isExpired ? 'disabled' : '' %>
+                                                            onchange="toggleCouponStatus('<%= coupon._id %>', event)">
+                                                                <span class="toggle-slider"></span>
+                                                    </label>
+
+                                                    <!-- Edit Button -->
+                                                    <button class="action-btn btn-edit"
+                                                        onclick="openEditModal('<%= coupon._id %>')" title="Edit">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+
+                                                    <!-- Delete Button -->
+                                                    <button class="action-btn btn-delete"
+                                                        onclick="deleteCoupon('<%= coupon._id %>')" title="Delete">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <% }) %>
+                                            <% } else { %>
+                                                <tr>
+                                                    <td colspan="7" class="empty-state">
+                                                        <i class="bi bi-ticket-perforated"
+                                                            style="font-size: 48px; opacity: 0.3;"></i>
+                                                        <p>No coupons found. Create your first coupon!</p>
+                                                    </td>
+                                                </tr>
+                                                <% } %>
+                    </tbody>
+                </table>
+                <div id="paginationControls" class="pagination-controls"
+                    style="display: none; padding: 1rem; border-top: 1px solid #e2e8f0; justify-content: flex-end; gap: 0.5rem; display: flex;">
+                </div>
+            </div>
+        </div>
+
+        <!-- ADD/EDIT COUPON MODAL -->
+        <div class="modal-overlay" id="couponModal">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="modalTitle">Create New Coupon</h2>
+                    <button type="button" class="close-btn" onclick="closeModal()">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <form id="couponForm">
+                        <input type="hidden" name="couponId" id="couponId">
+
+                        <!-- Basic Info Section -->
+                        <span class="section-label">Basic Information</span>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Coupon Code </label>
+                                <div class="code-input-wrapper">
+                                    <input type="text" name="code" id="couponCode" class="form-input" placeholder="e.g. SUMMER20" style="text-transform: uppercase;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" id="couponDescription" class="form-input" placeholder="e.g. Summer sale discount" rows="3"></textarea>
+                        </div>
+
+                        <!-- Discount Settings Section -->
+                        <span class="section-label" style="margin-top: 28px;">Discount Settings</span>
+
+                        <div class="form-group">
+                            <label class="form-label">Discount Type</label>
+                            <div class="discount-type-toggle">
+                                <button type="button" class="discount-type-btn active"
+                                    onclick="selectDiscountType(this, 'percentage')">Percentage (%)</button>
+                                <button type="button" class="discount-type-btn"
+                                    onclick="selectDiscountType(this, 'fixed')">Fixed Amount (&#8377;)</button>
+                            </div>
+                            <input type="hidden" name="discountType" id="discountType" value="percentage">
+                        </div>
+
+                        <div class="form-grid three-cols">
+                            <div class="form-group">
+                                <label class="form-label" id="discountLabel">Discount Value (%) </label>
+                                <input type="number" name="discountValue" id="discountValue" class="form-input" min="1" max="99" placeholder="e.g. 20" >
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Min Purchase (&#8377;)</label>
+                                <input type="number" name="minPurchase" id="minPurchase" class="form-input" min="0" placeholder="e.g. 1000" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Max Discount (&#8377;)</label>
+                                <input type="number" name="maxDiscount" id="maxDiscount" class="form-input" min="0" placeholder="No limit">
+                                <p class="help-text">Leave empty for no cap</p>
+                            </div>
+                        </div>
+
+                        <!-- Usage Limits Section -->
+                        <span class="section-label" style="margin-top: 28px;">Usage Limits</span>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Total Usage Limit</label>
+                                <input type="number" name="usageLimit" id="usageLimit" class="form-input" min="1" placeholder="Unlimited">
+                                <p class="help-text">Leave empty for unlimited</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Per User Limit</label>
+                                <input type="number" name="perUserLimit" id="perUserLimit" class="form-input" min="1" placeholder="e.g. 1" value="1">
+                                <p class="help-text">Times each user can use</p>
+                            </div>
+                        </div>
+
+                        <!-- Schedule Section -->
+                        <span class="section-label" style="margin-top: 28px;">Schedule</span>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Start Date </label>
+                                <input type="date" name="startDate" id="startDate" class="form-input" >
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">End Date </label>
+                                <input type="date" name="endDate" id="endDate" class="form-input" >
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal()" class="btn-secondary">Cancel</button>
+                    <button type="button" onclick="saveCoupon()" class="btn-primary" id="saveBtn">Create Coupon</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pass coupon data to JavaScript -->
+        <script>
+            window.couponsData = [];
+            <% if (typeof coupons !== 'undefined' && coupons.length > 0) { %>
+                window.couponsData = <% - JSON.stringify(coupons) %>;
+            <% } %>
+        </script>
+
+        <!-- External JavaScript -->
+        <script src="/js/admin/couponManagement.js"></script>
+</body>
+
+</html>

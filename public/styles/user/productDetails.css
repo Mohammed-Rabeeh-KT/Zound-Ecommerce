@@ -63,7 +63,7 @@
     border-radius: 20px;
     border: 1px solid #e5e7eb;
     cursor: crosshair;
-    overflow:hidden !important;
+    overflow: visible;
 }
 
 .main-image {
@@ -73,6 +73,7 @@
     display: block;
     margin: auto;
     cursor: zoom-in;
+    border-radius: 20px;
 }
 
 /* Product Badges */
@@ -123,8 +124,8 @@
     border-radius: 20px;
     background-repeat: no-repeat;
     background-color: #FFFFFF;
-    display: none; 
-    pointer-events: none; 
+    display: none;
+    pointer-events: none;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
     z-index: 9999;
 }
@@ -860,15 +861,15 @@
         grid-template-columns: 1fr;
         gap: 2.5rem;
     }
-    
+
     .gallery-section {
         position: static;
     }
-    
+
     .product-title {
         font-size: 1.875rem;
     }
-    
+
     .current-price {
         font-size: 2rem;
     }
@@ -878,53 +879,51 @@
     .container {
         padding: 0 1rem;
     }
-    
+
     .product-detail-container {
         padding: 1.5rem 0 2rem;
     }
-    
+
     .product-detail-grid {
         gap: 2rem;
     }
-    
+
     .product-title {
         font-size: 1.5rem;
     }
-    
+
     .current-price {
         font-size: 1.75rem;
     }
-    
+
     .action-buttons {
         flex-direction: column;
     }
-    
+
     .btn-outline,
     .btn-icon {
         width: 100%;
     }
-    
+
     .tab-buttons {
         overflow-x: auto;
     }
-    
+
     .tab-btn {
         white-space: nowrap;
         font-size: 0.9375rem;
         padding: 1rem 1.5rem;
     }
-    
+
     .tab-content-wrapper {
         padding: 1.5rem;
     }
-    
+
     .features-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .related-grid {
         grid-template-columns: 1fr;
     }
 }
-
-

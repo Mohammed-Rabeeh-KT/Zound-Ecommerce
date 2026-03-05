@@ -99,12 +99,13 @@
 
         <form id="addBrandForm" enctype="multipart/form-data">
           <div class="form-group">
-            <label>Brand Name <span class="required">*</span></label>
-            <input type="text" name="brandName" placeholder="e.g., Apple" required />
+            <label>Brand Name </label>
+            <input type="text" name="brandName" placeholder="e.g., Apple" />
+            <span class="error-message" id="addBrandNameError" style="color: #ef4444; font-size: 0.85rem; display: none; margin-top: 4px;"></span>
           </div>
 
           <div class="form-group">
-            <label>Brand Logo <span class="required">*</span></label>
+            <label>Brand Logo </label>
 
             <div class="drop-zone" id="addBrandDropZone">
               <span class="drop-zone-prompt">
@@ -117,9 +118,10 @@
                 <br>
                 Drag & drop or click to upload
               </span>
-              <input type="file" name="logo" class="drop-zone-input" accept="image/*" required id="addBrandFile" />
+              <input type="file" name="logo" class="drop-zone-input" accept="image/*" id="addBrandFile" />
               <div class="drop-zone-thumb" style="display:none;"></div>
             </div>
+            <span class="error-message" id="addBrandLogoError" style="color: #ef4444; font-size: 0.85rem; display: none; margin-top: 4px;"></span>
           </div>
 
           <div class="form-group">
@@ -171,8 +173,9 @@
           <input type="hidden" id="editBrandId" name="id" />
 
           <div class="form-group">
-            <label>Brand Name <span class="required">*</span></label>
-            <input type="text" id="editBrandName" name="brandName" required />
+            <label>Brand Name </label>
+            <input type="text" id="editBrandName" name="brandName" />
+            <span class="error-message" id="editBrandNameError" style="color: #ef4444; font-size: 0.85rem; display: none; margin-top: 4px;"></span>
           </div>
 
           <div class="form-group">
@@ -182,6 +185,7 @@
               <input type="file" name="logo" class="drop-zone-input" accept="image/*" id="editBrandFile" />
               <div class="drop-zone-thumb" id="editBrandThumb"></div>
             </div>
+            <span class="error-message" id="editBrandLogoError" style="color: #ef4444; font-size: 0.85rem; display: none; margin-top: 4px;"></span>
           </div>
 
           <div class="form-group">
