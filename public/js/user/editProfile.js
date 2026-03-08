@@ -346,6 +346,15 @@ async function initiateEmailVerification() {
     const newEmail = emailInput.value.trim();
 
     isOtpRequestInProgress = true;
+    const originalBtnText = verifyBtn.innerHTML;
+
+    // Disable button to prevent double clicks during network request
+    if (verifyBtn) {
+        verifyBtn.disabled = true;
+        verifyBtn.style.opacity = '0.5';
+        verifyBtn.style.cursor = 'not-allowed';
+        verifyBtn.innerHTML = 'Sending...';
+    }
 
     try {
         const response = await axios.post('/api/user/send-email-otp', { email: newEmail });
@@ -355,21 +364,40 @@ async function initiateEmailVerification() {
         if (data.success) {
             showFeedback('Verification code sent to your email', 'success');
             if (otpSection) otpSection.classList.add('show');
+            verifyBtn.style.display = 'none'; // Hide VerifyBtn once sending is complete so user doesn't multi-click
             startTimer(120); // 2 minutes timer
         } else {
             showFeedback(data.message || 'Failed to send verification code', 'error');
+            if (verifyBtn) {
+                verifyBtn.disabled = false;
+                verifyBtn.style.opacity = '1';
+                verifyBtn.style.cursor = 'pointer';
+                verifyBtn.innerHTML = originalBtnText;
+            }
         }
     } catch (error) {
         console.error('Error:', error);
-        showFeedback('Failed to send verification code. Please try again.', 'error');
+        showFeedback(error.response?.data?.message || 'Failed to send verification code. Please try again.', 'error');
+        if (verifyBtn) {
+            verifyBtn.disabled = false;
+            verifyBtn.style.opacity = '1';
+            verifyBtn.style.cursor = 'pointer';
+            verifyBtn.innerHTML = originalBtnText;
+        }
     } finally {
         setTimeout(() => {
             isOtpRequestInProgress = false;
-        }, 3000)
+        }, 1000)
     }
 }
 
-async function verifyInlineOtp() {
+let isVerifyingOtp = false;
+
+async function verifyInlineOtp(e) {
+    if (e) e.preventDefault();
+
+    if (isVerifyingOtp) return;
+
     const otp = document.getElementById('inlineOtpInput')?.value.trim();
     const email = emailInput.value.trim();
 
@@ -378,6 +406,10 @@ async function verifyInlineOtp() {
         return;
     }
 
+    isVerifyingOtp = true;
+    const btn = document.querySelector('.btn-verify-small');
+    if (btn) btn.disabled = true;
+
     try {
         const response = await axios.post('/api/user/verify-email-otp', { email, otp: parseInt(otp, 10) });
 
@@ -385,16 +417,28 @@ async function verifyInlineOtp() {
 
         if (data.success) {
             isEmailVerified = true;
+            emailChanged = false; // Reset to false because it is already updated on backend
+            originalValues.email = email; // Update original to prevent Save Changes from thinking it needs an update
+
             toggleVerifyUI(false, true);
-            showFeedback('Email verified successfully!', 'success');
+            showFeedback('Email updated successfully! Refreshing...', 'success');
             if (otpSection) otpSection.classList.remove('show');
             updateSaveButtonState();
+
+            // Reload after 1 second to update the session and UI nicely
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
         } else {
             showOtpError(data.message || 'Invalid verification code');
         }
     } catch (error) {
         console.error('Error:', error);
-        showOtpError(error.response?.data?.message || 'Incorrect OTP');
+        const errorMsg = error.response?.data?.message || 'Incorrect OTP';
+        showOtpError(errorMsg);
+    } finally {
+        isVerifyingOtp = false;
+        if (btn) btn.disabled = false;
     }
 }
 
@@ -419,8 +463,8 @@ async function handleProfileUpdate(e) {
 
     const formData = {
         name: document.getElementById('name').value.trim(),
-        phone: document.getElementById('phone').value.trim(),
-        email: emailInput.value.trim()
+        phone: document.getElementById('phone').value.trim()
+        // Removed email because its now updated immediately upon OTP validation
     };
 
     const originalText = saveBtn?.innerHTML || 'Save';
@@ -446,7 +490,8 @@ async function handleProfileUpdate(e) {
         }
     } catch (err) {
         console.error('Update error:', err);
-        Swal.fire('Error', err.message || 'Something went wrong', 'error');
+        const errorMsg = err.response?.data?.message || err.message || 'Something went wrong';
+        Swal.fire('Error', errorMsg, 'error');
     } finally {
         if (saveBtn) {
             saveBtn.innerHTML = originalText;
@@ -507,13 +552,14 @@ function startTimer(duration) {
         if (--timer < 0) {
             clearInterval(window.otpInterval);
             if (display) {
-                display.textContent = 'Didn\'t receive code? Resend';
-                display.style.cursor = 'pointer';
-                display.onclick = () => {
-                    if (display.textContent.includes('Resend')) {
+                display.innerHTML = '<span style="color: #6b7280;">Didn\'t receive code?</span> <strong style="color: #2563eb; cursor: pointer; text-decoration: underline;" id="resendClickBtn">Resend</strong>';
+
+                const resendBtn = document.getElementById('resendClickBtn');
+                if (resendBtn) {
+                    resendBtn.onclick = () => {
                         initiateEmailVerification();
-                    }
-                };
+                    };
+                }
             }
         }
     };
@@ -756,7 +802,8 @@ async function handleChangePassword() {
         }
     } catch (error) {
         console.error('Password change error:', error);
-        showPasswordFeedback('An error occurred. Please try again.', 'error');
+        const errorMsg = error.response?.data?.message || 'An error occurred. Please try again.';
+        showPasswordFeedback(errorMsg, 'error');
     } finally {
         if (btn) {
             btn.innerHTML = originalText;

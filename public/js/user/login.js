@@ -67,8 +67,12 @@ document.addEventListener('DOMContentLoaded', () => {
     passwordInput.addEventListener('input', () => hideError(passwordInput, passwordError));
 
     // Form Submission
+    let isSubmitting = false;
+
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        if (isSubmitting) return;
 
         const isEmailEmpty = emailInput.value.trim() === '';
         const isPasswordEmpty = passwordInput.value.trim() === '';
@@ -88,6 +92,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        isSubmitting = true;
+        const submitBtn = loginForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn ? submitBtn.innerText : 'Login';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Logging in...';
+        }
+
         try {
             const response = await axios.post('/api/user/login', {
                 email: emailInput.value.trim(),
@@ -102,6 +114,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 1000);
             }
         } catch (err) {
+            isSubmitting = false;
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerText = originalBtnText;
+            }
             const message = err.response?.data?.message || "Login failed. Please try again.";
             window.showToast(message, "error");
         }

@@ -58,19 +58,26 @@ const sendEmailOtp = async (email, userId) => {
     return true;
 };
 
-const verifyEmailOtp = async (email, otp) => {
+const verifyEmailOtp = async (userId, email, otp) => {
     const record = otpStore[email];
 
-    if (!record || record.expiresAt < Date.now()) {
-        throw new AppError("OTP expired or invalid", STATUS.BAD_REQUEST);
+    if (!record) {
+        throw new AppError("No OTP request found for this email", STATUS.BAD_REQUEST);
+    }
+
+    if (record.expiresAt < Date.now()) {
+        throw new AppError("OTP has expired. Please request a new one.", STATUS.BAD_REQUEST);
     }
 
     if (parseInt(otp) !== record.otp) {
         throw new AppError("Incorrect OTP", STATUS.BAD_REQUEST);
     }
 
-    // OTP Valid
+    // OTP Valid - Update User Email Directly
     delete otpStore[email]; // Clear OTP
+
+    await User.findByIdAndUpdate(userId, { email: email.trim() });
+
     return true;
 };
 
@@ -124,11 +131,6 @@ const updateProfileData = async (userId, data) => {
         name: trimmedName,
         phone: phone ? phone.trim() : ''
     };
-
-    // If email is present, we assume it was verified on frontend (Double check logic in production)
-    if (email && email.trim()) {
-        updateData.email = email.trim();
-    }
 
     await User.findByIdAndUpdate(userId, updateData);
     return true;

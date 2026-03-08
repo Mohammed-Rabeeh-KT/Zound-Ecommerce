@@ -6,7 +6,6 @@ import WalletTransaction from "../../models/walletTransactionSchema.js";
 
 
 //  OTP Utilities
-
 function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -58,7 +57,6 @@ function verifyOTPCode(enteredOTP, sessionOTP) {
 
 
 //  Login
-
 async function validateLoginInput(email, password) {
     const errors = {};
 
@@ -140,7 +138,6 @@ function generateAuthToken(userId, options = {}) {
 
 
 //  Signup
-
 async function checkExistingUser(email) {
     return await User.findOne({ email: email.trim().toLowerCase() });
 }
@@ -157,7 +154,6 @@ async function validateReferralCode(referralCode) {
 
 
 //  Verify OTP (Signup)
-
 function validateOTPSession(session) {
     if (!session.userOTP || !session.otpTimestamp) {
         return { error: "OTP session expired. Please signup again.", status: 400 };
@@ -244,7 +240,6 @@ async function createUserFromSession(sessionData, referredByCode) {
 
 
 //  Forgot Password
-
 async function findUserByEmail(email) {
     if (!email || email.trim() === "") {
         return { error: "Email is required" };
@@ -272,7 +267,6 @@ function validateFpOTPSession(session) {
 
 
 //  Reset Password
-
 async function resetUserPassword(email, newPassword) {
     const user = await User.findOne({ email });
 
@@ -295,7 +289,6 @@ async function resetUserPassword(email, newPassword) {
 
 
 //  Check Email
-
 async function checkEmailExists(email) {
     if (!email || email.trim() === "") {
         return { exists: false };

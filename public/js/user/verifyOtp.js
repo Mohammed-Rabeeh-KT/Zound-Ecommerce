@@ -96,8 +96,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Form Submission ---
+    let isSubmitting = false;
     otpForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        if (isSubmitting) return;
 
         let otpVal = "";
         inputs.forEach(input => otpVal += input.value);
@@ -105,6 +108,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (otpVal.length !== 6) {
             window.showToast("Please enter all 6 digits", "warning");
             return;
+        }
+
+        isSubmitting = true;
+        const originalBtnText = verifyBtn ? verifyBtn.innerText : 'Verify';
+        if (verifyBtn) {
+            verifyBtn.disabled = true;
+            verifyBtn.innerHTML = 'Verifying...';
         }
 
         try {
@@ -119,14 +129,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     startTimer(); // This will show as expired
                 }
                 window.showError(response.data.message || "Invalid OTP");
+                isSubmitting = false;
+                if (verifyBtn) {
+                    verifyBtn.disabled = false;
+                    verifyBtn.innerText = originalBtnText;
+                }
             }
         } catch (error) {
+            isSubmitting = false;
+            if (verifyBtn) {
+                verifyBtn.disabled = false;
+                verifyBtn.innerText = originalBtnText;
+            }
             const data = error.response?.data;
             if (data?.expired) {
                 localStorage.removeItem(TIMER_KEY);
                 startTimer();
             }
-            window.showError(data?.message || "An error occurred during verification");
+            window.showError(data?.message || "An error occurred during OTP verification");
         }
     });
 

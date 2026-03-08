@@ -133,12 +133,12 @@
                                                     onclick="event.stopPropagation(); editAddress('<%= addr._id %>')">
                                                     <span class="material-icons">edit</span>
                                                 </button>
-                                                <% if (addresses.length > 1) { %>
-                                                <button class="delete-btn"
-                                                    onclick="event.stopPropagation(); deleteAddressCheckout('<%= addr._id %>')">
-                                                    <span class="material-icons">delete</span>
-                                                </button>
-                                                <% } %>
+                                                <% if (addresses.length> 1) { %>
+                                                    <button class="delete-btn"
+                                                        onclick="event.stopPropagation(); deleteAddressCheckout('<%= addr._id %>')">
+                                                        <span class="material-icons">delete</span>
+                                                    </button>
+                                                    <% } %>
                                             </div>
                                         </div>
                                         <% } %>
@@ -204,7 +204,8 @@
                                 <div class="payment-option <%= isCodDisabled ? 'disabled' : '' %>" data-method="cod"
                                     onclick="<%= isCodDisabled ? '' : 'selectPayment(\'cod\')' %>">
                                     <div class="payment-radio">
-                                        <input type="radio" name="paymentMethod" id="cod" value="cod" <%=isCodDisabled ? 'disabled' : '' %>>
+                                        <input type="radio" name="paymentMethod" id="cod" value="cod" <%=isCodDisabled
+                                            ? 'disabled' : '' %>>
                                     </div>
                                     <div class="payment-content">
                                         <div class="payment-icon cod">
@@ -475,6 +476,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/utils/toast.js"></script>
     <script src="/js/user/addresses.js"></script>
     <script src="/js/user/checkout.js"></script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>

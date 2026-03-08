@@ -94,7 +94,6 @@ const signup = catchAsync(async (req, res, next) => {
 
 //  Verify OTP (Signup)
 
-
 const verifyOTP = catchAsync(async (req, res, next) => {
     const { otp } = req.body;
     const enteredOTP = Array.isArray(otp) ? otp.join("") : otp;

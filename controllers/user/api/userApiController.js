@@ -15,10 +15,11 @@ const sendEmailOtp = catchAsync(async (req, res, next) => {
 // Verify email OTP
 const verifyEmailOtp = catchAsync(async (req, res, next) => {
     const { email, otp } = req.body;
+    const userId = req.user._id;
 
-    await userService.verifyEmailOtp(email, otp);
+    await userService.verifyEmailOtp(userId, email, otp);
 
-    res.json({ success: true, message: "Email verified" });
+    res.json({ success: true, message: "Email verified & updated successfully" });
 });
 
 // Update Profile Data

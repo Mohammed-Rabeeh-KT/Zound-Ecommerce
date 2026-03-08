@@ -117,8 +117,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Form Submission
+    let isSubmitting = false;
+
     signupForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        if (isSubmitting) return;
 
         const nameEmpty = nameInput.value.trim() === '';
         const emailEmpty = emailInput.value.trim() === '';
@@ -142,6 +146,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        isSubmitting = true;
+        const submitBtn = signupForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn ? submitBtn.innerText : 'Submit';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Processing...';
+        }
+
         try {
             const response = await axios.post('/api/user/signup', {
                 name: nameInput.value.trim(),
@@ -158,6 +170,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 1000);
             }
         } catch (err) {
+            isSubmitting = false;
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerText = originalBtnText;
+            }
             const message = err.response?.data?.message || 'Signup failed. Please try again.';
             window.showToast(message, 'error');
         }

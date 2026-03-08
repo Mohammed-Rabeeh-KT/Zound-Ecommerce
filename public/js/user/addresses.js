@@ -1,5 +1,6 @@
 // State
 let editingAddressId = null;
+let originalAddressData = null;
 
 // Toggle Add Address Form
 function toggleAddressForm(isEdit = false) {
@@ -74,6 +75,7 @@ function resetAddressForm() {
         document.querySelectorAll('.form-input').forEach(el => el.classList.remove('error'));
     }
     editingAddressId = null;
+    originalAddressData = null;
 }
 
 // Handle Add/Update Address Form Submit
@@ -101,9 +103,25 @@ async function handleAddAddress(event) {
         return;
     }
 
+    const isEditing = editingAddressId !== null;
+
+    if (isEditing && originalAddressData) {
+        let hasChanges = false;
+        for (const key in formData) {
+            if (formData[key] !== originalAddressData[key]) {
+                hasChanges = true;
+                break;
+            }
+        }
+
+        if (!hasChanges) {
+            toast.info('No changes were made to the address.');
+            return;
+        }
+    }
+
     const saveBtn = document.getElementById('saveAddressBtn');
     const originalText = saveBtn.innerHTML;
-    const isEditing = editingAddressId !== null;
 
     try {
         saveBtn.innerHTML = '<svg class="spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg> Saving...';
@@ -127,26 +145,16 @@ async function handleAddAddress(event) {
         const data = response.data;
 
         if (data.success) {
-            Swal.fire({
-                icon: 'success',
-                title: isEditing ? 'Address Updated!' : 'Address Added!',
-                text: isEditing ? 'Your address has been updated successfully.' : 'Your new address has been saved successfully.',
-                showConfirmButton: false,
-                timer: 1500
-            }).then(() => {
+            toast.success(isEditing ? 'Your address has been updated successfully.' : 'Your new address has been saved successfully.');
+            setTimeout(() => {
                 window.location.reload();
-            });
+            }, 1000);
         } else {
             throw new Error(data.message || 'Failed to save address');
         }
     } catch (error) {
         console.error('Save address error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: error.message || 'Failed to save address. Please try again.',
-            confirmButtonColor: '#002366'
-        });
+        toast.error(error.message || 'Failed to save address. Please try again.');
     } finally {
         saveBtn.innerHTML = originalText;
         saveBtn.disabled = false;
@@ -161,8 +169,8 @@ const VALIDATION_PATTERNS = {
     // Address: Letters, numbers, spaces, and common punctuation. Min 5 chars
     address: /^[A-Za-z0-9\s,.\-\/#()':&]{5,150}$/,
 
-    // Phone: Indian mobile number starting with 6-9, exactly 10 digits
-    phone: /^[6-9]\d{9}$/,
+    // Phone: Indian mobile number starting with 6-9, optionally with +91 or 0 prefix
+    phone: /^(\+91[\-\s]?)?[0]?(91)?[6789]\d{9}$/,
 
     // City: Letters, spaces, dots, hyphens. Min 2 chars
     city: /^[A-Za-z][A-Za-z\s.-]{1,49}$/,
@@ -226,7 +234,7 @@ function validateAddressForm(data) {
     }
 
     // Phone Number validation
-    const cleanPhone = data.phone.replace(/\D/g, '');
+    const cleanPhone = data.phone.replace(/[\s\-]/g, '');
     if (!data.phone) {
         showFieldError('phoneError', 'Phone number is required');
         isValid = false;
@@ -237,7 +245,7 @@ function validateAddressForm(data) {
 
     // Alternative Phone validation (optional, but if provided must be valid)
     if (data.altPhone && data.altPhone.trim() !== '') {
-        const cleanAltPhone = data.altPhone.replace(/\D/g, '');
+        const cleanAltPhone = data.altPhone.replace(/[\s\-]/g, '');
         if (!VALIDATION_PATTERNS.phone.test(cleanAltPhone)) {
             showFieldError('altPhoneError', 'Enter a valid 10-digit mobile number starting with 6-9');
             isValid = false;
@@ -328,27 +336,17 @@ async function setDefaultAddress(addressId) {
             const data = response.data;
 
             if (data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Updated!',
-                    text: 'Default address has been updated.',
-                    showConfirmButton: false,
-                    timer: 1500
-                }).then(() => {
+                toast.success('Default address has been updated.');
+                setTimeout(() => {
                     window.location.reload();
-                });
+                }, 1000);
             } else {
                 throw new Error(data.message);
             }
         }
     } catch (error) {
         console.error('Set default error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: error.message || 'Failed to update default address.',
-            confirmButtonColor: '#002366'
-        });
+        toast.error(error.message || 'Failed to update default address.');
     }
 }
 
@@ -368,6 +366,17 @@ async function editAddress(addressId) {
 
         // Set editingAddressId
         editingAddressId = addressId;
+        originalAddressData = {
+            label: address.label || '',
+            fullName: address.fullName || '',
+            addressLine1: address.addressLine1 || '',
+            addressLine2: address.addressLine2 || '',
+            phone: address.phone || '',
+            altPhone: address.altPhone || '',
+            city: address.city || '',
+            state: address.state || '',
+            pincode: address.pincode || ''
+        };
 
         // Close form if open, then open in edit mode
         const dropdown = document.getElementById('addressFormDropdown');
@@ -393,13 +402,8 @@ async function editAddress(addressId) {
 
     } catch (error) {
         console.error('Edit address error:', error);
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: error.message || 'Failed to load address. Please try again.',
-                confirmButtonColor: '#002366'
-            });
+        if (typeof toast !== 'undefined') {
+            toast.error(error.message || 'Failed to load address. Please try again.');
         } else {
             alert(error.message || 'Failed to load address');
         }
@@ -425,26 +429,16 @@ async function deleteAddress(addressId) {
             const data = response.data;
 
             if (data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Deleted!',
-                    text: 'Address has been removed.',
-                    showConfirmButton: false,
-                    timer: 1500
-                }).then(() => {
+                toast.success('Address has been removed.');
+                setTimeout(() => {
                     window.location.reload();
-                });
+                }, 1000);
             } else {
                 throw new Error(data.message);
             }
         }
     } catch (error) {
         console.error('Delete error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: error.message || 'Failed to delete address.',
-            confirmButtonColor: '#002366'
-        });
+        toast.error(error.message || 'Failed to delete address.');
     }
 }
