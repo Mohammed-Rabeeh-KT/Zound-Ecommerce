@@ -128,7 +128,8 @@
             </div>
           </a>
           <a href="#latest-drops" class="hero-button-link">
-            <button class="hero-button px-8 py-4 border border-slate-200 text-slate-700 rounded-full font-medium hover:bg-slate-50 transition-colors">
+            <button
+              class="hero-button px-8 py-4 border border-slate-200 text-slate-700 rounded-full font-medium hover:bg-slate-50 transition-colors">
               View New Arrivals
             </button>
           </a>
@@ -269,7 +270,7 @@
                       <!-- Image Area -->
                       <a href="/user/products/<%= p.slug %>" class="block h-2/3 overflow-hidden relative bg-slate-50">
                         <img src="<%= p.listingImage %>" alt="<%= p.productName %>"
-                          class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 mix-blend-multiply">
+                          class="w-full h-full object-contain p-6 transition-transform duration-700 group-hover:scale-110 mix-blend-multiply">
                         <!-- Quick Add Button -->
                         <div
                           class="absolute bottom-4 left-0 w-full flex justify-center opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
@@ -335,7 +336,7 @@
             <div
               class="relative aspect-square bg-[#f8fafc] rounded-2xl overflow-hidden mb-4 border border-slate-100 group-hover:border-blue-200 transition-colors shadow-inner">
               <img src="<%= p.listingImage %>" alt="<%= p.productName %>"
-                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 mix-blend-multiply">
+                class="w-full h-full object-contain p-5 transition-transform duration-700 group-hover:scale-110 mix-blend-multiply">
 
               <% if (p.topSelling) { %>
                 <div class="absolute top-2 left-2 w-2 h-2 bg-[#002366] rounded-full animate-ping"></div>

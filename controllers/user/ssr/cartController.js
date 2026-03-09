@@ -9,7 +9,6 @@ const loadCart = catchAsync(async (req, res, next) => {
             cart: { items: [] },
             cartTotal: 0,
             savings: 0,
-            cartCount: 0,
             hasStockIssues: false,
             blockedItems: []
         });

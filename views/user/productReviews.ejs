@@ -1,0 +1,155 @@
+<link rel="stylesheet" href="/styles/user/productReviews.css">
+
+<div class="page-container">
+
+    <!-- Breadcrumbs -->
+    <div class="container">
+        <div class="breadcrumbs">
+            <a href="/user/home">Home</a>
+            <span>/</span>
+            <a href="/user/products">Products</a>
+            <span>/</span>
+            <% if (product.category) { %>
+                <a href="/user/products?category=<%= product.category.slug %>">
+                    <%= product.category.name %>
+                </a>
+                <span>/</span>
+                <% } %>
+                    <a href="/user/products/<%= product.slug %>">
+                        <%= product.productName %>
+                    </a>
+                    <span>/</span>
+                    <span>Reviews</span>
+        </div>
+    </div>
+
+    <main class="main-content container">
+        <header class="page-header">
+            <div class="product-info-minimal">
+                <img src="<%= product.productImages && product.productImages[0] ? product.productImages[0] : '/images/placeholder.png' %>"
+                    alt="<%= product.productName %>" class="prod-thumb">
+                <div>
+                    <h1 class="headline">
+                        <%= product.productName %> Reviews
+                    </h1>
+                    <a href="/user/products/<%= product.slug %>" class="back-link">Back to Product</a>
+                </div>
+            </div>
+        </header>
+
+        <div class="reviews-layout">
+            <!-- Left Column: Summary & Rating Distribution -->
+            <aside class="reviews-sidebar">
+                <div class="review-summary-card">
+                    <div class="average-rating-display">
+                        <h2>
+                            <%= product.averageRating ? product.averageRating.toFixed(1) : '0.0' %>
+                        </h2>
+                        <div class="stars-large">
+                            <% for(let i=1; i<=5; i++) { %>
+                                <span
+                                    class="star <%= i <= Math.round(product.averageRating || 0) ? 'filled' : '' %>">★</span>
+                                <% } %>
+                        </div>
+                        <p>
+                            <%= product.reviewCount || 0 %> Reviews
+                        </p>
+                    </div>
+
+                    <div class="rating-distributions">
+                        <% [5, 4, 3, 2, 1].forEach(star=> {
+                            const count = ratingDistribution[star] || 0;
+                            const percentage = product.reviewCount > 0 ? (count / product.reviewCount) * 100 : 0;
+                            %>
+                            <div class="distribution-row">
+                                <span class="star-label">
+                                    <%= star %> Star
+                                </span>
+                                <div class="progress-bar-bg">
+                                    <div class="progress-bar-fill" style="width: <%= percentage %>%"></div>
+                                </div>
+                                <span class="count-label">
+                                    <%= count %>
+                                </span>
+                            </div>
+                            <% }); %>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Right Column: Reviews List -->
+            <section class="reviews-main">
+                <% if (reviews && reviews.length> 0) { %>
+                    <div class="reviews-list">
+                        <% reviews.forEach(review=> { %>
+                            <div class="review-card">
+                                <div class="review-header">
+                                    <div class="reviewer-info">
+                                        <div class="reviewer-avatar">
+                                            <% if (review.user && review.user.profileImage) { %>
+                                                <img src="<%= review.user.profileImage %>"
+                                                    alt="<%= review.user.name %>">
+                                                <% } else { %>
+                                                    <span>
+                                                        <%= review.user && review.user.name ?
+                                                            review.user.name.charAt(0).toUpperCase() : 'U' %>
+                                                    </span>
+                                                    <% } %>
+                                        </div>
+                                        <div class="reviewer-meta">
+                                            <h4>
+                                                <%= review.user ? review.user.name : 'Zound Customer' %>
+                                            </h4>
+                                            <span class="review-date">
+                                                <%= new Date(review.createdAt).toLocaleDateString('en-US', {
+                                                    day: 'numeric' , month: 'short' , year: 'numeric' }) %>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="review-rating">
+                                        <% for(let i=1; i<=5; i++) { %>
+                                            <span class="star <%= i <= review.rating ? 'filled' : '' %>">★</span>
+                                            <% } %>
+                                    </div>
+                                </div>
+
+                                <div class="review-body">
+                                    <p>
+                                        <%= review.comment || '' %>
+                                    </p>
+                                </div>
+                            </div>
+                            <% }); %>
+                    </div>
+
+                    <!-- Pagination -->
+                    <% if (pagination && pagination.pages> 1) { %>
+                        <div class="pagination">
+                            <% if (pagination.current> 1) { %>
+                                <a href="?page=<%= pagination.current - 1 %>" class="page-btn">&laquo; Prev</a>
+                                <% } %>
+
+                                    <% for(let i=1; i<=pagination.pages; i++) { %>
+                                        <a href="?page=<%= i %>"
+                                            class="page-btn <%= pagination.current === i ? 'active' : '' %>">
+                                            <%= i %>
+                                        </a>
+                                        <% } %>
+
+                                            <% if (pagination.current < pagination.pages) { %>
+                                                <a href="?page=<%= pagination.current + 1 %>" class="page-btn">Next
+                                                    &raquo;</a>
+                                                <% } %>
+                        </div>
+                        <% } %>
+
+                            <% } else { %>
+                                <div class="no-reviews">
+                                    <p>There are no reviews for this product yet.</p>
+                                </div>
+                                <% } %>
+            </section>
+        </div>
+    </main>
+
+</div>

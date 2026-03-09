@@ -12,7 +12,8 @@ const getProductListing = catchAsync(async (req, res, next) => {
         return res.json({
             products: data.processedProducts,
             currentPage: data.currentPage,
-            totalPages: data.totalPages
+            totalPages: data.totalPages,
+            totalProducts: data.totalProducts
         });
     }
 
@@ -23,7 +24,7 @@ const getProductListing = catchAsync(async (req, res, next) => {
         pageDescription: data.pageDescription,
         products: data.processedProducts,
         totalProducts: data.totalProducts,
-        totalStock : data.totalStock,
+        totalStock: data.totalStock,
         searchQuery: data.searchQuery,
         sortBy: data.sortBy,
         selectedFilters: req.query,

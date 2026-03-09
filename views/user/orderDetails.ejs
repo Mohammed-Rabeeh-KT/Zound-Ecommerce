@@ -1,4 +1,13 @@
 <link rel="stylesheet" href="/styles/user/orderDetails.css">
+<style>
+    .swal-above-modal {
+        z-index: 99999 !important;
+    }
+
+    .swal2-container {
+        z-index: 99999 !important;
+    }
+</style>
 
 <div class="order-details-page">
     <div class="page-container">
@@ -242,47 +251,123 @@
                                         </div>
                                     </div>
 
-                                    <!-- Delivery Address -->
-                                    <div class="card address-card slide-up delay-3">
-                                        <div class="card-header">
-                                            <h3>
-                                                <span class="material-icons">location_on</span>
-                                                Delivery Address
-                                            </h3>
-                                        </div>
-                                        <div class="address-content">
-                                            <% if (order.address) { %>
-                                                <div class="address-type">
-                                                    <span
-                                                        class="type-badge <%= order.address.label ? order.address.label.toLowerCase() : 'home' %>">
-                                                        <%= order.address.label || 'Home' %>
-                                                    </span>
+                                    <% if (order.status==='Delivered' ) { %>
+                                        <!-- Rate Your Purchase Section -->
+                                        <div class="card slide-up delay-3" style="overflow:hidden;">
+                                            <div class="card-header">
+                                                <h3>
+                                                    <span class="material-icons" style="color:#f59e0b;">star</span>
+                                                    Rate Your Purchase
+                                                </h3>
+                                            </div>
+                                            <div style="padding:20px;">
+                                                <p style="font-size:13px;color:#64748b;margin:0 0 16px;">Tap a product
+                                                    to share your experience</p>
+                                                <div style="display:flex;flex-wrap:wrap;gap:12px;">
+                                                    <% order.orderedItems.forEach(function(item) { var
+                                                        rProduct=item.product; if (!rProduct) return; if
+                                                        (item.itemStatus==='Cancelled' || item.itemStatus==='Returned' )
+                                                        return; var rImage='/images/placeholder.png' ; var rVariantId=''
+                                                        ; if (rProduct.variants && rProduct.variants.length> 0) {
+                                                        var rVariant = null;
+                                                        if (item.variantId) {
+                                                        for (var rv = 0; rv < rProduct.variants.length; rv++) { if
+                                                            (rProduct.variants[rv]._id.toString()===item.variantId.toString())
+                                                            { rVariant=rProduct.variants[rv]; break; } } } if
+                                                            (!rVariant) rVariant=rProduct.variants[0]; if (rVariant) {
+                                                            rVariantId=rVariant._id.toString(); if (rVariant.images &&
+                                                            rVariant.images.length> 0) rImage = rVariant.images[0];
+                                                            else if (rProduct.productImages &&
+                                                            rProduct.productImages.length > 0) rImage =
+                                                            rProduct.productImages[0];
+                                                            }
+                                                            } else if (rProduct.productImages &&
+                                                            rProduct.productImages.length > 0) {
+                                                            rImage = rProduct.productImages[0];
+                                                            }
+                                                            %>
+                                                            <button type="button" class="review-product-card"
+                                                                data-product-id="<%= rProduct._id %>"
+                                                                data-product-name="<%= rProduct.productName %>"
+                                                                data-variant-id="<%= rVariantId %>"
+                                                                onclick="openReviewModal(this.dataset.productId, this.dataset.productName, this.dataset.variantId)"
+                                                                style="display:flex;align-items:center;gap:12px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;cursor:pointer;transition:all 0.2s;text-align:left;flex:1;min-width:200px;"
+                                                                onmouseenter="this.style.borderColor='#002366';this.style.boxShadow='0 4px 12px rgba(0,35,102,0.08)'"
+                                                                onmouseleave="this.style.borderColor='#e2e8f0';this.style.boxShadow='none'">
+                                                                <img src="<%= rImage %>"
+                                                                    alt="<%= rProduct.productName %>"
+                                                                    style="width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;">
+                                                                <div style="flex:1;min-width:0;">
+                                                                    <div
+                                                                        style="font-size:13px;font-weight:600;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                                                        <%= rProduct.productName %>
+                                                                    </div>
+                                                                    <div
+                                                                        style="display:flex;align-items:center;gap:4px;margin-top:4px;">
+                                                                        <svg width="14" height="14" viewBox="0 0 24 24"
+                                                                            fill="#f59e0b" stroke="none">
+                                                                            <polygon
+                                                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                                                            </polygon>
+                                                                        </svg>
+                                                                        <span
+                                                                            style="font-size:12px;font-weight:600;color:#002366;">Write
+                                                                            Review</span>
+                                                                    </div>
+                                                                </div>
+                                                                <svg width="16" height="16" viewBox="0 0 24 24"
+                                                                    fill="none" stroke="#9ca3af" stroke-width="2"
+                                                                    style="flex-shrink:0;">
+                                                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                                                </svg>
+                                                            </button>
+                                                            <% }); %>
                                                 </div>
-                                                <h4 class="address-name">
-                                                    <%= order.address.fullName %>
-                                                </h4>
-                                                <p class="address-line">
-                                                    <%= order.address.addressLine1 %>
-                                                        <% if (order.address.addressLine2) { %>, <%=
-                                                                order.address.addressLine2 %>
-                                                                <% } %>
-                                                </p>
-                                                <p class="address-line">
-                                                    <%= order.address.city %>, <%= order.address.state %> - <%=
-                                                                order.address.pincode %>
-                                                </p>
-                                                <p class="address-phone">
-                                                    <span class="material-icons">phone</span>
-                                                    <%= order.address.phone %>
-                                                        <% if (order.address.altPhone) { %>, <%= order.address.altPhone
-                                                                %>
-                                                                <% } %>
-                                                </p>
-                                                <% } else { %>
-                                                    <p class="no-address">Address information not available</p>
-                                                    <% } %>
+                                            </div>
                                         </div>
-                                    </div>
+                                        <% } %>
+
+                                            <!-- Delivery Address -->
+                                            <div class="card address-card slide-up delay-3">
+                                                <div class="card-header">
+                                                    <h3>
+                                                        <span class="material-icons">location_on</span>
+                                                        Delivery Address
+                                                    </h3>
+                                                </div>
+                                                <div class="address-content">
+                                                    <% if (order.address) { %>
+                                                        <div class="address-type">
+                                                            <span
+                                                                class="type-badge <%= order.address.label ? order.address.label.toLowerCase() : 'home' %>">
+                                                                <%= order.address.label || 'Home' %>
+                                                            </span>
+                                                        </div>
+                                                        <h4 class="address-name">
+                                                            <%= order.address.fullName %>
+                                                        </h4>
+                                                        <p class="address-line">
+                                                            <%= order.address.addressLine1 %>
+                                                                <% if (order.address.addressLine2) { %>, <%=
+                                                                        order.address.addressLine2 %>
+                                                                        <% } %>
+                                                        </p>
+                                                        <p class="address-line">
+                                                            <%= order.address.city %>, <%= order.address.state %> - <%=
+                                                                        order.address.pincode %>
+                                                        </p>
+                                                        <p class="address-phone">
+                                                            <span class="material-icons">phone</span>
+                                                            <%= order.address.phone %>
+                                                                <% if (order.address.altPhone) { %>, <%=
+                                                                        order.address.altPhone %>
+                                                                        <% } %>
+                                                        </p>
+                                                        <% } else { %>
+                                                            <p class="no-address">Address information not available</p>
+                                                            <% } %>
+                                                </div>
+                                            </div>
                                 </div>
 
                                 <!-- Right Column -->
@@ -1056,4 +1141,177 @@
         window.open(`/api/user/orders/${orderData.orderId}/invoice`, '_blank');
     }
 
+    // ===== REVIEW FUNCTIONS =====
+    let currentReviewProductId = null;
+    let currentReviewRating = 0;
+    let currentReviewVariantId = null;
+
+    function openReviewModal(productId, productName, variantId) {
+        currentReviewProductId = productId;
+        currentReviewRating = 0;
+        currentReviewVariantId = variantId || null;
+
+        document.getElementById('reviewProductName').textContent = productName;
+        document.getElementById('reviewComment').value = '';
+        document.getElementById('reviewCharCount').textContent = '0';
+
+        // Reset stars
+        document.querySelectorAll('.review-star-btn').forEach((star, idx) => {
+            star.classList.remove('active');
+            star.querySelector('svg').setAttribute('fill', '#e5e7eb');
+        });
+
+        document.getElementById('reviewModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeReviewModal() {
+        document.getElementById('reviewModal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    function setReviewRating(rating) {
+        currentReviewRating = rating;
+        document.querySelectorAll('.review-star-btn').forEach((star, idx) => {
+            if (idx < rating) {
+                star.classList.add('active');
+                star.querySelector('svg').setAttribute('fill', '#f59e0b');
+            } else {
+                star.classList.remove('active');
+                star.querySelector('svg').setAttribute('fill', '#e5e7eb');
+            }
+        });
+    }
+
+    async function submitReview() {
+        if (currentReviewRating === 0) {
+            Swal.fire({ icon: 'warning', title: 'Rating Required', text: 'Please select a star rating.', confirmButtonColor: '#002366', customClass: { popup: 'swal-above-modal' } });
+            return;
+        }
+
+        const comment = document.getElementById('reviewComment').value.trim();
+
+        try {
+            const response = await axios.post('/api/user/reviews', {
+                productId: currentReviewProductId,
+                rating: currentReviewRating,
+                comment: comment,
+                variantId: currentReviewVariantId
+            });
+
+            if (response.data.success) {
+                closeReviewModal();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Review Submitted!',
+                    text: 'Your review has been submitted and will be visible after approval.',
+                    confirmButtonColor: '#002366'
+                });
+            }
+        } catch (error) {
+            const errorMsg = error.response?.data?.message || 'Failed to submit review. Please try again.';
+            closeReviewModal();
+            Swal.fire({ icon: 'error', title: 'Error', text: errorMsg, confirmButtonColor: '#002366', customClass: { popup: 'swal-above-modal' } });
+        }
+    }
+
+    // Review comment character counter
+    document.addEventListener('DOMContentLoaded', function () {
+        const reviewTextarea = document.getElementById('reviewComment');
+        const reviewCharCount = document.getElementById('reviewCharCount');
+        if (reviewTextarea && reviewCharCount) {
+            reviewTextarea.addEventListener('input', function () {
+                reviewCharCount.textContent = this.value.length;
+            });
+        }
+    });
 </script>
+
+<!-- Review Modal -->
+<div class="cancel-modal-overlay" id="reviewModal">
+    <div class="cancel-modal" style="max-width:500px;">
+        <div class="cancel-modal-header">
+            <div class="modal-icon-wrap" style="background:linear-gradient(135deg,#002366,#0a358c);color:#fff;">
+                <span class="material-icons">rate_review</span>
+            </div>
+            <h2>Write a Review</h2>
+            <p id="reviewProductName">Product</p>
+            <button class="close-modal-btn" onclick="closeReviewModal()">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <div class="cancel-modal-body" style="padding:24px;">
+            <!-- Star Rating -->
+            <div style="text-align:center;margin-bottom:24px;">
+                <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:12px;">How would
+                    you rate this product?</label>
+                <div style="display:flex;justify-content:center;gap:8px;">
+                    <button type="button" class="review-star-btn" onclick="setReviewRating(1)"
+                        style="background:none;border:none;cursor:pointer;padding:4px;transition:transform 0.15s;"
+                        onmouseenter="this.style.transform='scale(1.2)'" onmouseleave="this.style.transform='scale(1)'">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="#e5e7eb" stroke="none">
+                            <polygon
+                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                            </polygon>
+                        </svg>
+                    </button>
+                    <button type="button" class="review-star-btn" onclick="setReviewRating(2)"
+                        style="background:none;border:none;cursor:pointer;padding:4px;transition:transform 0.15s;"
+                        onmouseenter="this.style.transform='scale(1.2)'" onmouseleave="this.style.transform='scale(1)'">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="#e5e7eb" stroke="none">
+                            <polygon
+                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                            </polygon>
+                        </svg>
+                    </button>
+                    <button type="button" class="review-star-btn" onclick="setReviewRating(3)"
+                        style="background:none;border:none;cursor:pointer;padding:4px;transition:transform 0.15s;"
+                        onmouseenter="this.style.transform='scale(1.2)'" onmouseleave="this.style.transform='scale(1)'">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="#e5e7eb" stroke="none">
+                            <polygon
+                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                            </polygon>
+                        </svg>
+                    </button>
+                    <button type="button" class="review-star-btn" onclick="setReviewRating(4)"
+                        style="background:none;border:none;cursor:pointer;padding:4px;transition:transform 0.15s;"
+                        onmouseenter="this.style.transform='scale(1.2)'" onmouseleave="this.style.transform='scale(1)'">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="#e5e7eb" stroke="none">
+                            <polygon
+                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                            </polygon>
+                        </svg>
+                    </button>
+                    <button type="button" class="review-star-btn" onclick="setReviewRating(5)"
+                        style="background:none;border:none;cursor:pointer;padding:4px;transition:transform 0.15s;"
+                        onmouseenter="this.style.transform='scale(1.2)'" onmouseleave="this.style.transform='scale(1)'">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="#e5e7eb" stroke="none">
+                            <polygon
+                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                            </polygon>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Comment -->
+            <div>
+                <label class="reason-label">Your Review <span class="optional">(Optional)</span></label>
+                <textarea id="reviewComment" class="description-textarea"
+                    placeholder="Share your experience with this product..." maxlength="500"
+                    style="min-height:100px;"></textarea>
+                <span class="char-count"><span id="reviewCharCount">0</span>/500</span>
+            </div>
+        </div>
+        <div class="cancel-modal-footer">
+            <button class="modal-btn secondary" onclick="closeReviewModal()">
+                <span class="material-icons">close</span>
+                Cancel
+            </button>
+            <button class="modal-btn danger" onclick="submitReview()" style="background:#002366;">
+                <span class="material-icons">send</span>
+                Submit Review
+            </button>
+        </div>
+    </div>
+</div>

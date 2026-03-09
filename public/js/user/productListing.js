@@ -25,24 +25,8 @@ document.querySelectorAll('.filter-toggle').forEach(toggle => {
     });
 });
 
-// Search Functionality
 const searchInput = document.getElementById('searchInput');
-const clearSearch = document.getElementById('clearSearch');
-
-if (searchInput) {
-    searchInput.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-            applyFiltersAndSearch();
-        }
-    });
-}
-
-if (clearSearch) {
-    clearSearch.addEventListener('click', function () {
-        searchInput.value = '';
-        applyFiltersAndSearch();
-    });
-}
+// Search and Filters Functionality handled at the bottom of the file
 
 // Sort Functionality
 const sortSelect = document.getElementById('sortBy');
@@ -124,7 +108,8 @@ function applyFiltersAndSearch(page = 1) {
         params.set('maxPrice', maxPrice);
     }
 
-    window.location.href = `/user/products?${params.toString()}`;
+    // Call axios fetch instead of a full page reload!
+    fetchProducts(page, params);
 }
 
 // Handle "All" checkbox behavior for price range
@@ -244,56 +229,114 @@ if (pagination) {
     });
 }
 
-// async function fetchProducts(page = 1,params = null) {
-//     try {
-//         if (!params) {
-//             params = new URLSearchParams(window.location.search);
-//             params.set('page', page);
-//         }
+async function fetchProducts(page = 1, params = null) {
+    try {
+        if (!params) {
+            params = new URLSearchParams(window.location.search);
+            params.set('page', page);
+        }
 
-//         const res = await axios.get(`/api/user/products?${params.toString()}`, {
-//             headers: { 'X-Requested-With': 'XMLHttpRequest' }
-//         });
+        // Add a loading state to the grid if you'd like
+        productGrid.style.opacity = '0.5';
 
-//         renderProducts(res.data.products);
-//         renderPagination(res.data.currentPage, res.data.totalPages);
-//         renderActiveFilters();
+        // Hit the standard SSR route, which triggers res.json if X-Requested-With header is set to XMLHttpRequest in the controller
+        const res = await axios.get(`/user/products?${params.toString()}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
 
-//         history.pushState(null, '', `/user/products?${params.toString()}`);
-//         window.scrollTo({ top: 0, behavior: 'smooth' });
+        productGrid.style.opacity = '1';
 
-//     } catch (err) {
-//         console.error('Pagination error', err);
-//     }
-// }
+        // Update the URL without reloading the page
+        history.pushState(null, '', `/user/products?${params.toString()}`);
+
+        // Update the views with data passed back from Axios
+        renderProducts(res.data.products);
+        renderPagination(res.data.currentPage, res.data.totalPages);
+        renderActiveFilters();
+
+        const countEl = document.querySelector('.results-count');
+        if (countEl) countEl.innerText = `${res.data.totalProducts} Products`;
+
+        // Smoothly bring the user back to the top of the products
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    } catch (err) {
+        console.error('Pagination error', err);
+        productGrid.style.opacity = '1';
+    }
+}
 
 function renderProducts(products) {
     productGrid.innerHTML = '';
 
     if (!products.length) {
         productGrid.innerHTML = `
-      <div class="no-products">
-        <h3>No products found</h3>
-        <p>Try adjusting your filters</p>
+      <div class="no-products mt-12 mb-12 flex flex-col items-center justify-center w-full">
+        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+        <h3 class="text-xl font-bold mt-4">No products found</h3>
+        <p class="text-gray-500">Try adjusting your filters or search query</p>
       </div>`;
         return;
     }
 
     products.forEach(product => {
-        const variant = product.primaryVariant;
-        const salePrice = variant?.salePrice;
-        const basePrice = variant?.basePrice;
+        const variant = product.primaryVariant || (product.variants && product.variants.length > 0 ? product.variants[0] : null);
 
-        productGrid.insertAdjacentHTML('beforeend', `
-      <div class="product-card">
-        <div class="product-image-container premium-card">
-          <img src="${product.listingImage}" 
-               alt="${product.productName}" 
-               class="product-image">
+        // determine if in wishlist
+        let inWishlist = false;
+        const wishlistDataEl = document.getElementById('wishlistData');
+        if (wishlistDataEl) {
+            try {
+                const ids = JSON.parse(wishlistDataEl.getAttribute('data-ids') || '[]');
+                if (ids.includes(product._id.toString())) {
+                    inWishlist = true;
+                }
+            } catch (e) {
+                console.error("Could not parse wishlist IDs", e);
+            }
+        }
 
-          <div class="card-action-overlay">
-            ${variant && variant.stock > 0 ? `
-              <button class="card-btn primary" data-product-id="${product._id}">
+        let badgesHTML = '';
+        if (variant && variant.stock <= 0) {
+            badgesHTML = `<span class="badge" style="top:12px; left:12px; background: #ef4444; color: #FFFFFF;">Out of Stock</span>`;
+        } else if (product.featured) {
+            badgesHTML = `<span class="badge badge-featured">Featured</span>`;
+        }
+
+        let offerBadgeHTML = '';
+        if (product.offer && product.offer.hasOffer) {
+            offerBadgeHTML = `<span class="badge badge-offer">${product.offer.totalDiscountPercent}% OFF</span>`;
+        } else if (variant && variant.basePrice > variant.salePrice) {
+            const pct = Math.round(((variant.basePrice - variant.salePrice) / variant.basePrice) * 100);
+            offerBadgeHTML = `<span class="badge badge-sale">${pct}% OFF</span>`;
+        }
+
+        let priceHTML = '';
+        if (variant) {
+            if (product.offer && product.offer.hasOffer) {
+                priceHTML = `
+                    <span class="current-price">₹${(product.offer.offerPrice || 0).toLocaleString()}</span>
+                    <span class="original-price">₹${(product.offer.basePrice || variant.basePrice).toLocaleString()}</span>
+                    <span class="discount-percent font-bold text-green-600 text-sm ml-2">${product.offer.totalDiscountPercent}% OFF</span>
+                `;
+            } else {
+                priceHTML = `<span class="current-price">₹${variant.salePrice.toLocaleString()}</span>`;
+                if (variant.basePrice > variant.salePrice) {
+                    priceHTML += `<span class="original-price">₹${variant.basePrice.toLocaleString()}</span>`;
+                }
+            }
+        } else {
+            priceHTML = `<span class="text-red-500">Price Unavailable</span>`;
+        }
+
+        let addToCartHTML = '';
+        if (variant && variant.stock > 0) {
+            addToCartHTML = `
+              <button class="card-btn primary add-to-cart-card-btn" data-product-id="${product._id}" data-variant-id="${variant._id}"
+                onclick="event.preventDefault(); event.stopPropagation(); addToCartQuick('${product._id}', '${variant._id}')">
                 <svg viewBox="0 0 24 24">
                   <circle cx="9" cy="21" r="1"></circle>
                   <circle cx="20" cy="21" r="1"></circle>
@@ -301,64 +344,95 @@ function renderProducts(products) {
                 </svg>
                 <span>Add to Cart</span>
               </button>
-            ` : ``}
+            `;
+        }
 
-            <button class="card-btn secondary" data-product-id="${product._id}">
-              <svg viewBox="0 0 24 24">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67
-                         l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78
-                         L12 21.23l7.78-7.78a5.5 5.5 0 0 0 0-7.78z"/>
-              </svg>
-            </button>
+        let starsHTML = '';
+        if (product.averageRating > 0) {
+            let stars = '';
+            for (let s = 1; s <= 5; s++) {
+                if (s <= Math.round(product.averageRating)) {
+                    stars += `<svg width="13" height="13" viewBox="0 0 24 24" fill="#f59e0b" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+                } else {
+                    stars += `<svg width="13" height="13" viewBox="0 0 24 24" fill="#e5e7eb" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+                }
+            }
+            starsHTML = `
+                <div class="product-card-rating" style="display:flex;align-items:center;gap:4px;margin:4px 0 2px;">
+                    <div style="display:flex;align-items:center;gap:1px;">${stars}</div>
+                    <span style="font-size:11px;color:#6b7280;font-weight:500;">(${product.reviewCount || 0})</span>
+                </div>
+            `;
+        }
+
+        productGrid.insertAdjacentHTML('beforeend', `
+      <a href="/user/products/${product.slug}" class="product-card-link" style="text-decoration: none; color: inherit;">
+        <div class="product-card" style="position: relative; overflow: hidden; height: 100%;">
+          <div class="product-image-container premium-card">
+            <img src="${product.listingImage || '/images/placeholder.png'}" 
+                 alt="${product.productName}" 
+                 class="product-image">
+            
+            ${badgesHTML}
+            ${offerBadgeHTML}
+
+            <div class="card-action-overlay">
+              ${addToCartHTML}
+
+              <button class="card-btn secondary wishlist-btn ${inWishlist ? 'active' : ''}" 
+                data-product-id="${product._id}" data-variant-id="${variant ? variant._id : ''}"
+                onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist('${product._id}', '${variant ? variant._id : ''}', this)">
+                <svg class="wishlist-icon" viewBox="0 0 24 24" style="${inWishlist ? 'fill: #ef4444;' : 'fill: none;'}">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l7.78-7.78a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="product-info">
+            <div class="product-brand">${product.brand?.brandName || 'ZOUND'}</div>
+            ${starsHTML}
+            <h3 class="product-name">${product.productName}</h3>
+            <div class="product-pricing">
+              ${priceHTML}
+            </div>
           </div>
         </div>
-
-        <div class="product-info">
-          <div class="product-brand">
-            ${product.brand?.brandName || 'ZOUND'}
-          </div>
-
-          <h3 class="product-name">${product.productName}</h3>
-
-          <div class="product-pricing">
-            ${salePrice ? `
-              <span class="current-price">₹${salePrice.toLocaleString()}</span>
-              ${basePrice > salePrice ? `
-                <span class="original-price">₹${basePrice.toLocaleString()}</span>
-              ` : ``}
-            ` : `<span class="text-red-500">Price Unavailable</span>`}
-          </div>
-
-          <a href="/user/products/${product.slug}" class="view-details-btn">
-            View Details
-          </a>
-        </div>
-      </div>
+      </a>
     `);
     });
 }
 
 
-// function renderPagination(currentPage, totalPages) {
-//     pagination.innerHTML = '';
+function renderPagination(currentPage, totalPages) {
+    if (!pagination) return;
+    pagination.innerHTML = '';
 
-//     if (currentPage > 1) {
-//         pagination.innerHTML += `
-//             <button class="page-btn" data-page="${currentPage - 1}">←</button>`;
-//     }
+    // If total pages is 0 or 1, we can just hide pagination
+    if (totalPages <= 1) {
+        pagination.style.display = 'none';
+        return;
+    } else {
+        pagination.style.display = 'flex';
+    }
 
-//     for (let i = 1; i <= totalPages; i++) {
-//         pagination.innerHTML += `
-//             <button class="page-btn ${i === currentPage ? 'active' : ''}" data-page="${i}">
-//                 ${i}
-//             </button>`;
-//     }
+    if (currentPage > 1) {
+        pagination.innerHTML += `
+            <button class="page-btn" data-page="${currentPage - 1}">←</button>`;
+    }
 
-//     if (currentPage < totalPages) {
-//         pagination.innerHTML += `
-//             <button class="page-btn" data-page="${currentPage + 1}">→</button>`;
-//     }
-// }
+    for (let i = 1; i <= totalPages; i++) {
+        pagination.innerHTML += `
+            <button class="page-btn ${i === currentPage ? 'active' : ''}" data-page="${i}">
+                ${i}
+            </button>`;
+    }
+
+    if (currentPage < totalPages) {
+        pagination.innerHTML += `
+            <button class="page-btn" data-page="${currentPage + 1}">→</button>`;
+    }
+}
 
 const activeFiltersContainer = document.getElementById('activeFilters');
 
@@ -567,24 +641,49 @@ updateSliderFill();
 document.addEventListener('DOMContentLoaded', () => {
     const searchForm = document.getElementById('globalSearchForm');
     const searchInput = document.getElementById('searchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
 
     if (!searchForm || !searchInput) return;
+
+    if (clearSearchBtn) {
+        // Handle input events to toggle clear button visibility
+        searchInput.addEventListener('input', () => {
+            if (searchInput.value.trim().length > 0) {
+                clearSearchBtn.classList.add('opacity-100');
+                clearSearchBtn.classList.remove('opacity-0', 'pointer-events-none');
+            } else {
+                clearSearchBtn.classList.remove('opacity-100');
+                clearSearchBtn.classList.add('opacity-0', 'pointer-events-none');
+            }
+        });
+
+        // Handle click on clear button
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            clearSearchBtn.classList.remove('opacity-100');
+            clearSearchBtn.classList.add('opacity-0', 'pointer-events-none');
+
+            // If on the product listing page
+            if (typeof applyFiltersAndSearch === 'function') {
+                applyFiltersAndSearch(1);
+            } else {
+                // If on any other page, redirect to products page without search
+                window.location.href = '/user/products';
+            }
+        });
+    }
 
     searchForm.addEventListener('submit', (e) => {
         e.preventDefault();
 
-        const query = searchInput.value.trim();
-        const params = new URLSearchParams(window.location.search);
-
-        if (query) {
-            params.set('search', query);
+        if (typeof applyFiltersAndSearch === 'function') {
+            applyFiltersAndSearch(1);
         } else {
-            params.delete('search');
+            const query = searchInput.value.trim();
+            const params = new URLSearchParams();
+            if (query) params.set('search', query);
+            window.location.href = `/user/products?${params.toString()}`;
         }
-
-        params.set('page', 1);
-
-        window.location.href = `/user/products?${params.toString()}`;
     });
 });
 

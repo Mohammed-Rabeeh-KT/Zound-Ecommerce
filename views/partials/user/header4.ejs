@@ -1,0 +1,256 @@
+<header class="w-full bg-[#fcfbf9] border-b border-[#ebd7cc] sticky top-0 z-50 transition-all duration-500">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 h-20 sm:h-24 flex items-center justify-between gap-8">
+
+    <!-- Logo -->
+    <a href="/user/home" class="flex flex-col items-center justify-center group relative pt-2">
+      <span
+        class="font-serif text-[28px] tracking-[0.2em] text-[#2c2a29] leading-none transition-colors duration-500 group-hover:text-[#b08b73]">
+        ZOUND
+      </span>
+      <span
+        class="text-[9px] tracking-[0.3em] text-[#8c8279] uppercase font-light mt-1 opacity-70 group-hover:opacity-100 transition-opacity duration-500">Premium
+        Audio</span>
+    </a>
+
+    <!-- Primary Nav Links -->
+    <nav class="hidden md:flex items-center gap-10">
+      <a href="/user/products"
+        class="text-[14px] font-medium tracking-wide text-[#5c5652] hover:text-[#2c2a29] transition-all duration-300 relative after:content-[''] after:absolute after:-bottom-1 after:left-1/2 after:w-0 after:h-[1px] after:bg-[#b08b73] after:transition-all after:duration-300 hover:after:left-0 hover:after:w-full">Products</a>
+      <a href="/user/brands"
+        class="text-[14px] font-medium tracking-wide text-[#5c5652] hover:text-[#2c2a29] transition-all duration-300 relative after:content-[''] after:absolute after:-bottom-1 after:left-1/2 after:w-0 after:h-[1px] after:bg-[#b08b73] after:transition-all after:duration-300 hover:after:left-0 hover:after:w-full">Brands</a>
+      <a href="/user/deals"
+        class="text-[14px] font-medium tracking-wide text-[#5c5652] hover:text-[#2c2a29] transition-all duration-300 relative after:content-[''] after:absolute after:-bottom-1 after:left-1/2 after:w-0 after:h-[1px] after:bg-[#b08b73] after:transition-all after:duration-300 hover:after:left-0 hover:after:w-full">Deals</a>
+      <a href="/user/support"
+        class="text-[14px] font-medium tracking-wide text-[#5c5652] hover:text-[#2c2a29] transition-all duration-300 relative after:content-[''] after:absolute after:-bottom-1 after:left-1/2 after:w-0 after:h-[1px] after:bg-[#b08b73] after:transition-all after:duration-300 hover:after:left-0 hover:after:w-full">Support</a>
+    </nav>
+
+    <!-- Right Side Controls -->
+    <div class="flex items-center gap-6">
+
+      <!-- Search -->
+      <form id="globalSearchForm" action="/user/products" method="GET"
+        class="hidden lg:flex items-center relative group">
+        <input id="searchInput" name="search"
+          class="w-48 lg:w-60 pb-1 pt-2 px-1 bg-transparent border-b border-[#d4ceca] focus:border-[#b08b73] text-[#2c2a29] placeholder-[#aeadab] text-sm outline-none transition-all duration-500 font-light"
+          placeholder="Discover pure sound..." autocomplete="off"
+          value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>" />
+        <button type="submit"
+          class="absolute right-0 bottom-2 text-[#aeadab] group-hover:text-[#b08b73] transition-colors duration-500">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </button>
+      </form>
+
+      <div class="flex items-center gap-5 ml-4">
+        <% if (locals.user) { %>
+          <!-- Wishlist -->
+          <a href="/user/wishlist" class="relative text-[#5c5652] hover:text-[#b08b73] transition-colors duration-500">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
+              </path>
+            </svg>
+            <% if (typeof wishlistCount !=='undefined' && wishlistCount> 0) { %>
+              <span
+                class="absolute -top-1.5 -right-2 flex items-center justify-center w-3.5 h-3.5 bg-[#b08b73] text-white text-[9px] font-bold rounded-full">
+                <%= wishlistCount %>
+              </span>
+              <% } %>
+          </a>
+
+          <!-- Cart -->
+          <a href="/user/cart" class="relative text-[#5c5652] hover:text-[#b08b73] transition-colors duration-500">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+            </svg>
+            <% if (typeof cartCount !=='undefined' && cartCount> 0) { %>
+              <span
+                class="absolute -top-1.5 -right-2 flex items-center justify-center w-3.5 h-3.5 bg-[#b08b73] text-white text-[9px] font-bold rounded-full">
+                <%= cartCount %>
+              </span>
+              <% } %>
+          </a>
+
+          <!-- USER AVATAR -->
+          <div class="relative ml-2">
+            <button id="avatarBtn"
+              class="flex items-center focus:outline-none focus:ring-1 focus:ring-[#b08b73] rounded-full transition-all duration-300 hover:opacity-80">
+              <% if (user.profile_picture) { %>
+                <img src="<%= user.profile_picture %>"
+                  class="w-9 h-9 rounded-full object-cover border border-[#ebd7cc]" />
+                <% } else { %>
+                  <div
+                    class="w-9 h-9 flex items-center justify-center bg-[#eae4df] text-[#5c5652] text-sm font-serif rounded-full border border-[#ebd7cc]">
+                    <%= user.name.charAt(0).toUpperCase() %>
+                  </div>
+                  <% } %>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div id="avatarDropdown"
+              class="hidden absolute right-0 mt-4 w-60 bg-[#fcfbf9] border border-[#ebd7cc] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] rounded-xl overflow-hidden z-50 transform origin-top-right transition-all opacity-0 scale-95 duration-300">
+              <div class="px-6 py-5 border-b border-[#ebd7cc] bg-[#f9f7f4]">
+                <p class="font-medium text-[#2c2a29] truncate font-serif text-lg">
+                  <%= user.name %>
+                </p>
+                <p class="text-[13px] text-[#8c8279] truncate mt-0.5 font-light">
+                  <%= user.email %>
+                </p>
+              </div>
+              <div class="py-3 px-2">
+                <a href="/user/profile"
+                  class="flex items-center px-4 py-2.5 text-[14px] font-medium text-[#5c5652] hover:text-[#2c2a29] hover:bg-[#f3efeb] rounded-lg transition-colors group">
+                  <svg class="w-4 h-4 mr-3 text-[#aeadab] group-hover:text-[#b08b73] transition-colors" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                  </svg>
+                  My Account
+                </a>
+                <a href="/user/wishlist"
+                  class="flex items-center px-4 py-2.5 text-[14px] font-medium text-[#5c5652] hover:text-[#2c2a29] hover:bg-[#f3efeb] rounded-lg transition-colors group">
+                  <svg class="w-4 h-4 mr-3 text-[#aeadab] group-hover:text-[#b08b73] transition-colors" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
+                    </path>
+                  </svg>
+                  Wishlist
+                </a>
+                <a href="/user/orders"
+                  class="flex items-center px-4 py-2.5 text-[14px] font-medium text-[#5c5652] hover:text-[#2c2a29] hover:bg-[#f3efeb] rounded-lg transition-colors group">
+                  <svg class="w-4 h-4 mr-3 text-[#aeadab] group-hover:text-[#b08b73] transition-colors" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                  </svg>
+                  Order History
+                </a>
+              </div>
+              <div class="px-2 pb-3">
+                <button type="button" onclick="Logout()"
+                  class="w-full flex items-center justify-center px-4 py-2.5 text-[13px] font-bold tracking-wider text-[#d9534f] hover:bg-[#fdf3f2] border border-transparent hover:border-[#f9dada] rounded-lg transition-all">
+                  SIGN OUT
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <% } else { %>
+            <!-- Guest view -->
+            <a href="/user/cart"
+              class="relative text-[#5c5652] hover:text-[#b08b73] transition-colors duration-500 mr-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+              </svg>
+              <% if (typeof cartCount !=='undefined' && cartCount> 0) { %>
+                <span
+                  class="absolute -top-1.5 -right-2 flex items-center justify-center w-3.5 h-3.5 bg-[#b08b73] text-white text-[9px] font-bold rounded-full">
+                  <%= cartCount %>
+                </span>
+                <% } %>
+            </a>
+
+            <a href="/user/login"
+              class="px-7 py-2 text-[13px] font-medium tracking-widest uppercase border border-[#2c2a29] text-[#2c2a29] hover:bg-[#2c2a29] hover:text-white transition-all duration-500 rounded-full ml-2">
+              Login
+            </a>
+            <% } %>
+
+      </div>
+    </div>
+  </div>
+</header>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+  // Avatar Dropdown Toggle
+  const avatarBtn = document.getElementById("avatarBtn");
+  const avatarDropdown = document.getElementById("avatarDropdown");
+
+  if (avatarBtn) {
+    avatarBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isHidden = avatarDropdown.classList.contains("hidden");
+
+      if (isHidden) {
+        avatarDropdown.classList.remove("hidden");
+        setTimeout(() => {
+          avatarDropdown.classList.remove("opacity-0", "scale-95");
+          avatarDropdown.classList.add("opacity-100", "scale-100");
+        }, 10);
+      } else {
+        closeDropdown();
+      }
+    });
+
+    const closeDropdown = () => {
+      avatarDropdown.classList.remove("opacity-100", "scale-100");
+      avatarDropdown.classList.add("opacity-0", "scale-95");
+      setTimeout(() => {
+        avatarDropdown.classList.add("hidden");
+      }, 300);
+    };
+
+    window.addEventListener("click", (e) => {
+      if (!avatarDropdown.classList.contains("hidden") && !avatarDropdown.contains(e.target) && !avatarBtn.contains(e.target)) {
+        closeDropdown();
+      }
+    });
+  }
+
+  function Logout() {
+    Swal.fire({
+      title: "Sign Out?",
+      text: "You will need to login again to access your account.",
+      icon: "question",
+      showCancelButton: true,
+      background: '#fcfbf9',
+      color: '#2c2a29',
+      confirmButtonColor: "#d9534f",
+      cancelButtonColor: "#eae4df",
+      confirmButtonText: "Sign Out",
+      cancelButtonText: "<span style='color: #5c5652'>Stay logged in</span>",
+      customClass: {
+        confirmButton: 'rounded-full font-medium px-6 shadow-sm',
+        cancelButton: 'rounded-full font-medium px-6 border border-[#d4ceca]',
+        popup: 'rounded-2xl border border-[#ebd7cc] shadow-xl',
+        title: 'font-serif text-2xl tracking-wide text-[#2c2a29]'
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        if (typeof window.toast !== 'undefined') { window.toast.success("Successfully logged out."); } else { Swal.fire({ title: "Signed Out", text: "See you next time!", icon: "success", timer: 1500, showConfirmButton: false }); } setTimeout(() => { window.location.href = '/user/logout'; }, 1200); //
+          .then(() => {
+            if (typeof window.toast !== 'undefined') {
+              window.toast.success("Successfully signed out. Goodbye!");
+            } else {
+              Swal.fire({
+                title: "Signed Out",
+                text: "Goodbye!",
+                icon: "success",
+                timer: 1500,
+                showConfirmButton: false,
+                background: '#fcfbf9',
+                color: '#2c2a29',
+                customClass: {
+                  popup: 'rounded-2xl border border-[#ebd7cc]'
+                }
+              });
+            }
+            setTimeout(() => {
+              window.location.href = '/user/login';
+            }, 1200);
+          })
+          .catch(error => {
+            console.error("Logout error:", error);
+            if (typeof window.toast !== 'undefined') window.toast.error("Logout failed. Try again!");
+            else Swal.fire("Error", "Something went wrong. Try again!", "error");
+          });
+      }
+    });
+  }
+</script>

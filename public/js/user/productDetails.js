@@ -529,6 +529,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // --- 9. TAB SWITCHING LOGIC ---
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', function () {
+            // Remove active class from all buttons and panes
+            tabButtons.forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
+            // Add active class to clicked button and corresponding pane
+            this.classList.add('active');
+            const tabId = this.dataset.tab;
+            const targetPane = document.getElementById(tabId);
+            if (targetPane) {
+                targetPane.classList.add('active');
+            }
+        });
+    });
 });
 
 // =============================================
@@ -639,8 +657,178 @@ function showToast(message, type = 'success') {
     }
 }
 
+// =============================================
+// REVIEWS - Load max 5 reviews with See More
+// =============================================
 
+document.addEventListener('DOMContentLoaded', function () {
+    const reviewsList = document.getElementById('reviewsList');
+    const loadMoreContainer = document.getElementById('loadMoreContainer');
+    const averageRatingDisplay = document.getElementById('averageRatingDisplay');
+    const averageRatingStars = document.getElementById('averageRatingStars');
+    const totalReviewsCount = document.getElementById('totalReviewsCount');
+    const ratingBreakdown = document.getElementById('ratingBreakdown');
 
+    if (!reviewsList) return;
 
+    // Extract productId from the page
+    const addToCartBtn = document.getElementById('addToCartBtn');
+    const wishlistBtn = document.getElementById('wishlistBtn');
+    const productId = addToCartBtn?.dataset?.productId || wishlistBtn?.dataset?.productId;
+
+    if (!productId) return;
+
+    async function loadReviews() {
+        try {
+            const response = await axios.get(`/api/user/reviews/product/${productId}?limit=5`);
+            const result = response.data;
+
+            if (!result.success) return;
+
+            const reviews = result.data?.reviews || [];
+            const totalReviews = result.data?.pagination?.total || reviews.length;
+            const breakdown = result.data?.ratingDistribution || null;
+
+            // Calculate average rating from breakdown
+            let avgRating = 0;
+            if (breakdown) {
+                let totalScore = 0, totalCount = 0;
+                for (let i = 1; i <= 5; i++) {
+                    totalScore += i * (breakdown[i] || 0);
+                    totalCount += (breakdown[i] || 0);
+                }
+                avgRating = totalCount > 0 ? totalScore / totalCount : 0;
+            }
+
+            // Update summary
+            if (averageRatingDisplay) {
+                averageRatingDisplay.textContent = avgRating.toFixed(1);
+            }
+            if (totalReviewsCount) {
+                totalReviewsCount.textContent = `${totalReviews} Review${totalReviews !== 1 ? 's' : ''}`;
+            }
+
+            // Update stars
+            if (averageRatingStars) {
+                const stars = averageRatingStars.querySelectorAll('.star');
+                stars.forEach((star, index) => {
+                    star.style.color = index < Math.round(avgRating) ? '#f59e0b' : '#d1d5db';
+                });
+            }
+
+            // Update breakdown
+            if (ratingBreakdown && breakdown) {
+                let breakdownHTML = '';
+                for (let i = 5; i >= 1; i--) {
+                    const count = breakdown[i] || 0;
+                    const percent = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
+                    breakdownHTML += `
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                            <span style="font-size:13px;color:#6b7280;width:14px;">${i}</span>
+                            <span style="color:#f59e0b;font-size:13px;">★</span>
+                            <div style="flex:1;height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden;">
+                                <div style="height:100%;width:${percent}%;background:linear-gradient(90deg,#f59e0b,#fbbf24);border-radius:4px;transition:width 0.3s;"></div>
+                            </div>
+                            <span style="font-size:12px;color:#9ca3af;width:24px;text-align:right;">${count}</span>
+                        </div>`;
+                }
+                ratingBreakdown.innerHTML = breakdownHTML;
+            }
+
+            // Render reviews (max 5)
+            const displayReviews = reviews.slice(0, 5);
+            if (displayReviews.length === 0) {
+                reviewsList.innerHTML = `
+                    <div style="text-align:center;padding:60px 20px;background:linear-gradient(135deg,#f8fafc,#eef2ff);border-radius:16px;border:1px dashed #c7d2fe;">
+                        <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#e0e7ff,#c7d2fe);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5">
+                                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                            </svg>
+                        </div>
+                        <p style="font-size:17px;font-weight:600;color:#1f2937;margin:0 0 6px;">No reviews yet</p>
+                        <p style="font-size:14px;color:#6b7280;margin:0;">Be the first to share your experience with this product!</p>
+                    </div>`;
+                if (loadMoreContainer) loadMoreContainer.style.display = 'none';
+                return;
+            }
+
+            // Color palette for avatar backgrounds
+            const avatarColors = [
+                'linear-gradient(135deg,#002366,#2563eb)',
+                'linear-gradient(135deg,#7c3aed,#a78bfa)',
+                'linear-gradient(135deg,#059669,#34d399)',
+                'linear-gradient(135deg,#dc2626,#f87171)',
+                'linear-gradient(135deg,#d97706,#fbbf24)'
+            ];
+
+            let reviewsHTML = '';
+            displayReviews.forEach((review, index) => {
+                const reviewDate = new Date(review.createdAt).toLocaleDateString('en-IN', {
+                    year: 'numeric', month: 'short', day: 'numeric'
+                });
+
+                let starsHTML = '';
+                for (let s = 1; s <= 5; s++) {
+                    starsHTML += `<span style="color:${s <= review.rating ? '#f59e0b' : '#e5e7eb'};font-size:15px;">★</span>`;
+                }
+
+                const userName = review.user?.name || 'Anonymous';
+                const avatarBg = avatarColors[index % avatarColors.length];
+
+                // Rating label
+                const ratingLabels = { 5: 'Excellent', 4: 'Great', 3: 'Good', 2: 'Fair', 1: 'Poor' };
+                const ratingLabel = ratingLabels[review.rating] || '';
+
+                reviewsHTML += `
+                    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:24px;margin-bottom:16px;transition:all 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.04);"
+                         onmouseover="this.style.boxShadow='0 8px 24px rgba(0,35,102,0.08)';this.style.borderColor='#c7d2fe';"
+                         onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.04)';this.style.borderColor='#e5e7eb';">
+                        
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+                            <div style="display:flex;align-items:center;gap:12px;">
+                                <div style="width:42px;height:42px;border-radius:50%;background:${avatarBg};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;flex-shrink:0;">
+                                    ${userName.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <div style="font-weight:600;font-size:15px;color:#1f2937;">${userName}</div>
+                                    <div style="font-size:12px;color:#9ca3af;margin-top:2px;">${reviewDate}</div>
+                                </div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <div style="display:flex;gap:2px;">${starsHTML}</div>
+                                <span style="font-size:12px;font-weight:600;color:#fff;background:${review.rating >= 4 ? '#16a34a' : review.rating >= 3 ? '#f59e0b' : '#ef4444'};padding:3px 10px;border-radius:20px;">${ratingLabel}</span>
+                            </div>
+                        </div>
+
+                        ${review.title ? `<h4 style="font-size:15px;font-weight:700;color:#1f2937;margin:0 0 8px;letter-spacing:-0.01em;">${review.title}</h4>` : ''}
+                        
+                        <p style="font-size:14px;color:#4b5563;line-height:1.7;margin:0;padding-left:14px;border-left:3px solid #e0e7ff;">${review.comment || ''}</p>
+
+                        <div style="display:flex;align-items:center;gap:6px;margin-top:14px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#16a34a" stroke="none">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span style="font-size:12px;color:#16a34a;font-weight:500;">Verified Purchase</span>
+                        </div>
+                    </div>`;
+            });
+            reviewsList.innerHTML = reviewsHTML;
+
+            // Show "See More Reviews" if total > 5
+            if (loadMoreContainer) {
+                loadMoreContainer.style.display = totalReviews > 5 ? 'flex' : 'none';
+            }
+
+        } catch (error) {
+            console.error('Error loading reviews:', error);
+            reviewsList.innerHTML = `
+                <div style="text-align:center;padding:40px;color:#9ca3af;background:#f8fafc;border-radius:12px;">
+                    <p style="margin:0;font-size:14px;">Unable to load reviews at this time.</p>
+                </div>`;
+        }
+    }
+
+    loadReviews();
+});
 
 

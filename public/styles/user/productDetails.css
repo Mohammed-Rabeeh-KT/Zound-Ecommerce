@@ -661,11 +661,12 @@
 .variants-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
 }
 
 .variants-table th {
     text-align: left;
-    padding: 1rem;
+    padding: 1rem 1.25rem;
     background: #f9fafb;
     color: #1a1a1a;
     font-weight: 700;
@@ -674,9 +675,14 @@
 }
 
 .variants-table td {
-    padding: 1.25rem 1rem;
-    border-bottom: 1px solid #e5e7eb;
+    padding: 1.25rem;
+    border-bottom: 1px solid #f1f5f9;
     color: #4b5563;
+    vertical-align: middle;
+}
+
+.variants-table tbody tr:hover {
+    background: #f8fafc;
 }
 
 .variant-name-cell {
@@ -685,16 +691,18 @@
 }
 
 .color-preview {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     border: 2px solid #e5e7eb;
+    display: inline-block;
+    vertical-align: middle;
 }
 
-.price-cell {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+.price-cell .table-price,
+.price-cell .table-original-price {
+    display: inline;
+    vertical-align: middle;
 }
 
 .table-price {
@@ -707,6 +715,7 @@
     color: #9ca3af;
     text-decoration: line-through;
     font-size: 0.875rem;
+    margin-left: 8px;
 }
 
 .status-badge {

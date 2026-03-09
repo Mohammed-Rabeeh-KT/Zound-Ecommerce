@@ -145,7 +145,7 @@
                         </div>
                         <div class="stat-value">
                             <span class="currency">₹</span>
-                            <%= user.walletBalance || 0 %>
+                            <%= user.wallet ? user.wallet.toFixed(2) : '0.00' %>
                         </div>
                     </div>
 

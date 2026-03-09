@@ -9,6 +9,7 @@ const catchAsync = (fn) => (...args) => fn(...args).catch((err) => {
 let cropper = null;
 let currentInput = null;
 let currentDropZone = null;
+let currentToggleId = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     safeCall(loadBrands, 1);
@@ -191,10 +192,10 @@ function renderPagination(total, page, limit) {
    ============================ */
 async function submitAddBrand(e) {
     e.preventDefault();
-    
+
     // Clear previous errors
     clearInlineErrors();
-    
+
     const formData = new FormData(e.target);
     const statusEl = e.target.querySelector("input[name='isListed']");
     formData.set("isListed", statusEl && statusEl.checked ? "on" : "off");
@@ -207,13 +208,13 @@ async function submitAddBrand(e) {
             showInlineError(json.message);
             return showError(json.message);
         }
-        
+
         document.getElementById("addBrandModal").classList.remove("active");
         showSuccess("Brand added");
         safeCall(loadBrands, 1);
     } catch (error) {
         console.error('Error adding brand:', error);
-        
+
         // Show inline errors for validation failures
         const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Something went wrong';
         showInlineError(errorMessage);
@@ -245,6 +246,12 @@ async function openEditModal(id) {
         prompt.style.display = "flex";
     }
 
+    const form = document.getElementById("editBrandForm");
+    if (form) {
+        form.dataset.originalName = brand.brandName;
+        form.dataset.originalStatus = brand.isListed;
+    }
+
     document.getElementById("editBrandModal").classList.add("active");
 }
 
@@ -258,6 +265,19 @@ async function submitEditBrand(e) {
     const statusEl = document.getElementById("editBrandStatus");
     formData.set("isListed", statusEl && statusEl.checked ? "on" : "off");
 
+    const formEl = document.getElementById("editBrandForm");
+    const originalName = formEl?.dataset.originalName || "";
+    const originalStatus = formEl?.dataset.originalStatus === "true";
+
+    const currentName = document.getElementById("editBrandName").value.trim();
+    const currentStatus = (statusEl && statusEl.checked);
+    const hasImage = document.getElementById("editBrandFile")?.files?.length > 0;
+
+    if (!hasImage && currentName === originalName && currentStatus === originalStatus) {
+        showError("No changes made. Please update at least one field before saving.");
+        return;
+    }
+
     try {
         const { data: json } = await axios.patch(`/api/admin/brands/update/${id}`, formData);
 
@@ -266,13 +286,13 @@ async function submitEditBrand(e) {
             showInlineError(json.message);
             return showError(json.message);
         }
-        
+
         document.getElementById("editBrandModal").classList.remove("active");
         showSuccess("Brand updated");
         safeCall(loadBrands, 1);
     } catch (error) {
         console.error('Error updating brand:', error);
-        
+
         // Show inline errors for validation failures
         const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Something went wrong';
         showInlineError(errorMessage);
@@ -406,11 +426,13 @@ function openToggleModal(btn) {
 
     if (isListed) {
         titleEl.innerText = "Unlist Brand";
+        document.getElementById("toggleModalAction").innerText = "unlist";
         iconEl.innerHTML = redUnlistModalIcon();
         confirmBtn.innerText = "Unlist";
         confirmBtn.className = "btn-delete";
     } else {
         titleEl.innerText = "List Brand";
+        document.getElementById("toggleModalAction").innerText = "list";
         iconEl.innerHTML = greenListModalIcon();
         confirmBtn.innerText = "List";
         confirmBtn.className = "btn-delete list";
@@ -464,7 +486,7 @@ function clearInlineErrors() {
 function showInlineError(errorMessage) {
     // Clear previous errors first
     clearInlineErrors();
-    
+
     // Show error based on message content
     if (errorMessage.toLowerCase().includes('brand name') || errorMessage.toLowerCase().includes('name')) {
         const nameError = document.getElementById('addBrandNameError') || document.getElementById('editBrandNameError');
@@ -473,7 +495,7 @@ function showInlineError(errorMessage) {
             nameError.style.display = 'block';
         }
     }
-    
+
     if (errorMessage.toLowerCase().includes('logo') || errorMessage.toLowerCase().includes('image')) {
         const logoError = document.getElementById('addBrandLogoError') || document.getElementById('editBrandLogoError');
         if (logoError) {
@@ -481,7 +503,7 @@ function showInlineError(errorMessage) {
             logoError.style.display = 'block';
         }
     }
-    
+
     // For duplicate errors, show under name field
     if (errorMessage.toLowerCase().includes('already exists') || errorMessage.toLowerCase().includes('duplicate')) {
         const nameError = document.getElementById('addBrandNameError') || document.getElementById('editBrandNameError');
@@ -497,7 +519,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add brand form
     const addNameInput = document.getElementById('addBrandNameInput') || document.querySelector('#addBrandForm input[name="brandName"]');
     const addLogoInput = document.getElementById('addBrandFile');
-    
+
     if (addNameInput) {
         addNameInput.addEventListener('input', () => {
             const nameError = document.getElementById('addBrandNameError');
@@ -507,7 +529,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    
+
     if (addLogoInput) {
         addLogoInput.addEventListener('change', () => {
             const logoError = document.getElementById('addBrandLogoError');
@@ -517,11 +539,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    
+
     // Edit brand form
     const editNameInput = document.getElementById('editBrandName');
     const editLogoInput = document.getElementById('editBrandFile');
-    
+
     if (editNameInput) {
         editNameInput.addEventListener('input', () => {
             const nameError = document.getElementById('editBrandNameError');
@@ -531,7 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    
+
     if (editLogoInput) {
         editLogoInput.addEventListener('change', () => {
             const logoError = document.getElementById('editBrandLogoError');

@@ -82,7 +82,14 @@ const validateOfferBase = (data) => {
     // Date validation
     const startDate = new Date(startOn);
     const endDate = new Date(expireOn);
-    const now = new Date();
+
+    // Normalize today to start of day for comparison
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Normalize start and end date to start of day to avoid timezone/time-of-day offset issues
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(0, 0, 0, 0);
 
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
         throw new AppError('Invalid date format', STATUS.BAD_REQUEST);
@@ -92,11 +99,11 @@ const validateOfferBase = (data) => {
         throw new AppError('End date must be after start date', STATUS.BAD_REQUEST);
     }
 
-    if (startDate < now) {
+    if (startDate < today) {
         throw new AppError('Start date cannot be in the past', STATUS.BAD_REQUEST);
     }
 
-    if (endDate < now) {
+    if (endDate < today) {
         throw new AppError('End date cannot be in the past', STATUS.BAD_REQUEST);
     }
 
@@ -134,7 +141,7 @@ const addProductOffer = async (data) => {
     const { productId } = data;
 
     if (!productId) throw new AppError('Product selection is required', STATUS.BAD_REQUEST);
-    
+
     const { discountNum, startDate, endDate, minPurchase, trimmedName } = validateOfferBase(data);
 
     const product = await Product.findById(productId);
@@ -179,7 +186,7 @@ const addCategoryOffer = async (data) => {
     const { name, categoryId, discountType, discountValue, startOn, expireOn, minPurchaseAmount } = data;
 
     if (!categoryId) throw new AppError('All fields are required', STATUS.BAD_REQUEST);
-    const { discountNum, startDate, endDate } = validateOfferBase(data);
+    const { discountNum, startDate, endDate, minPurchase, trimmedName } = validateOfferBase(data);
 
     const existingOffer = await Offer.findOne({
         categoryId,
@@ -193,7 +200,7 @@ const addCategoryOffer = async (data) => {
     }
 
     const newOffer = new Offer({
-        title: name,
+        title: trimmedName,
         discount_value: discountNum,
         discount_type: discountType,
         apply_for: 'category',
@@ -213,7 +220,7 @@ const addBrandOffer = async (data) => {
     const { name, brandId, discountType, discountValue, startOn, expireOn, minPurchaseAmount } = data;
 
     if (!brandId) throw new AppError('All fields are required', STATUS.BAD_REQUEST);
-    const { discountNum, startDate, endDate } = validateOfferBase(data);
+    const { discountNum, startDate, endDate, minPurchase, trimmedName } = validateOfferBase(data);
 
     const existingOffer = await Offer.findOne({
         brandId,
@@ -227,7 +234,7 @@ const addBrandOffer = async (data) => {
     }
 
     const newOffer = new Offer({
-        title: name,
+        title: trimmedName,
         discount_value: discountNum,
         discount_type: discountType,
         apply_for: 'brand',

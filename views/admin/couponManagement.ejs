@@ -95,7 +95,8 @@
                 <div class="table-header">
                     <div class="search-box">
                         <i class="bi bi-search search-icon"></i>
-                        <input type="text" id="searchInput" placeholder="Search coupons..." onkeyup="filterCoupons(this.value)">
+                        <input type="text" id="searchInput" placeholder="Search coupons..."
+                            onkeyup="filterCoupons(this.value)">
                     </div>
                     <div class="filter-badges">
                         <span class="filter-badge">
@@ -268,16 +269,22 @@
 
                         <div class="form-grid">
                             <div class="form-group">
-                                <label class="form-label">Coupon Code </label>
+                                <label class="form-label">Coupon Code *</label>
                                 <div class="code-input-wrapper">
-                                    <input type="text" name="code" id="couponCode" class="form-input" placeholder="e.g. SUMMER20" style="text-transform: uppercase;">
+                                    <input type="text" name="code" id="couponCode" class="form-input"
+                                        placeholder="e.g. SUMMER20" style="text-transform: uppercase;">
                                 </div>
+                                <span class="error-message" id="couponCodeError"
+                                    style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">Description</label>
-                            <textarea name="description" id="couponDescription" class="form-input" placeholder="e.g. Summer sale discount" rows="3"></textarea>
+                            <label class="form-label">Description *</label>
+                            <textarea name="description" id="couponDescription" class="form-input"
+                                placeholder="e.g. Summer sale discount" rows="3"></textarea>
+                            <span class="error-message" id="couponDescriptionError"
+                                style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                         </div>
 
                         <!-- Discount Settings Section -->
@@ -296,17 +303,26 @@
 
                         <div class="form-grid three-cols">
                             <div class="form-group">
-                                <label class="form-label" id="discountLabel">Discount Value (%) </label>
-                                <input type="number" name="discountValue" id="discountValue" class="form-input" min="1" max="99" placeholder="e.g. 20" >
+                                <label class="form-label" id="discountLabel">Discount Value (%) *</label>
+                                <input type="number" name="discountValue" id="discountValue" class="form-input" min="1"
+                                    max="99" placeholder="e.g. 20">
+                                <span class="error-message" id="discountValueError"
+                                    style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Min Purchase (&#8377;)</label>
-                                <input type="number" name="minPurchase" id="minPurchase" class="form-input" min="0" placeholder="e.g. 1000" value="0">
+                                <label class="form-label">Min Purchase (&#8377;) *</label>
+                                <input type="number" name="minPurchase" id="minPurchase" class="form-input" min="0"
+                                    placeholder="e.g. 1000" value="0">
+                                <span class="error-message" id="minPurchaseError"
+                                    style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Max Discount (&#8377;)</label>
-                                <input type="number" name="maxDiscount" id="maxDiscount" class="form-input" min="0" placeholder="No limit">
+                                <input type="number" name="maxDiscount" id="maxDiscount" class="form-input" min="0"
+                                    placeholder="No limit">
                                 <p class="help-text">Leave empty for no cap</p>
+                                <span class="error-message" id="maxDiscountError"
+                                    style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                             </div>
                         </div>
 
@@ -315,14 +331,20 @@
 
                         <div class="form-grid">
                             <div class="form-group">
-                                <label class="form-label">Total Usage Limit</label>
-                                <input type="number" name="usageLimit" id="usageLimit" class="form-input" min="1" placeholder="Unlimited">
+                                <label class="form-label">Total Usage Limit *</label>
+                                <input type="number" name="usageLimit" id="usageLimit" class="form-input" min="1"
+                                    placeholder="Unlimited">
                                 <p class="help-text">Leave empty for unlimited</p>
+                                <span class="error-message" id="usageLimitError"
+                                    style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Per User Limit</label>
-                                <input type="number" name="perUserLimit" id="perUserLimit" class="form-input" min="1" placeholder="e.g. 1" value="1">
+                                <label class="form-label">Per User Limit *</label>
+                                <input type="number" name="perUserLimit" id="perUserLimit" class="form-input" min="1"
+                                    placeholder="e.g. 1" value="1">
                                 <p class="help-text">Times each user can use</p>
+                                <span class="error-message" id="perUserLimitError"
+                                    style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                             </div>
                         </div>
 
@@ -331,12 +353,16 @@
 
                         <div class="form-grid">
                             <div class="form-group">
-                                <label class="form-label">Start Date </label>
-                                <input type="date" name="startDate" id="startDate" class="form-input" >
+                                <label class="form-label">Start Date *</label>
+                                <input type="date" name="startDate" id="startDate" class="form-input">
+                                <span class="error-message" id="startDateError"
+                                    style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">End Date </label>
-                                <input type="date" name="endDate" id="endDate" class="form-input" >
+                                <label class="form-label">End Date *</label>
+                                <input type="date" name="endDate" id="endDate" class="form-input">
+                                <span class="error-message" id="endDateError"
+                                    style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                             </div>
                         </div>
                     </form>

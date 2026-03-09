@@ -77,8 +77,8 @@ router.get('/profile/referrals', authenticateUser, requireUser, userController.l
 // ==========================================
 // Review Routes (Requires Auth)
 // ==========================================
-router.get('/products/:productId/reviews', getProductReviewsPage);
-router.get('/reviews/my-reviews', authenticateUser, requireUser, getUserReviewsPage);
+router.get('/products/:slug/reviews', getProductReviewsPage);
+router.get('/profile/reviews', authenticateUser, requireUser, getUserReviewsPage);
 
 
 export default router;

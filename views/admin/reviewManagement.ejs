@@ -1,218 +1,251 @@
-<link rel="stylesheet" href="/styles/admin/reviewManagement.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<link rel="stylesheet" href="/styles/admin/reviewManagement.css">
 
 <%- include("../partials/admin/adminSidebar") %>
 
     <div class="main-content">
 
-        <!-- HEADER -->
-        <div class="header">
-            <h1 class="page-title">Review Management</h1>
-            <p class="page-subtitle">Manage customer reviews and ratings</p>
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Review Management</h1>
+                <p class="page-subtitle">Manage customer reviews and ratings</p>
+            </div>
         </div>
 
-        <!-- STATS CARDS -->
-        <div class="stats-container">
+        <!-- Stats Cards -->
+        <div class="stats-row">
             <div class="stat-card">
                 <div class="stat-icon pending">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
+                    <i class="bi bi-clock-history"></i>
                 </div>
                 <div class="stat-content">
-                    <h3 id="pendingCount">0</h3>
-                    <p>Pending Reviews</p>
+                    <h3>
+                        <%= stats.pending || 0 %>
+                    </h3>
+                    <p>Pending</p>
                 </div>
             </div>
-            
             <div class="stat-card">
                 <div class="stat-icon approved">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
+                    <i class="bi bi-check-circle"></i>
                 </div>
                 <div class="stat-content">
-                    <h3 id="approvedCount">0</h3>
-                    <p>Approved Reviews</p>
+                    <h3>
+                        <%= stats.approved || 0 %>
+                    </h3>
+                    <p>Approved</p>
                 </div>
             </div>
-            
             <div class="stat-card">
                 <div class="stat-icon rejected">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="15" y1="9" x2="9" y2="15"></line>
-                        <line x1="9" y1="9" x2="15" y2="15"></line>
-                    </svg>
+                    <i class="bi bi-x-circle"></i>
                 </div>
                 <div class="stat-content">
-                    <h3 id="rejectedCount">0</h3>
-                    <p>Rejected Reviews</p>
+                    <h3>
+                        <%= stats.rejected || 0 %>
+                    </h3>
+                    <p>Rejected</p>
                 </div>
             </div>
-            
             <div class="stat-card">
                 <div class="stat-icon average">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                    </svg>
+                    <i class="bi bi-star-fill"></i>
                 </div>
                 <div class="stat-content">
-                    <h3 id="averageRating">0.0</h3>
-                    <p>Average Rating</p>
+                    <h3>
+                        <%= stats.averageRating || '0.0' %>
+                    </h3>
+                    <p>Avg Rating</p>
                 </div>
             </div>
         </div>
 
-        <!-- FILTERS AND SEARCH -->
+        <!-- Filters -->
         <div class="filters-container">
-            <form method="GET" action="/admin/reviews" id="reviewFilterForm">
-                <div class="filter-row">
-                    <div class="review-search-wrapper">
-                        <span class="review-search-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6c6c6c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="11" cy="11" r="8"></circle>
-                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                            </svg>
-                        </span>
-                        <input type="text" name="search" value="<%= search %>" class="review-search-input" id="reviewSearchInput" placeholder="Search reviews..." />
-                        <span class="review-clear-icon" id="reviewClearSearchIcon" style="display: none;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="18" y1="6" x2="6" y2="18" />
-                                <line x1="6" y1="6" x2="18" y2="18" />
-                            </svg>
-                        </span>
-                    </div>
+            <div class="search-wrapper">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" id="searchInput" class="search-input"
+                    placeholder="Search by product, customer or comment..." value="<%= filters.search %>"
+                    onkeypress="if(event.key === 'Enter') applyFilter('search', this.value)">
+                <% if (filters.search) { %>
+                    <button class="clear-search" onclick="applyFilter('search', '')" title="Clear Search">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </button>
+                    <% } %>
+            </div>
 
-                    <select name="status" class="review-filter-select">
-                        <option value="">All Status</option>
-                        <option value="pending" <%= status === 'pending' ? 'selected' : '' %>>Pending</option>
-                        <option value="approved" <%= status === 'approved' ? 'selected' : '' %>>Approved</option>
-                        <option value="rejected" <%= status === 'rejected' ? 'selected' : '' %>>Rejected</option>
-                    </select>
+            <select class="filter-select" onchange="applyFilter('status', this.value)">
+                <option value="">Status: All</option>
+                <option value="pending" <%=filters.status==='pending' ? 'selected' : '' %>>Pending</option>
+                <option value="approved" <%=filters.status==='approved' ? 'selected' : '' %>>Approved</option>
+                <option value="rejected" <%=filters.status==='rejected' ? 'selected' : '' %>>Rejected</option>
+            </select>
 
-                    <select name="rating" class="review-filter-select">
-                        <option value="">All Ratings</option>
-                        <option value="5" <%= rating === '5' ? 'selected' : '' %>>5 Stars</option>
-                        <option value="4" <%= rating === '4' ? 'selected' : '' %>>4 Stars</option>
-                        <option value="3" <%= rating === '3' ? 'selected' : '' %>>3 Stars</option>
-                        <option value="2" <%= rating === '2' ? 'selected' : '' %>>2 Stars</option>
-                        <option value="1" <%= rating === '1' ? 'selected' : '' %>>1 Star</option>
-                    </select>
+            <select class="filter-select" onchange="applyFilter('rating', this.value)">
+                <option value="">Rating: All</option>
+                <option value="5" <%=filters.rating==='5' ? 'selected' : '' %>>5 Stars</option>
+                <option value="4" <%=filters.rating==='4' ? 'selected' : '' %>>4 Stars</option>
+                <option value="3" <%=filters.rating==='3' ? 'selected' : '' %>>3 Stars</option>
+                <option value="2" <%=filters.rating==='2' ? 'selected' : '' %>>2 Stars</option>
+                <option value="1" <%=filters.rating==='1' ? 'selected' : '' %>>1 Star</option>
+            </select>
 
-                    <button type="submit" class="btn-primary">Apply Filters</button>
-                    <a href="/admin/reviews" class="btn-secondary">Clear</a>
-                </div>
-            </form>
+            <% if (filters.status || filters.search || filters.rating) { %>
+                <a href="/admin/reviews" class="btn-reset">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                </a>
+                <% } %>
         </div>
 
-        <!-- BULK ACTIONS -->
-        <div class="bulk-actions" id="bulkActions" style="display: none;">
-            <span id="selectedCount">0 items selected</span>
-            <button class="btn-success" onclick="bulkApprove()">Approve Selected</button>
-            <button class="btn-danger" onclick="bulkReject()">Reject Selected</button>
-        </div>
-
-        <!-- TABLE -->
-        <div class="table-container">
+        <!-- Reviews Table -->
+        <div class="table-card">
             <table class="reviews-table">
                 <thead>
                     <tr>
-                        <th>
-                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
-                        </th>
-                        <th>Product</th>
-                        <th>Customer</th>
-                        <th>Rating</th>
-                        <th>Review</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                        <th>Actions</th>
+                        <th width="5%">#</th>
+                        <th width="25%">Product</th>
+                        <th width="18%">Customer</th>
+                        <th width="10%">Rating</th>
+                        <th width="17%">Comment</th>
+                        <th width="10%">Status</th>
+                        <th width="15%" style="text-align:right;">Actions</th>
                     </tr>
                 </thead>
-                <tbody id="reviewsTableBody">
-                    <!-- Reviews will be loaded here -->
+                <tbody>
+                    <% if (reviews && reviews.length> 0) { %>
+                        <% reviews.forEach(function(review, index) { %>
+                            <tr>
+                                <td>
+                                    <%= (pagination.current - 1) * 10 + index + 1 %>
+                                </td>
+                                <td>
+                                    <div class="product-cell">
+                                        <img src="<%= review.variantImage || '/images/placeholder.png' %>"
+                                            alt="<%= review.product ? review.product.productName : 'N/A' %>"
+                                            class="product-thumb">
+                                        <div>
+                                            <span class="product-name">
+                                                <%= review.product ? review.product.productName : 'Product Unavailable'
+                                                    %>
+                                            </span>
+                                            <span class="review-date">
+                                                <%= new Date(review.createdAt).toLocaleDateString('en-IN', {
+                                                    day: 'numeric' , month: 'short' , year: 'numeric' }) %>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="user-info">
+                                        <span class="user-name">
+                                            <%= review.user ? review.user.name : 'Unknown' %>
+                                        </span>
+                                        <span class="user-email">
+                                            <%= review.user ? review.user.email : '' %>
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="stars-cell">
+                                        <% for (let s=1; s <=5; s++) { %>
+                                            <i class="bi bi-star-fill"
+                                                style="color:<%= s <= review.rating ? '#f59e0b' : '#e5e7eb' %>;font-size:13px;"></i>
+                                            <% } %>
+                                                <span class="rating-num">
+                                                    <%= review.rating %>.0
+                                                </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="comment-text">
+                                        <%= review.comment || '—' %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-<%= review.status %>">
+                                        <%= review.status %>
+                                    </span>
+                                </td>
+                                <td style="text-align:right;">
+                                    <div class="action-btns">
+                                        <button class="action-btn view" onclick="viewReview('<%= review._id %>')"
+                                            title="View">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        <% if (review.status==='pending' ) { %>
+                                            <button class="action-btn approve"
+                                                onclick="approveReview('<%= review._id %>')" title="Approve">
+                                                <i class="bi bi-check-lg"></i>
+                                            </button>
+                                            <button class="action-btn reject"
+                                                onclick="rejectReview('<%= review._id %>')" title="Reject">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                            <% } %>
+                                                <button class="action-btn delete"
+                                                    onclick="deleteReview('<%= review._id %>')" title="Delete">
+                                                    <i class="bi bi-trash3"></i>
+                                                </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <% }); %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="7">
+                                            <div class="no-results">
+                                                <i class="bi bi-star" style="font-size: 2rem;"></i>
+                                                <h3>No reviews found</h3>
+                                                <p>Try adjusting your search or filters.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <% } %>
                 </tbody>
             </table>
         </div>
 
-        <!-- PAGINATION -->
-        <div class="pagination" id="pagination">
-            <!-- Pagination will be loaded here -->
-        </div>
+        <!-- Pagination -->
+        <% if (pagination.pages> 1) { %>
+            <div class="pagination">
+                <% if (pagination.current> 1) { %>
+                    <a href="javascript:void(0)" onclick="applyFilter('page', '<%= pagination.current - 1 %>')"
+                        class="page-btn">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                    <% } %>
+                        <% for (let i=1; i <=pagination.pages; i++) { %>
+                            <a href="javascript:void(0)" onclick="applyFilter('page', '<%= i %>')"
+                                class="page-btn <%= pagination.current === i ? 'active' : '' %>">
+                                <%= i %>
+                            </a>
+                            <% } %>
+                                <% if (pagination.current < pagination.pages) { %>
+                                    <a href="javascript:void(0)"
+                                        onclick="applyFilter('page', '<%= pagination.current + 1 %>')" class="page-btn">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                    <% } %>
+            </div>
+            <% } %>
+
     </div>
 
-    <!-- REVIEW MODAL -->
-    <div class="modal" id="reviewModal">
-        <div class="modal-content">
-            <div class="modal-header">
+    <!-- View Review Modal -->
+    <div class="review-modal-overlay" id="reviewModal">
+        <div class="review-modal">
+            <div class="review-modal-header">
                 <h3>Review Details</h3>
-                <span class="close" onclick="closeModal()">&times;</span>
+                <button class="close-modal" onclick="closeModal()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
             </div>
-            <div class="modal-body" id="modalBody">
-                <!-- Review details will be loaded here -->
-            </div>
-        </div>
-    </div>
-
-    <!-- EDIT MODAL -->
-    <div class="modal" id="editModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Edit Review</h3>
-                <span class="close" onclick="closeEditModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="editReviewForm">
-                    <input type="hidden" id="editReviewId">
-                    
-                    <div class="form-group">
-                        <label for="editRating">Rating <span class="required">*</span></label>
-                        <div class="rating-input">
-                            <span class="star" data-rating="1">★</span>
-                            <span class="star" data-rating="2">★</span>
-                            <span class="star" data-rating="3">★</span>
-                            <span class="star" data-rating="4">★</span>
-                            <span class="star" data-rating="5">★</span>
-                        </div>
-                        <div class="rating-hint">Click on stars to set rating</div>
-                        <span class="error-message" id="ratingError"></span>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="editComment">Comment <span class="required">*</span></label>
-                        <textarea id="editComment" rows="4" placeholder="Enter review comment (minimum 10 characters)"></textarea>
-                        <div class="char-counter">
-                            <span id="charCount">0</span> / 500 characters
-                        </div>
-                        <span class="error-message" id="editCommentError"></span>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="editStatus">Review Status</label>
-                        <div class="status-select-wrapper">
-                            <select id="editStatus">
-                                <option value="pending">⏳ Pending</option>
-                                <option value="approved">✅ Approved</option>
-                                <option value="rejected">❌ Rejected</option>
-                            </select>
-                            <div class="status-indicator" id="statusIndicator">
-                                <span class="status-badge pending">Pending</span>
-                            </div>
-                        </div>
-                        <div class="status-description">
-                            <small id="statusDescription">Review is waiting for approval</small>
-                        </div>
-                    </div>
-                    
-                    <div class="modal-actions">
-                        <button type="submit" class="btn-primary">Save Changes</button>
-                        <button type="button" class="btn-secondary" onclick="closeEditModal()">Cancel</button>
-                    </div>
-                </form>
+            <div class="review-modal-body" id="modalBody">
+                <!-- Loaded dynamically -->
             </div>
         </div>
     </div>
 
-<script src="/js/admin/reviewManagement.js"></script>
+    <script src="/js/admin/reviewManagement.js"></script>

@@ -53,7 +53,8 @@
                     <div class="table-header">
                         <div class="search-box">
                             <i class="bi bi-search search-icon"></i>
-                            <input type="text" placeholder="Search all offers..." onkeyup="filterTable('allTable', this.value)">
+                            <input type="text" placeholder="Search all offers..."
+                                onkeyup="filterTable('allTable', this.value)">
                         </div>
                         <div class="filter-badges">
                             <span class="filter-badge">
@@ -142,7 +143,8 @@
                                                             <!-- Toggle Switch -->
                                                             <label class="toggle-switch"
                                                                 title="<%= isExpired ? 'Offer expired' : (offer.isActive ? 'Deactivate' : 'Activate') %>">
-                                                                <input type="checkbox" <%=offer.isActive ? 'checked' : '' %>
+                                                                <input type="checkbox" <%=offer.isActive ? 'checked'
+                                                                    : '' %>
                                                                 <%= isExpired ? 'disabled' : '' %>
                                                                     onchange="toggleOfferStatus('<%= offer._id %>', '<%=
                                                                             offer.type.toLowerCase() %>', '<%=
@@ -192,7 +194,8 @@
                     <div class="table-header">
                         <div class="search-box">
                             <i class="bi bi-search search-icon"></i>
-                            <input type="text" placeholder="Search product offers..." onkeyup="filterTable('productTable', this.value)">
+                            <input type="text" placeholder="Search product offers..."
+                                onkeyup="filterTable('productTable', this.value)">
                         </div>
                     </div>
                     <table class="custom-table" id="productTable">
@@ -250,7 +253,8 @@
                                                         <!-- Toggle Switch -->
                                                         <label class="toggle-switch"
                                                             title="<%= isExpired ? 'Offer expired' : (isActive ? 'Deactivate' : 'Activate') %>">
-                                                            <input type="checkbox" <%=offer.isActive !==false ? 'checked' : '' %>
+                                                            <input type="checkbox" <%=offer.isActive !==false
+                                                                ? 'checked' : '' %>
                                                             <%= isExpired ? 'disabled' : '' %>
                                                                 onchange="toggleOfferStatus('<%= offer._id %>',
                                                                     'product', '<%= endDate.toISOString() %>', event)">
@@ -294,7 +298,8 @@
                     <div class="table-header">
                         <div class="search-box">
                             <i class="bi bi-search search-icon"></i>
-                            <input type="text" placeholder="Search category offers..." onkeyup="filterTable('categoryTable', this.value)">
+                            <input type="text" placeholder="Search category offers..."
+                                onkeyup="filterTable('categoryTable', this.value)">
                         </div>
                     </div>
                     <table class="custom-table" id="categoryTable">
@@ -352,7 +357,8 @@
                                                         <!-- Toggle Switch -->
                                                         <label class="toggle-switch"
                                                             title="<%= isExpired ? 'Offer expired' : (isActive ? 'Deactivate' : 'Activate') %>">
-                                                            <input type="checkbox" <%=offer.isActive !==false ? 'checked' : '' %>
+                                                            <input type="checkbox" <%=offer.isActive !==false
+                                                                ? 'checked' : '' %>
                                                             <%= isExpired ? 'disabled' : '' %>
                                                                 onchange="toggleOfferStatus('<%= offer._id %>',
                                                                     'category', '<%= endDate.toISOString() %>', event)">
@@ -396,7 +402,8 @@
                     <div class="table-header">
                         <div class="search-box">
                             <i class="bi bi-search search-icon"></i>
-                            <input type="text" placeholder="Search brand offers..." onkeyup="filterTable('brandTable', this.value)">
+                            <input type="text" placeholder="Search brand offers..."
+                                onkeyup="filterTable('brandTable', this.value)">
                         </div>
                     </div>
                     <table class="custom-table" id="brandTable">
@@ -454,7 +461,8 @@
                                                         <!-- Toggle Switch -->
                                                         <label class="toggle-switch"
                                                             title="<%= isExpired ? 'Offer expired' : (isActive ? 'Deactivate' : 'Activate') %>">
-                                                            <input type="checkbox" <%=offer.isActive !==false ? 'checked' : '' %>
+                                                            <input type="checkbox" <%=offer.isActive !==false
+                                                                ? 'checked' : '' %>
                                                             <%= isExpired ? 'disabled' : '' %>
                                                                 onchange="toggleOfferStatus('<%= offer._id %>', 'brand',
                                                                     '<%= endDate.toISOString() %>', event)">
@@ -497,7 +505,8 @@
                     <div class="table-header">
                         <div class="search-box">
                             <i class="bi bi-search search-icon"></i>
-                            <input type="text" placeholder="Search scheduled offers..." onkeyup="filterTable('scheduledTable', this.value)">
+                            <input type="text" placeholder="Search scheduled offers..."
+                                onkeyup="filterTable('scheduledTable', this.value)">
                         </div>
                         <div class="scheduled-info">
                             <i class="bi bi-info-circle"></i>
@@ -593,22 +602,27 @@
                             <span class="section-label">Offer Details</span>
 
                             <div class="form-group">
-                                <label class="form-label">Offer Name</label>
-                                <input type="text" name="name" class="form-input" placeholder="e.g. Summer Sale" >
+                                <label class="form-label">Offer Name *</label>
+                                <input type="text" name="name" class="form-input" placeholder="e.g. Summer Sale">
+                                <span class="error-message" id="productNameError"
+                                    style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                             </div>
 
                             <div class="form-group" style="position: relative;">
-                                <label class="form-label">Select Product</label>
-                                <input type="text" id="productSearch" class="form-input" placeholder="Search and select product..." oninput="searchProducts(this.value)">
-                                <input type="hidden" name="productId" id="selectedProductId" >
+                                <label class="form-label">Select Product *</label>
+                                <input type="text" id="productSearch" class="form-input"
+                                    placeholder="Search and select product..." oninput="searchProducts(this.value)">
+                                <input type="hidden" name="productId" id="selectedProductId">
                                 <div id="productSuggestions" class="autocomplete-suggestions" style="display: none;">
                                 </div>
+                                <span class="error-message" id="productIdError"
+                                    style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                             </div>
 
                             <span class="section-label" style="margin-top: 24px;">Discount Settings</span>
 
                             <div class="form-group">
-                                <label class="form-label">Discount Type</label>
+                                <label class="form-label">Discount Type *</label>
                                 <div class="discount-type-toggle">
                                     <button type="button" class="discount-type-btn active"
                                         onclick="selectDiscountType(this, 'percentage', 'product')">Percentage
@@ -620,20 +634,27 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" id="productDiscountLabel">Discount Value (%)</label>
-                                <input type="number" name="discountValue" class="form-input" min="1" max="99" placeholder="e.g. 20" >
+                                <label class="form-label" id="productDiscountLabel">Discount Value (%) *</label>
+                                <input type="number" name="discountValue" class="form-input" min="1" max="99"
+                                    placeholder="e.g. 20">
+                                <span class="error-message" id="productDiscountError"
+                                    style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                             </div>
 
                             <span class="section-label" style="margin-top: 24px;">Schedule</span>
 
                             <div class="form-grid">
                                 <div class="form-group">
-                                    <label class="form-label">Start Date</label>
-                                    <input type="date" name="startOn" class="form-input" >
+                                    <label class="form-label">Start Date *</label>
+                                    <input type="date" name="startOn" class="form-input">
+                                    <span class="error-message" id="productStartError"
+                                        style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">End Date</label>
-                                    <input type="date" name="expireOn" class="form-input" >
+                                    <label class="form-label">End Date *</label>
+                                    <input type="date" name="expireOn" class="form-input">
+                                    <span class="error-message" id="productEndError"
+                                        style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                                 </div>
                             </div>
                         </form>
@@ -662,13 +683,15 @@
                             <span class="section-label">Offer Details</span>
 
                             <div class="form-group">
-                                <label class="form-label">Offer Name</label>
-                                <input type="text" name="name" class="form-input" placeholder="e.g. Headphones Sale" >
+                                <label class="form-label">Offer Name *</label>
+                                <input type="text" name="name" class="form-input" placeholder="e.g. Headphones Sale">
+                                <span class="error-message" id="categoryNameError"
+                                    style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label">Select Category</label>
-                                <select name="categoryId" id="categorySelect" style="display:none;" >
+                                <label class="form-label">Select Category *</label>
+                                <select name="categoryId" id="categorySelect" style="display:none;">
                                     <option value="">Select Category</option>
                                     <% if (typeof categories !=='undefined' ) { %>
                                         <% categories.forEach(cat=> { %>
@@ -678,12 +701,14 @@
                                             <% }) %>
                                                 <% } %>
                                 </select>
+                                <span class="error-message" id="categoryIdError"
+                                    style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                             </div>
 
                             <span class="section-label" style="margin-top: 24px;">Discount Settings</span>
 
                             <div class="form-group">
-                                <label class="form-label">Discount Type</label>
+                                <label class="form-label">Discount Type *</label>
                                 <div class="discount-type-toggle">
                                     <button type="button" class="discount-type-btn active"
                                         onclick="selectDiscountType(this, 'percentage', 'category')">Percentage
@@ -696,20 +721,27 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" id="categoryDiscountLabel">Discount Value (%)</label>
-                                <input type="number" name="discountValue" class="form-input" min="1" placeholder="e.g. 20" >
+                                <label class="form-label" id="categoryDiscountLabel">Discount Value (%) *</label>
+                                <input type="number" name="discountValue" class="form-input" min="1"
+                                    placeholder="e.g. 20">
+                                <span class="error-message" id="categoryDiscountError"
+                                    style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                             </div>
 
                             <span class="section-label" style="margin-top: 24px;">Schedule</span>
 
                             <div class="form-grid">
                                 <div class="form-group">
-                                    <label class="form-label">Start Date</label>
-                                    <input type="date" name="startOn" class="form-input" >
+                                    <label class="form-label">Start Date *</label>
+                                    <input type="date" name="startOn" class="form-input">
+                                    <span class="error-message" id="categoryStartError"
+                                        style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">End Date</label>
-                                    <input type="date" name="expireOn" class="form-input" >
+                                    <label class="form-label">End Date *</label>
+                                    <input type="date" name="expireOn" class="form-input">
+                                    <span class="error-message" id="categoryEndError"
+                                        style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                                 </div>
                             </div>
                         </form>
@@ -739,13 +771,15 @@
                             <span class="section-label">Offer Details</span>
 
                             <div class="form-group">
-                                <label class="form-label">Offer Name</label>
-                                <input type="text" name="name" class="form-input" placeholder="e.g. Sony Brand Sale" >
+                                <label class="form-label">Offer Name *</label>
+                                <input type="text" name="name" class="form-input" placeholder="e.g. Sony Brand Sale">
+                                <span class="error-message" id="brandNameError"
+                                    style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label">Select Brand</label>
-                                <select name="brandId" id="brandSelect" style="display:none;" >
+                                <label class="form-label">Select Brand *</label>
+                                <select name="brandId" id="brandSelect" style="display:none;">
                                     <option value="">Select Brand</option>
                                     <% if (typeof brands !=='undefined' ) { %>
                                         <% brands.forEach(brand=> { %>
@@ -755,12 +789,14 @@
                                             <% }) %>
                                                 <% } %>
                                 </select>
+                                <span class="error-message" id="brandIdError"
+                                    style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                             </div>
 
                             <span class="section-label" style="margin-top: 24px;">Discount Settings</span>
 
                             <div class="form-group">
-                                <label class="form-label">Discount Type</label>
+                                <label class="form-label">Discount Type *</label>
                                 <div class="discount-type-toggle">
                                     <button type="button" class="discount-type-btn active"
                                         onclick="selectDiscountType(this, 'percentage', 'brand')">Percentage
@@ -772,20 +808,27 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" id="brandDiscountLabel">Discount Value (%)</label>
-                                <input type="number" name="discountValue" class="form-input" min="1" placeholder="e.g. 20" >
+                                <label class="form-label" id="brandDiscountLabel">Discount Value (%) *</label>
+                                <input type="number" name="discountValue" class="form-input" min="1"
+                                    placeholder="e.g. 20">
+                                <span class="error-message" id="brandDiscountError"
+                                    style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                             </div>
 
                             <span class="section-label" style="margin-top: 24px;">Schedule</span>
 
                             <div class="form-grid">
                                 <div class="form-group">
-                                    <label class="form-label">Start Date</label>
-                                    <input type="date" name="startOn" class="form-input" >
+                                    <label class="form-label">Start Date *</label>
+                                    <input type="date" name="startOn" class="form-input">
+                                    <span class="error-message" id="brandStartError"
+                                        style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">End Date</label>
-                                    <input type="date" name="expireOn" class="form-input" >
+                                    <label class="form-label">End Date *</label>
+                                    <input type="date" name="expireOn" class="form-input">
+                                    <span class="error-message" id="brandEndError"
+                                        style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                                 </div>
                             </div>
                         </form>
@@ -817,14 +860,16 @@
                             <span class="section-label">Offer Details</span>
 
                             <div class="form-group">
-                                <label class="form-label">Offer Name</label>
-                                <input type="text" name="name" id="editOfferName" class="form-input" >
+                                <label class="form-label">Offer Name *</label>
+                                <input type="text" name="name" id="editOfferName" class="form-input">
+                                <span class="error-message" id="editNameError"
+                                    style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                             </div>
 
                             <span class="section-label" style="margin-top: 24px;">Discount Settings</span>
 
                             <div class="form-group">
-                                <label class="form-label">Discount Type</label>
+                                <label class="form-label">Discount Type *</label>
                                 <div class="discount-type-toggle">
                                     <button type="button" class="discount-type-btn" id="editPercentageBtn"
                                         onclick="selectEditDiscountType('percentage')">Percentage (%)</button>
@@ -835,20 +880,27 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" id="editDiscountLabel">Discount Value</label>
-                                <input type="number" name="discountValue" id="editDiscountValue" class="form-input" min="1" >
+                                <label class="form-label" id="editDiscountLabel">Discount Value *</label>
+                                <input type="number" name="discountValue" id="editDiscountValue" class="form-input"
+                                    min="1">
+                                <span class="error-message" id="editDiscountError"
+                                    style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                             </div>
 
                             <span class="section-label" style="margin-top: 24px;">Schedule</span>
 
                             <div class="form-grid">
                                 <div class="form-group">
-                                    <label class="form-label">Start Date</label>
-                                    <input type="date" name="startOn" id="editStartDate" class="form-input" >
+                                    <label class="form-label">Start Date *</label>
+                                    <input type="date" name="startOn" id="editStartDate" class="form-input">
+                                    <span class="error-message" id="editStartError"
+                                        style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">End Date</label>
-                                    <input type="date" name="expireOn" id="editEndDate" class="form-input" >
+                                    <label class="form-label">End Date *</label>
+                                    <input type="date" name="expireOn" id="editEndDate" class="form-input">
+                                    <span class="error-message" id="editEndError"
+                                        style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                                 </div>
                             </div>
                         </form>

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Reviews | ZOUND</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/styles/user/editProfile.css">
+</head>
+
+<body>
+
+    <div class="page-container">
+
+        <%- include('../partials/user/user-sidebar', { currentPage: 'reviews' }) %>
+
+            <main class="main-content">
+
+                <header class="page-header">
+                    <h1 class="headline">My Reviews</h1>
+                    <p class="sub-headline">View and manage all your product reviews.</p>
+                </header>
+
+                <% if (reviews && reviews.length> 0) { %>
+
+                    <!-- Reviews Summary Cards -->
+                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;">
+                        <div
+                            style="background:#fff;border-radius:16px;padding:20px 16px;text-align:center;border:1px solid #e2e8f0;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+                            <div style="font-size:28px;font-weight:800;color:#002366;">
+                                <%= pagination.total %>
+                            </div>
+                            <div
+                                style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-top:6px;">
+                                Total</div>
+                        </div>
+                        <div
+                            style="background:#fff;border-radius:16px;padding:20px 16px;text-align:center;border:1px solid #e2e8f0;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+                            <div style="font-size:28px;font-weight:800;color:#f59e0b;">
+                                <%= reviews.filter(r=> r.status === 'pending').length %>
+                            </div>
+                            <div
+                                style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-top:6px;">
+                                Pending</div>
+                        </div>
+                        <div
+                            style="background:#fff;border-radius:16px;padding:20px 16px;text-align:center;border:1px solid #e2e8f0;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+                            <div style="font-size:28px;font-weight:800;color:#16a34a;">
+                                <%= reviews.filter(r=> r.status === 'approved').length %>
+                            </div>
+                            <div
+                                style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-top:6px;">
+                                Approved</div>
+                        </div>
+                        <div
+                            style="background:#fff;border-radius:16px;padding:20px 16px;text-align:center;border:1px solid #e2e8f0;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+                            <div style="font-size:28px;font-weight:800;color:#dc2626;">
+                                <%= reviews.filter(r=> r.status === 'rejected').length %>
+                            </div>
+                            <div
+                                style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-top:6px;">
+                                Rejected</div>
+                        </div>
+                    </div>
+
+                    <!-- Reviews List -->
+                    <div style="display:flex;flex-direction:column;gap:16px;">
+                        <% reviews.forEach(function(review) { %>
+                            <div class="premium-card" style="overflow:hidden;">
+                                <div style="display:flex;align-items:flex-start;gap:16px;padding:24px;">
+                                    <!-- Product Image (variant-aware) -->
+                                    <% if (review.product) { %>
+                                        <% var reviewImage='/images/placeholder.png' ; var
+                                            hasVariants=review.product.variants && review.product.variants.length> 0;
+
+                                            if (review.variantId && hasVariants) {
+                                            // Match the exact variant from the delivered order
+                                            for (var vi = 0; vi < review.product.variants.length; vi++) { if
+                                                (review.product.variants[vi]._id.toString()===review.variantId.toString())
+                                                { if (review.product.variants[vi].images &&
+                                                review.product.variants[vi].images.length> 0) {
+                                                reviewImage = review.product.variants[vi].images[0];
+                                                }
+                                                break;
+                                                }
+                                                }
+                                                }
+
+                                                // Fallback to product images
+                                                if (reviewImage === '/images/placeholder.png' &&
+                                                review.product.productImages && review.product.productImages.length > 0)
+                                                {
+                                                reviewImage = review.product.productImages[0];
+                                                }
+                                                %>
+                                                <a href="/user/products/<%= review.product.slug %>"
+                                                    style="flex-shrink:0;">
+                                                    <img src="<%= reviewImage %>"
+                                                        alt="<%= review.product.productName %>"
+                                                        style="width:80px;height:80px;object-fit:cover;border-radius:12px;border:1px solid #e2e8f0;">
+                                                </a>
+                                                <% } %>
+
+                                                    <!-- Review Content -->
+                                                    <div style="flex:1;min-width:0;">
+                                                        <!-- Title + Status Row -->
+                                                        <div
+                                                            style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
+                                                            <% if (review.product) { %>
+                                                                <a href="/user/products/<%= review.product.slug %>"
+                                                                    style="font-weight:700;font-size:15px;color:#0f172a;text-decoration:none;">
+                                                                    <%= review.product.productName %>
+                                                                </a>
+                                                                <% } else { %>
+                                                                    <span
+                                                                        style="font-weight:700;font-size:15px;color:#9ca3af;">Product
+                                                                        Unavailable</span>
+                                                                    <% } %>
+
+                                                                        <!-- Status Badge -->
+                                                                        <% if (review.status==='pending' ) { %>
+                                                                            <span
+                                                                                style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;border-radius:20px;text-transform:uppercase;letter-spacing:.03em;">
+                                                                                <svg width="12" height="12"
+                                                                                    viewBox="0 0 24 24" fill="none"
+                                                                                    stroke="currentColor"
+                                                                                    stroke-width="2.5">
+                                                                                    <circle cx="12" cy="12" r="10">
+                                                                                    </circle>
+                                                                                    <polyline points="12 6 12 12 16 14">
+                                                                                    </polyline>
+                                                                                </svg>
+                                                                                Pending
+                                                                            </span>
+                                                                            <% } else if (review.status==='approved' ) {
+                                                                                %>
+                                                                                <span
+                                                                                    style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;background:#dcfce7;color:#166534;font-size:11px;font-weight:700;border-radius:20px;text-transform:uppercase;letter-spacing:.03em;">
+                                                                                    <svg width="12" height="12"
+                                                                                        viewBox="0 0 24 24" fill="none"
+                                                                                        stroke="currentColor"
+                                                                                        stroke-width="2.5">
+                                                                                        <polyline
+                                                                                            points="20 6 9 17 4 12">
+                                                                                        </polyline>
+                                                                                    </svg>
+                                                                                    Approved
+                                                                                </span>
+                                                                                <% } else if (review.status==='rejected'
+                                                                                    ) { %>
+                                                                                    <span
+                                                                                        style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;background:#fee2e2;color:#991b1b;font-size:11px;font-weight:700;border-radius:20px;text-transform:uppercase;letter-spacing:.03em;">
+                                                                                        <svg width="12" height="12"
+                                                                                            viewBox="0 0 24 24"
+                                                                                            fill="none"
+                                                                                            stroke="currentColor"
+                                                                                            stroke-width="2.5">
+                                                                                            <line x1="18" y1="6" x2="6"
+                                                                                                y2="18">
+                                                                                            </line>
+                                                                                            <line x1="6" y1="6" x2="18"
+                                                                                                y2="18">
+                                                                                            </line>
+                                                                                        </svg>
+                                                                                        Rejected
+                                                                                    </span>
+                                                                                    <% } %>
+                                                        </div>
+
+                                                        <!-- Stars -->
+                                                        <div
+                                                            style="display:flex;align-items:center;gap:2px;margin-bottom:10px;">
+                                                            <% for (let s=1; s <=5; s++) { %>
+                                                                <% if (s <=review.rating) { %>
+                                                                    <svg width="16" height="16" viewBox="0 0 24 24"
+                                                                        fill="#f59e0b" stroke="none">
+                                                                        <polygon
+                                                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                                                        </polygon>
+                                                                    </svg>
+                                                                    <% } else { %>
+                                                                        <svg width="16" height="16" viewBox="0 0 24 24"
+                                                                            fill="#e5e7eb" stroke="none">
+                                                                            <polygon
+                                                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                                                            </polygon>
+                                                                        </svg>
+                                                                        <% } %>
+                                                                            <% } %>
+                                                                                <span
+                                                                                    style="font-size:13px;font-weight:600;color:#374151;margin-left:6px;">
+                                                                                    <%= review.rating %>.0
+                                                                                </span>
+                                                        </div>
+
+                                                        <!-- Comment -->
+                                                        <% if (review.comment) { %>
+                                                            <p
+                                                                style="font-size:14px;color:#4b5563;line-height:1.6;margin:0 0 10px;font-style:italic;">
+                                                                "<%= review.comment %>"
+                                                            </p>
+                                                            <% } %>
+
+                                                                <!-- Date & Actions -->
+                                                                <div
+                                                                    style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid #f3f4f6;">
+                                                                    <span style="font-size:12px;color:#9ca3af;">
+                                                                        Reviewed on
+                                                                        <%= new
+                                                                            Date(review.createdAt).toLocaleDateString('en-IN',
+                                                                            { day: 'numeric' , month: 'long' ,
+                                                                            year: 'numeric' }) %>
+                                                                    </span>
+
+                                                                    <% if (review.status==='pending' ) { %>
+                                                                        <button
+                                                                            onclick="deleteReview('<%= review._id %>')"
+                                                                            style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;background:#fee2e2;color:#dc2626;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;">
+                                                                            <svg width="12" height="12"
+                                                                                viewBox="0 0 24 24" fill="none"
+                                                                                stroke="currentColor"
+                                                                                stroke-width="2.5">
+                                                                                <polyline points="3 6 5 6 21 6">
+                                                                                </polyline>
+                                                                                <path
+                                                                                    d="m19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                                                                </path>
+                                                                            </svg>
+                                                                            Delete
+                                                                        </button>
+                                                                        <% } %>
+                                                                </div>
+                                                    </div>
+                                </div>
+                            </div>
+                            <% }); %>
+                    </div>
+
+                    <!-- Pagination -->
+                    <% if (pagination.pages> 1) { %>
+                        <div style="display:flex;justify-content:center;gap:8px;margin-top:32px;">
+                            <% for (let p=1; p <=pagination.pages; p++) { %>
+                                <a href="/user/profile/reviews?page=<%= p %>"
+                                    style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;transition:all 0.2s;
+                                    <%= p === pagination.current ? 'background:#002366;color:#fff;' : 'background:#f8fafc;color:#374151;border:1px solid #e2e8f0;' %>">
+                                    <%= p %>
+                                </a>
+                                <% } %>
+                        </div>
+                        <% } %>
+
+                            <% } else { %>
+
+                                <!-- Empty State -->
+                                <section class="premium-card" style="text-align:center;padding:60px 24px;">
+                                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#d1d5db"
+                                        stroke-width="1.5" style="margin:0 auto 16px;display:block;">
+                                        <polygon
+                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                        </polygon>
+                                    </svg>
+                                    <h3 style="font-size:18px;font-weight:700;color:#0f172a;margin:0 0 8px;">No Reviews
+                                        Yet</h3>
+                                    <p style="font-size:14px;color:#64748b;margin:0 0 24px;">You haven't reviewed any
+                                        products yet.
+                                        Purchase a product and share your experience!</p>
+                                    <a href="/user/products"
+                                        style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:#002366;color:#fff;text-decoration:none;border-radius:12px;font-size:14px;font-weight:600;transition:all 0.2s;">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                                            <path d="M16 10a4 4 0 0 1-8 0"></path>
+                                        </svg>
+                                        Browse Products
+                                    </a>
+                                </section>
+
+                                <% } %>
+
+            </main>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        async function deleteReview(reviewId) {
+            const result = await Swal.fire({
+                title: 'Delete Review?',
+                text: 'This action cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, Delete',
+                cancelButtonText: 'Cancel'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await axios.delete('/api/user/reviews/' + reviewId);
+                    if (response.data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Deleted!',
+                            text: 'Your review has been deleted.',
+                            confirmButtonColor: '#002366'
+                        }).then(function () { window.location.reload(); });
+                    }
+                } catch (error) {
+                    var errorMsg = error.response && error.response.data && error.response.data.message ? error.response.data.message : 'Failed to delete review.';
+                    Swal.fire({ icon: 'error', title: 'Error', text: errorMsg, confirmButtonColor: '#002366' });
+                }
+            }
+        }
+    </script>
+
+</body>
+
+</html>

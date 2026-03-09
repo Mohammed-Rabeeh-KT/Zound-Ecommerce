@@ -60,7 +60,6 @@ const loadReferrals = catchAsync(async (req, res, next) => {
     res.render('user/referrals', {
         user: data.user,
         layout: 'layout',
-        cartCount: req.session?.cart?.length || 0,
         referralCode: data.referralCode,
         stats: data.stats,
         referees: data.referees,

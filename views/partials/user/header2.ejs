@@ -4,6 +4,15 @@
 
     <!-- Logo -->
     <a href="/user/home" class="flex items-center gap-2 group">
+      <div
+        class="bg-gradient-to-br from-[#002366] to-[#0a358c] text-white p-1.5 rounded-lg shadow-md group-hover:scale-105 transition-transform duration-300">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          class="transform -rotate-12">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+          <path d="M2 17l10 5 10-5"></path>
+          <path d="M2 12l10 5 10-5"></path>
+        </svg>
+      </div>
       <span
         class="font-extrabold text-2xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#002366] to-[#0a358c]">ZOUND</span>
     </a>
@@ -46,16 +55,9 @@
           </svg>
         </div>
         <input id="searchInput" name="search"
-          class="w-40 xl:w-64 pl-10 pr-10 py-2 bg-gray-100/80 border border-transparent focus:bg-white focus:border-[#002366] focus:ring-2 focus:ring-[#002366]/20 rounded-full text-sm transition-all duration-300 ease-in-out outline-none shadow-sm"
+          class="w-40 xl:w-64 pl-10 pr-4 py-2 bg-gray-100/80 border border-transparent focus:bg-white focus:border-[#002366] focus:ring-2 focus:ring-[#002366]/20 rounded-full text-sm transition-all duration-300 ease-in-out outline-none shadow-sm"
           placeholder="Search premium audio..." autocomplete="off"
           value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>" />
-        <button type="button" id="clearSearchBtn"
-          class="absolute inset-y-0 right-0 pr-3 flex items-center transition-opacity duration-200 <%= typeof searchQuery !== 'undefined' && searchQuery ? 'opacity-100' : 'opacity-0 pointer-events-none' %>">
-          <svg class="w-4 h-4 text-gray-400 hover:text-red-500 transition-colors" fill="none" stroke="currentColor"
-            viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-        </button>
       </form>
 
       <% if (locals.user) { %>
@@ -69,7 +71,7 @@
           </svg>
           <% if (typeof wishlistCount !=='undefined' && wishlistCount> 0) { %>
             <span
-              class="absolute top-1 right-0.5 flex items-center justify-center w-4 h-4 bg-[#002366] text-white text-[10px] font-bold rounded-full border-2 border-white shadow-sm transform scale-110">
+              class="absolute top-1 right-0.5 flex items-center justify-center w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full border-2 border-white shadow-sm transform scale-110">
               <%= wishlistCount %>
             </span>
             <% } %>
@@ -84,7 +86,7 @@
           </svg>
           <% if (typeof cartCount !=='undefined' && cartCount> 0) { %>
             <span
-              class="absolute top-1 right-0.5 flex items-center justify-center w-4 h-4 bg-[#002366] text-white text-[10px] font-bold rounded-full border-2 border-white shadow-sm transform scale-110">
+              class="absolute top-1 right-0.5 flex items-center justify-center w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full border-2 border-white shadow-sm transform scale-110">
               <%= cartCount %>
             </span>
             <% } %>
@@ -169,7 +171,7 @@
             </svg>
             <% if (typeof cartCount !=='undefined' && cartCount> 0) { %>
               <span
-                class="absolute top-1 right-0.5 flex items-center justify-center w-4 h-4 bg-[#002366] text-white text-[10px] font-bold rounded-full border-2 border-white shadow-sm transform scale-110">
+                class="absolute top-1 right-0.5 flex items-center justify-center w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full border-2 border-white shadow-sm transform scale-110">
                 <%= cartCount %>
               </span>
               <% } %>
@@ -239,20 +241,24 @@
       }
     }).then((result) => {
       if (result.isConfirmed) {
-        if (typeof window.toast !== 'undefined') {
-          window.toast.success("Successfully logged out.");
-        } else {
-          Swal.fire({
-            title: "Signed Out",
-            text: "See you next time!",
-            icon: "success",
-            timer: 1500,
-            showConfirmButton: false
+        if (typeof window.toast !== 'undefined') { window.toast.success("Successfully logged out."); } else { Swal.fire({ title: "Signed Out", text: "See you next time!", icon: "success", timer: 1500, showConfirmButton: false }); } setTimeout(() => { window.location.href = '/user/logout'; }, 1200); //
+          .then(() => {
+            Swal.fire({
+              title: "Signed Out",
+              text: "See you next time!",
+              icon: "success",
+              timer: 1500,
+              showConfirmButton: false
+            });
+            setTimeout(() => {
+              window.location.href = '/user/login';
+            }, 1200);
+          })
+          .catch(error => {
+            console.error("Logout error:", error);
+            if (typeof window.toast !== 'undefined') window.toast.error("Logout failed. Try again!");
+            else Swal.fire("Error", "Something went wrong. Try again!", "error");
           });
-        }
-        setTimeout(() => {
-          window.location.href = '/user/logout';
-        }, 1200);
       }
     });
   }

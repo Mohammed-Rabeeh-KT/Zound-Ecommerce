@@ -7,7 +7,7 @@ import { STATUS } from '../../utils/response.js';
 const reviewService = {
     // Add a new review
     async addReview(userId, reviewData) {
-        const { productId, rating, comment } = reviewData;
+        const { productId, rating, comment, variantId } = reviewData;
 
         // Check if product exists
         const product = await Product.findById(productId);
@@ -15,15 +15,15 @@ const reviewService = {
             throw new AppError('Product not found', STATUS.NOT_FOUND);
         }
 
-        // Check if user has purchased the product
+        // Check if user has purchased and received the product
         const hasPurchased = await Order.findOne({
-            user: userId,
-            'items.product': productId,
-            'orderStatus': 'Delivered'
+            userId: userId,
+            'orderedItems.product': productId,
+            status: 'Delivered'
         });
 
         if (!hasPurchased) {
-            throw new AppError('You can only review products you have purchased', STATUS.FORBIDDEN);
+            throw new AppError('You can only review products you have purchased and received', STATUS.FORBIDDEN);
         }
 
         // Check if user has already reviewed this product
@@ -41,7 +41,8 @@ const reviewService = {
             user: userId,
             product: productId,
             rating,
-            comment
+            comment,
+            variantId: variantId || null
         });
 
         await review.save();
@@ -60,10 +61,10 @@ const reviewService = {
             product: productId,
             status: 'approved'
         })
-        .populate('user', 'name profileImage')
-        .sort({ createdAt: -1 })
-        .limit(limit * 1)
-        .skip((page - 1) * limit);
+            .populate('user', 'name profileImage')
+            .sort({ createdAt: -1 })
+            .limit(limit * 1)
+            .skip((page - 1) * limit);
 
         const total = await Review.countDocuments({
             product: productId,
@@ -109,10 +110,41 @@ const reviewService = {
         const { page = 1, limit = 10 } = query;
 
         const reviews = await Review.find({ user: userId })
-            .populate('product', 'name productImage')
+            .populate('product', 'productName productImages variants slug')
             .sort({ createdAt: -1 })
             .limit(limit * 1)
-            .skip((page - 1) * limit);
+            .skip((page - 1) * limit)
+            .lean();
+
+        // Enrich reviews with actual variant info from delivered orders
+        const productIds = reviews
+            .filter(r => r.product)
+            .map(r => r.product._id);
+
+        if (productIds.length > 0) {
+            const deliveredOrders = await Order.find({
+                userId: userId,
+                status: 'Delivered',
+                'orderedItems.product': { $in: productIds }
+            }).select('orderedItems.product orderedItems.variantId').lean();
+
+            for (const review of reviews) {
+                if (!review.product) continue;
+                // If review already has correct variantId, skip
+                if (review.variantId) continue;
+
+                // Find the delivered order item for this product
+                for (const order of deliveredOrders) {
+                    const matchingItem = order.orderedItems.find(
+                        item => item.product && item.product.toString() === review.product._id.toString()
+                    );
+                    if (matchingItem && matchingItem.variantId) {
+                        review.variantId = matchingItem.variantId;
+                        break;
+                    }
+                }
+            }
+        }
 
         const total = await Review.countDocuments({ user: userId });
 
@@ -191,7 +223,7 @@ const reviewService = {
 
             await Product.findByIdAndUpdate(productId, {
                 averageRating: Math.round(stats.averageRating * 10) / 10,
-                totalReviews: stats.totalReviews
+                reviewCount: stats.totalReviews
             });
         } catch (error) {
             console.error('Error updating product rating:', error);

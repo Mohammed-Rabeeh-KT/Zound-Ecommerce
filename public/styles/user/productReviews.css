@@ -1,0 +1,251 @@
+/* ========================================
+   ZOUND - Product Reviews Page
+   ======================================== */
+
+.page-container {
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.breadcrumbs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    font-size: 0.9rem;
+    color: #64748b;
+}
+
+.breadcrumbs a {
+    color: #0ea5e9;
+    text-decoration: none;
+}
+
+.product-info-minimal {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.prod-thumb {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.headline {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    color: #1e293b;
+}
+
+.back-link {
+    color: #0ea5e9;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+.reviews-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 40px;
+}
+
+/* Sidebar Stats */
+.review-summary-card {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #e2e8f0;
+}
+
+.average-rating-display {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.average-rating-display h2 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    color: #1e293b;
+}
+
+.stars-large {
+    font-size: 1.5rem;
+    color: #cbd5e1;
+    margin-bottom: 8px;
+}
+
+.star.filled {
+    color: #eab308;
+}
+
+.average-rating-display p {
+    margin: 0;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.distribution-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.star-label {
+    width: 45px;
+    color: #475569;
+}
+
+.progress-bar-bg {
+    flex: 1;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: #eab308;
+}
+
+.count-label {
+    width: 30px;
+    text-align: right;
+    color: #64748b;
+}
+
+/* Review Cards */
+.reviews-main {
+    padding-top: 12px;
+}
+
+.reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.review-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.reviewer-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.reviewer-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #64748b;
+    font-size: 1.2rem;
+    overflow: hidden;
+}
+
+.reviewer-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.reviewer-meta h4 {
+    margin: 0 0 4px 0;
+    font-size: 1rem;
+    color: #1e293b;
+}
+
+.review-date {
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
+
+.review-rating {
+    display: flex;
+    gap: 2px;
+    color: #cbd5e1;
+    font-size: 1rem;
+}
+
+.review-body p {
+    margin: 0;
+    color: #475569;
+    line-height: 1.6;
+}
+
+.no-reviews {
+    text-align: center;
+    padding: 60px 20px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px dashed #cbd5e1;
+    color: #64748b;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 32px;
+}
+
+.page-btn {
+    padding: 8px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #1e293b;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.page-btn:hover:not(.active) {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.page-btn.active {
+    background: #0ea5e9;
+    color: white;
+    border-color: #0ea5e9;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .reviews-layout {
+        grid-template-columns: 1fr;
+    }
+}

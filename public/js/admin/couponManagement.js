@@ -222,6 +222,19 @@ async function openEditModal(couponId) {
         const typeBtn = document.querySelectorAll('.discount-type-btn')[coupon.discountType === 'percentage' ? 0 : 1];
         selectDiscountType(typeBtn, coupon.discountType);
 
+        document.getElementById('couponForm').dataset.originalValues = JSON.stringify({
+            code: coupon.code,
+            description: coupon.description || '',
+            discountValue: String(coupon.discountValue),
+            minPurchase: String(coupon.minPurchase || 0),
+            maxDiscount: String(coupon.maxDiscount || ''),
+            usageLimit: String(coupon.usageLimit || ''),
+            perUserLimit: String(coupon.perUserLimit || 1),
+            startDate: new Date(coupon.startDate).toISOString().split('T')[0],
+            endDate: new Date(coupon.endDate).toISOString().split('T')[0],
+            discountType: coupon.discountType
+        });
+
         document.getElementById('couponModal').classList.add('active');
     } catch (error) {
         console.error('Error fetching coupon:', error);
@@ -266,14 +279,89 @@ async function saveCoupon() {
     };
 
     // Validation
-    if (!data.code) return Swal.fire('Error', 'Coupon code is required', 'error');
-    if (!/^[A-Z0-9]{3,20}$/.test(data.code)) return Swal.fire('Error', 'Coupon code must be 3-20 alphanumeric characters only', 'error');
-    if (!data.discountValue || data.discountValue <= 0) return Swal.fire('Error', 'Invalid discount value', 'error');
-    if (data.discountType === 'percentage' && data.discountValue > 99) return Swal.fire('Error', 'Percentage cannot exceed 99%', 'error');
-    if (data.discountType === 'fixed' && data.discountValue > 50000) return Swal.fire('Error', 'Fixed discount cannot exceed ₹50,000', 'error');
-    if (!data.startDate || !data.endDate) return Swal.fire('Error', 'Dates are required', 'error');
-    if (new Date(data.endDate) <= new Date(data.startDate)) return Swal.fire('Error', 'End date must be after start date', 'error');
-    if (new Date(data.endDate) < new Date().setHours(0, 0, 0, 0)) return Swal.fire('Error', 'End date cannot be in the past', 'error');
+    document.querySelectorAll('#couponForm .error-message').forEach(el => el.textContent = '');
+    let isValid = true;
+
+    if (!data.code) {
+        document.getElementById('couponCodeError').textContent = 'Coupon code is required';
+        isValid = false;
+    } else if (!/^[A-Z0-9]{3,20}$/.test(data.code)) {
+        document.getElementById('couponCodeError').textContent = 'Must be 3-20 alphanumeric characters';
+        isValid = false;
+    }
+
+    if (!data.description || data.description.trim() === '') {
+        document.getElementById('couponDescriptionError').textContent = 'Description is required';
+        isValid = false;
+    }
+
+    if (!data.discountValue || data.discountValue <= 0) {
+        document.getElementById('discountValueError').textContent = 'Invalid discount value';
+        isValid = false;
+    } else if (data.discountType === 'percentage' && data.discountValue > 99) {
+        document.getElementById('discountValueError').textContent = 'Percentage cannot exceed 99%';
+        isValid = false;
+    } else if (data.discountType === 'fixed' && data.discountValue > 50000) {
+        document.getElementById('discountValueError').textContent = 'Fixed discount cannot exceed ₹50,000';
+        isValid = false;
+    }
+
+    if (data.minPurchase === null || data.minPurchase === undefined || data.minPurchase < 0 || String(formData.get('minPurchase')).trim() === '') {
+        document.getElementById('minPurchaseError').textContent = 'Minimum purchase limit is required';
+        isValid = false;
+    }
+    if (formData.get('maxDiscount') && Number(formData.get('maxDiscount')) <= 0) {
+        document.getElementById('maxDiscountError').textContent = 'Max discount must be greater than 0';
+        isValid = false;
+    }
+
+    if (formData.get('usageLimit') !== null && formData.get('usageLimit').trim() !== '' && Number(formData.get('usageLimit')) <= 0) {
+        document.getElementById('usageLimitError').textContent = 'Usage limit must be at least 1';
+        isValid = false;
+    }
+
+    if (!formData.get('perUserLimit') || Number(formData.get('perUserLimit')) <= 0) {
+        document.getElementById('perUserLimitError').textContent = 'Per user limit must be at least 1';
+        isValid = false;
+    }
+
+    if (!data.startDate) {
+        document.getElementById('startDateError').textContent = 'Start date is required';
+        isValid = false;
+    }
+
+    if (!data.endDate) {
+        document.getElementById('endDateError').textContent = 'End date is required';
+        isValid = false;
+    } else if (data.startDate && new Date(data.endDate) <= new Date(data.startDate)) {
+        document.getElementById('endDateError').textContent = 'End date must be after start date';
+        isValid = false;
+    }
+
+    if (!isValid) {
+        Swal.fire({ icon: 'error', title: 'Invalid Input', text: 'Please fill all required fields correctly.', confirmButtonColor: '#002366' });
+        return;
+    }
+
+    if (couponId && form.dataset.originalValues) {
+        const currentValues = {
+            code: formData.get('code').toUpperCase().trim(),
+            description: formData.get('description') || '',
+            discountValue: String(formData.get('discountValue')),
+            minPurchase: String(formData.get('minPurchase') || 0),
+            maxDiscount: String(formData.get('maxDiscount') || ''),
+            usageLimit: String(formData.get('usageLimit') || ''),
+            perUserLimit: String(formData.get('perUserLimit') || 1),
+            startDate: formData.get('startDate'),
+            endDate: formData.get('endDate'),
+            discountType: formData.get('discountType')
+        };
+
+        if (JSON.stringify(currentValues) === form.dataset.originalValues) {
+            Swal.fire('No changes made', 'Please update at least one field before saving.', 'error');
+            return;
+        }
+    }
 
     try {
         const url = couponId ? '/api/admin/coupons/' + couponId : '/api/admin/coupons';
@@ -296,12 +384,12 @@ async function saveCoupon() {
         }
     } catch (error) {
         console.error('Error saving coupon:', error);
-        
+
         // Show backend validation error if available
-        const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error || 
-                          'Something went wrong. Please try again.';
-        
+        const errorMessage = error.response?.data?.message ||
+            error.response?.data?.error ||
+            'Something went wrong. Please try again.';
+
         Swal.fire({
             icon: 'error',
             title: 'Error',
@@ -335,19 +423,19 @@ async function toggleCouponStatus(id, event) {
         }
     } catch (error) {
         console.error('Error toggling coupon status:', error);
-        
+
         // Show backend validation error if available
-        const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error || 
-                          'Something went wrong. Please try again.';
-        
+        const errorMessage = error.response?.data?.message ||
+            error.response?.data?.error ||
+            'Something went wrong. Please try again.';
+
         Swal.fire({
             icon: 'error',
             title: 'Error',
             text: errorMessage,
             confirmButtonColor: '#ef4444'
         });
-        
+
         event.target.checked = !isActive;
     }
 }
@@ -375,12 +463,12 @@ async function deleteCoupon(id) {
             }
         } catch (error) {
             console.error('Error deleting coupon:', error);
-            
+
             // Show backend validation error if available
-            const errorMessage = error.response?.data?.message || 
-                              error.response?.data?.error || 
-                              'Something went wrong. Please try again.';
-            
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                'Something went wrong. Please try again.';
+
             Swal.fire({
                 icon: 'error',
                 title: 'Error',

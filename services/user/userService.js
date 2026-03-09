@@ -20,7 +20,16 @@ const getProfileData = async (userId) => {
     if (!userData) {
         throw new AppError(MESSAGE.NOT_FOUND || "User not found", STATUS.NOT_FOUND);
     }
-    return userData.toObject();
+
+    let referralCount = 0;
+    if (userData.referralCode) {
+        referralCount = await User.countDocuments({ referredBy: userData.referralCode });
+    }
+
+    const userObj = userData.toObject();
+    userObj.referralCount = referralCount;
+
+    return userObj;
 };
 
 const sendEmailOtp = async (email, userId) => {

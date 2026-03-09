@@ -309,6 +309,14 @@ function openEditModal(btn) {
     if (nameEl) nameEl.value = unescapeHtmlAttr(name);
     if (descEl) descEl.value = unescapeHtmlAttr(description);
     if (statusEl) statusEl.checked = status;
+
+    const form = document.getElementById("editCategoryForm");
+    if (form) {
+        form.dataset.originalName = unescapeHtmlAttr(name);
+        form.dataset.originalDescription = unescapeHtmlAttr(description);
+        form.dataset.originalStatus = status;
+    }
+
     if (modal) modal.classList.add("active");
 }
 
@@ -349,6 +357,20 @@ async function submitEditCategory(e) {
         hasError = true;
     }
     if (hasError) return;
+
+    const formEl = document.getElementById("editCategoryForm");
+    const originalName = formEl?.dataset.originalName || "";
+    const originalDescription = formEl?.dataset.originalDescription || "";
+    const originalStatus = formEl?.dataset.originalStatus === "true";
+
+    const currentName = payload.name.trim();
+    const currentDescription = payload.description.trim();
+    const currentStatus = payload.isListed === "on";
+
+    if (currentName === unescapeHtmlAttr(originalName) && currentDescription === unescapeHtmlAttr(originalDescription) && currentStatus === originalStatus) {
+        showError("No changes made. Please update at least one field before saving.");
+        return;
+    }
 
     try {
         const { data: json } = await axios.patch(`/api/admin/categories/update/${id}`, payload);

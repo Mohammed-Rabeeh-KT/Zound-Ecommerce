@@ -94,6 +94,7 @@ router.post("/reviews/bulk-reject", reviewManagementApiController.bulkReject);
 router.get("/banners", bannerManagementApiController.getBanners);
 router.get("/banners/active", bannerManagementApiController.getActiveBanners);
 router.get("/banners/stats", bannerManagementApiController.getBannerStats);
+router.get("/banners/products", bannerManagementApiController.getProductsForBanner);
 router.get("/banners/:id", bannerManagementApiController.getBannerById);
 router.post("/banners", bannerManagementApiController.createBanner);
 router.put("/banners/:id", bannerManagementApiController.updateBanner);

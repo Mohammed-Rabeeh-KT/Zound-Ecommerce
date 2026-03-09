@@ -113,42 +113,63 @@ async function submitOffer(type) {
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
 
-    // Basic validation
-    if (!data.name || !data.discountValue || !data.startOn || !data.expireOn) {
-        Swal.fire({ icon: 'error', title: 'Missing Fields', text: 'Please fill all required fields.', confirmButtonColor: '#002366' });
-        return;
+    // Clear previous errors
+    document.querySelectorAll(`#add${type.charAt(0).toUpperCase() + type.slice(1)}OfferForm .error-message`).forEach(el => el.textContent = '');
+
+    let isValid = true;
+
+    // Check Name
+    if (!data.name || data.name.trim() === '') {
+        document.getElementById(`${type}NameError`).textContent = 'Offer Name is required';
+        isValid = false;
     }
 
-    // Type-specific validation
+    // Type-specific Check
     if (type === 'product' && !data.productId) {
-        Swal.fire({ icon: 'error', title: 'Missing Product', text: 'Please select a product.', confirmButtonColor: '#002366' });
-        return;
+        document.getElementById(`productIdError`).textContent = 'Please select a product';
+        isValid = false;
     }
     if (type === 'category' && !data.categoryId) {
-        Swal.fire({ icon: 'error', title: 'Missing Category', text: 'Please select a category.', confirmButtonColor: '#002366' });
-        return;
+        document.getElementById(`categoryIdError`).textContent = 'Please select a category';
+        isValid = false;
     }
     if (type === 'brand' && !data.brandId) {
-        Swal.fire({ icon: 'error', title: 'Missing Brand', text: 'Please select a brand.', confirmButtonColor: '#002366' });
-        return;
+        document.getElementById(`brandIdError`).textContent = 'Please select a brand';
+        isValid = false;
     }
 
-    // Date validation
-    const startDate = new Date(data.startOn);
-    const endDate = new Date(data.expireOn);
-    if (endDate <= startDate) {
-        Swal.fire({ icon: 'error', title: 'Invalid Dates', text: 'End date must be after start date.', confirmButtonColor: '#002366' });
-        return;
+    // Start Date Check
+    if (!data.startOn) {
+        document.getElementById(`${type}StartError`).textContent = 'Start Date is required';
+        isValid = false;
     }
 
-    // Discount validation
-    const discountValue = parseFloat(data.discountValue);
-    if (isNaN(discountValue) || discountValue < 1) {
-        Swal.fire({ icon: 'error', title: 'Invalid Discount', text: 'Discount value must be at least 1.', confirmButtonColor: '#002366' });
-        return;
+    // End Date Check
+    if (!data.expireOn) {
+        document.getElementById(`${type}EndError`).textContent = 'End Date is required';
+        isValid = false;
+    } else if (data.startOn && new Date(data.expireOn) <= new Date(data.startOn)) {
+        document.getElementById(`${type}EndError`).textContent = 'End date must be after start date';
+        isValid = false;
     }
-    if (data.discountType === 'percentage' && discountValue > 99) {
-        Swal.fire({ icon: 'error', title: 'Invalid Discount', text: 'Percentage discount cannot exceed 99%.', confirmButtonColor: '#002366' });
+
+    // Discount Check
+    if (!data.discountValue || data.discountValue.trim() === '') {
+        document.getElementById(`${type}DiscountError`).textContent = 'Discount value is required';
+        isValid = false;
+    } else {
+        const discountValue = parseFloat(data.discountValue);
+        if (isNaN(discountValue) || discountValue < 1) {
+            document.getElementById(`${type}DiscountError`).textContent = 'Discount value must be at least 1';
+            isValid = false;
+        } else if (data.discountType === 'percentage' && discountValue > 99) {
+            document.getElementById(`${type}DiscountError`).textContent = 'Percentage discount cannot exceed 99%';
+            isValid = false;
+        }
+    }
+
+    if (!isValid) {
+        Swal.fire({ icon: 'error', title: 'Invalid Input', text: 'Please fill all required fields correctly.', confirmButtonColor: '#002366' });
         return;
     }
 
@@ -171,7 +192,8 @@ async function submitOffer(type) {
             Swal.fire({ icon: 'error', title: 'Error', text: result.message, confirmButtonColor: '#ef4444' });
         }
     } catch (error) {
-        Swal.fire({ icon: 'error', title: 'Error', text: 'Something went wrong. Please try again.', confirmButtonColor: '#ef4444' });
+        const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Something went wrong. Please try again.';
+        Swal.fire({ icon: 'error', title: 'Error', text: errorMessage, confirmButtonColor: '#ef4444' });
     }
 }
 
@@ -418,6 +440,15 @@ function openEditModal(offerId, type, name, discountType, discountValue, startOn
     document.getElementById('editDiscountValue').value = discountValue;
     document.getElementById('editStartDate').value = startOn;
     document.getElementById('editEndDate').value = expireOn;
+
+    document.getElementById('editOfferForm').dataset.originalValues = JSON.stringify({
+        name: name,
+        discountType: discountType,
+        discountValue: String(discountValue),
+        startOn: startOn,
+        expireOn: expireOn
+    });
+
     // Set discount type button active state
     selectEditDiscountType(discountType);
     // Open modal
@@ -447,26 +478,62 @@ async function submitEditOffer() {
     const form = document.getElementById('editOfferForm');
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
-    // Validation
-    if (!data.name || !data.discountValue || !data.startOn || !data.expireOn) {
-        Swal.fire({ icon: 'error', title: 'Missing Fields', text: 'Please fill all required fields.', confirmButtonColor: '#002366' });
+    // Clear previous errors
+    document.querySelectorAll('#editOfferForm .error-message').forEach(el => el.textContent = '');
+
+    let isValid = true;
+
+    if (!data.name || data.name.trim() === '') {
+        document.getElementById(`editNameError`).textContent = 'Offer Name is required';
+        isValid = false;
+    }
+
+    if (!data.startOn) {
+        document.getElementById(`editStartError`).textContent = 'Start Date is required';
+        isValid = false;
+    }
+
+    if (!data.expireOn) {
+        document.getElementById(`editEndError`).textContent = 'End Date is required';
+        isValid = false;
+    } else if (data.startOn && new Date(data.expireOn) <= new Date(data.startOn)) {
+        document.getElementById(`editEndError`).textContent = 'End date must be after start date';
+        isValid = false;
+    }
+
+    if (!data.discountValue || data.discountValue.trim() === '') {
+        document.getElementById(`editDiscountError`).textContent = 'Discount value is required';
+        isValid = false;
+    } else {
+        const discountValue = parseFloat(data.discountValue);
+        if (isNaN(discountValue) || discountValue < 1) {
+            document.getElementById(`editDiscountError`).textContent = 'Discount value must be at least 1';
+            isValid = false;
+        } else if (data.discountType === 'percentage' && discountValue > 99) {
+            document.getElementById(`editDiscountError`).textContent = 'Percentage cannot exceed 99%';
+            isValid = false;
+        }
+    }
+
+    if (!isValid) {
+        Swal.fire({ icon: 'error', title: 'Invalid Input', text: 'Please fill all required fields correctly.', confirmButtonColor: '#002366' });
         return;
     }
-    const startDate = new Date(data.startOn);
-    const endDate = new Date(data.expireOn);
-    if (endDate <= startDate) {
-        Swal.fire({ icon: 'error', title: 'Invalid Dates', text: 'End date must be after start date.', confirmButtonColor: '#002366' });
-        return;
+
+    if (form.dataset.originalValues) {
+        const currentValues = {
+            name: data.name,
+            discountType: data.discountType,
+            discountValue: String(data.discountValue),
+            startOn: data.startOn,
+            expireOn: data.expireOn
+        };
+        if (JSON.stringify(currentValues) === form.dataset.originalValues) {
+            Swal.fire('No changes made', 'Please update at least one field before saving.', 'error');
+            return;
+        }
     }
-    const discountValue = parseFloat(data.discountValue);
-    if (isNaN(discountValue) || discountValue < 1) {
-        Swal.fire({ icon: 'error', title: 'Invalid Discount', text: 'Discount value must be at least 1.', confirmButtonColor: '#002366' });
-        return;
-    }
-    if (data.discountType === 'percentage' && discountValue > 99) {
-        Swal.fire({ icon: 'error', title: 'Invalid Discount', text: 'Percentage cannot exceed 99%.', confirmButtonColor: '#002366' });
-        return;
-    }
+
     try {
         const response = await axios.put(`/api/admin/offers/${data.offerId}`, data);
         const result = response.data;
@@ -484,6 +551,7 @@ async function submitEditOffer() {
             Swal.fire({ icon: 'error', title: 'Error', text: result.message, confirmButtonColor: '#ef4444' });
         }
     } catch (error) {
-        Swal.fire({ icon: 'error', title: 'Error', text: 'Something went wrong. Please try again.', confirmButtonColor: '#ef4444' });
+        const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Something went wrong. Please try again.';
+        Swal.fire({ icon: 'error', title: 'Error', text: errorMessage, confirmButtonColor: '#ef4444' });
     }
 }

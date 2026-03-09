@@ -144,6 +144,20 @@ const bannerManagementApiController = {
         } catch (error) {
             next(error);
         }
+    },
+
+    // Get products for banner
+    async getProductsForBanner(req, res, next) {
+        try {
+            const products = await bannerManagementService.getProductsForBanner();
+
+            res.status(200).json({
+                success: true,
+                data: products
+            });
+        } catch (error) {
+            next(error);
+        }
     }
 };
 

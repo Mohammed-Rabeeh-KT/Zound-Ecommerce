@@ -9,49 +9,47 @@ class BannerManagement {
 
     init() {
         this.loadBanners();
-        this.loadStats();
         this.loadProducts();
         this.setupEventListeners();
     }
 
     setupEventListeners() {
-        // Search functionality
-        const searchForm = document.getElementById('searchForm');
-        if (searchForm) {
-            searchForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.handleSearch();
-            });
+        // Status filter
+        const statusSelect = document.getElementById('statusSelect');
+        if (statusSelect) {
+            statusSelect.addEventListener('change', () => this.handleSearch());
         }
 
-        // Clear search
-        const clearIcon = document.getElementById('clearSearchIcon');
-        if (clearIcon) {
-            clearIcon.addEventListener('click', () => {
-                const searchInput = document.querySelector('.search-input');
-                if (searchInput) {
-                    searchInput.value = '';
-                    clearIcon.style.display = 'none';
+        // Search functionality is mostly handled by bannerSearch.js, but if we need to link it:
+        const searchInput = document.getElementById('searchInput');
+        const searchForm = document.getElementById('searchForm'); // Note: we removed form in EJS, let's catch Enter key
+        if (searchInput) {
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.handleSearch();
                 }
             });
-        }
 
-        // Search input change
-        const searchInput = document.querySelector('.search-input');
-        if (searchInput) {
             searchInput.addEventListener('input', (e) => {
                 const clearIcon = document.getElementById('clearSearchIcon');
                 if (clearIcon) {
-                    clearIcon.style.display = e.target.value ? 'block' : 'none';
+                    clearIcon.style.display = e.target.value.trim() ? 'block' : 'none';
                 }
             });
         }
 
-        // Filter changes
-        const filterSelects = document.querySelectorAll('.filter-select');
-        filterSelects.forEach(select => {
-            select.addEventListener('change', () => this.handleSearch());
-        });
+        const clearIcon = document.getElementById('clearSearchIcon');
+        if (clearIcon) {
+            clearIcon.addEventListener('click', () => {
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.value = '';
+                    clearIcon.style.display = 'none';
+                    this.handleSearch();
+                }
+            });
+        }
     }
 
     async loadBanners() {
@@ -62,72 +60,29 @@ class BannerManagement {
 
             if (data.success) {
                 this.banners = data.data.banners;
-                this.renderBanners(data.data.banners);
+                this.renderBanners(data.data.banners, params);
                 this.renderPagination(data.data.pagination);
             }
         } catch (error) {
             console.error('Error loading banners:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Failed to load banners. Please try again.',
-                confirmButtonColor: '#002366'
-            });
+            Swal.fire('Error', 'Failed to load banners.', 'error');
         }
     }
 
-    async loadStats() {
-        try {
-            const response = await fetch('/api/admin/banners/stats');
-            const data = await response.json();
 
-            if (data.success) {
-                this.stats = data.data;
-                this.renderStats();
-            }
-        } catch (error) {
-            console.error('Error loading stats:', error);
-        }
-    }
 
-    async loadProducts() {
-        try {
-            const response = await fetch('/api/admin/banners/products');
-            const data = await response.json();
-
-            if (data.success) {
-                this.populateProductSelect(data.data);
-            }
-        } catch (error) {
-            console.error('Error loading products:', error);
-        }
-    }
-
-    populateProductSelect(products) {
-        const select = document.getElementById('productId');
-        if (!select) return;
-
-        // Clear existing options except the first one
-        while (select.children.length > 1) {
-            select.removeChild(select.lastChild);
-        }
-
-        // Add product options
-        products.forEach(product => {
-            const option = document.createElement('option');
-            option.value = product._id;
-            option.textContent = product.name;
-            select.appendChild(option);
-        });
-    }
-
-    renderBanners(banners) {
+    renderBanners(banners, params) {
         const grid = document.getElementById('bannersGrid');
         if (!grid) return;
 
         grid.innerHTML = '';
 
-        banners.forEach(banner => {
+        if (banners.length === 0) {
+            grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #6c6c6c; background: white; border-radius: 12px; border: 1px solid #e3e6eb;">No banners found.</div>`;
+            return;
+        }
+
+        banners.forEach((banner) => {
             const card = this.createBannerCard(banner);
             grid.appendChild(card);
         });
@@ -136,139 +91,136 @@ class BannerManagement {
     createBannerCard(banner) {
         const card = document.createElement('div');
         card.className = 'banner-card';
+
+        const statusClass = banner.isActive ? 'status-active' : 'status-inactive';
+        const statusText = banner.isActive ? 'Active' : 'Inactive';
+        const startDate = banner.startDate ? new Date(banner.startDate).toLocaleDateString() : '--';
+        const endDate = banner.endDate ? new Date(banner.endDate).toLocaleDateString() : '--';
+
         card.innerHTML = `
             <div class="banner-image-container">
-                ${banner.image ? 
-                    `<img src="${banner.image}" alt="${banner.title}" class="banner-image">` : 
-                    '<div class="banner-image placeholder">No Image</div>'
-                }
-            </div>
-            <div class="banner-content">
-                <h3 class="banner-title">${banner.title}</h3>
-                ${banner.subtitle ? `<p class="banner-subtitle">${banner.subtitle}</p>` : ''}
-                ${banner.description ? `<p class="banner-description">${banner.description}</p>` : ''}
-                <div class="banner-meta">
-                    <span class="banner-status ${banner.isActive ? 'active' : 'inactive'}">
-                        ${banner.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                    <span class="banner-order">Order: ${banner.order}</span>
+                <img src="${banner.image || '/images/placeholder.png'}" alt="Banner" class="banner-image" onerror="this.src='/images/placeholder.png'">
+                <div class="banner-status-badge">
+                    <span class="status-badge ${statusClass}">${statusText}</span>
                 </div>
-                ${banner.product ? 
-                    `<div class="banner-product">Product: ${banner.product.name}</div>` : ''
-                }
-                <div class="banner-actions">
-                    <button class="action-btn edit" onclick="editBanner('${banner._id}')">Edit</button>
-                    <button class="action-btn toggle" onclick="toggleBanner('${banner._id}')">
-                        ${banner.isActive ? 'Deactivate' : 'Activate'}
+            </div>
+            
+            <div class="banner-content">
+                <div class="banner-header">
+                    <h3 class="banner-title" title="${banner.title}">${banner.title}</h3>
+                </div>
+                ${banner.subtitle ? `<p class="banner-subtitle">${banner.subtitle}</p>` : ''}
+                
+                <div class="banner-details">
+                    <div class="detail-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        <span>${startDate} — ${endDate}</span>
+                    </div>
+                    <div class="detail-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                        <span>Display Order: <strong>${banner.order || 0}</strong></span>
+                    </div>
+                </div>
+
+                <div class="card-actions">
+                    <button class="action-btn edit-btn" title="Edit" onclick="editBanner('${banner._id}')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                        Edit
                     </button>
-                    <button class="action-btn delete" onclick="deleteBanner('${banner._id}')">Delete</button>
+                    ${banner.isActive ? `
+                        <button class="action-btn toggle-btn inactive" title="Deactivate" onclick="openToggleModal('${banner._id}', '${banner.title.replace(/'/g, "\\'")}', 'deactivate')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="15"></line><line x1="15" y1="9" x2="9" y2="15"></line></svg>
+                        </button>
+                    ` : `
+                        <button class="action-btn toggle-btn active" title="Activate" onclick="openToggleModal('${banner._id}', '${banner.title.replace(/'/g, "\\'")}', 'activate')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        </button>
+                    `}
+                    <button class="action-btn delete-btn" title="Delete" onclick="deleteBanner('${banner._id}')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
                 </div>
             </div>
         `;
-
         return card;
     }
 
-    renderStats() {
-        document.getElementById('totalCount').textContent = this.stats.total || 0;
-        document.getElementById('activeCount').textContent = this.stats.active || 0;
-        document.getElementById('inactiveCount').textContent = this.stats.inactive || 0;
-        document.getElementById('withProductCount').textContent = this.stats.withProduct || 0;
-    }
-
     renderPagination(pagination) {
-        const paginationDiv = document.getElementById('pagination');
-        if (!paginationDiv) return;
+        const paginationContainer = document.getElementById('paginationContainer');
+        if (!paginationContainer) return;
 
         let html = '';
-        
-        // Previous button
         if (pagination.current > 1) {
-            html += `<button onclick="goToPage(${pagination.current - 1})">Previous</button>`;
+            html += `<button class="page-btn" onclick="goToPage(${pagination.current - 1})">Prev</button>`;
         }
 
-        // Page numbers
         for (let i = 1; i <= pagination.pages; i++) {
-            const active = i === pagination.current ? 'active' : '';
-            html += `<button class="${active}" onclick="goToPage(${i})">${i}</button>`;
+            const active = (i === pagination.current) ? 'active' : '';
+            html += `<button class="page-btn ${active}" onclick="goToPage(${i})">${i}</button>`;
         }
 
-        // Next button
         if (pagination.current < pagination.pages) {
-            html += `<button onclick="goToPage(${pagination.current + 1})">Next</button>`;
+            html += `<button class="page-btn" onclick="goToPage(${pagination.current + 1})">Next</button>`;
         }
 
-        paginationDiv.innerHTML = html;
+        paginationContainer.innerHTML = html;
     }
 
     handleSearch() {
-        const form = document.getElementById('searchForm');
-        if (form) {
-            const formData = new FormData(form);
-            const params = new URLSearchParams(formData);
-            window.location.href = `/admin/banners?${params.toString()}`;
-        }
-    }
+        const searchInput = document.getElementById('searchInput');
+        const statusSelect = document.getElementById('statusSelect');
 
-    showToast(message, type = 'info') {
-        // Create toast element
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        toast.textContent = message;
-        toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#007bff'};
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            z-index: 10000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
-        `;
+        const params = new URLSearchParams(window.location.search);
 
-        document.body.appendChild(toast);
+        if (searchInput && searchInput.value) params.set('search', searchInput.value);
+        else params.delete('search');
 
-        // Animate in
-        setTimeout(() => {
-            toast.style.transform = 'translateX(0)';
-        }, 100);
+        if (statusSelect && statusSelect.value) params.set('isActive', statusSelect.value);
+        else params.delete('isActive');
 
-        // Remove after 3 seconds
-        setTimeout(() => {
-            toast.style.transform = 'translateX(100%)';
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.parentNode.removeChild(toast);
-                }
-            }, 300);
-        }, 3000);
+        params.set('page', '1');
+
+        window.location.href = `/admin/banners?${params.toString()}`;
     }
 }
 
-// Global functions for onclick handlers
+// Global scope functions for onclick
+window.goToPage = (page) => {
+    const url = new URL(window.location);
+    url.searchParams.set('page', page);
+    window.location.href = url.toString();
+};
+
 window.openAddModal = () => {
     const modal = document.getElementById('bannerModal');
     const form = document.getElementById('bannerForm');
-    
+
     if (modal && form) {
-        document.getElementById('modalTitle').textContent = 'Add Banner';
+        document.getElementById('modalTitle').innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1e3a5f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px;">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg> Add Banner
+        `;
         form.reset();
         document.getElementById('bannerId').value = '';
-        
-        // Set default values
+
+        // Default values
         document.getElementById('buttonText').value = 'Shop Now';
-        document.getElementById('isActive').value = 'true';
+        document.getElementById('isActive').checked = true;
         document.getElementById('order').value = '0';
-        
-        // Set current date as start date
+
         const now = new Date();
         document.getElementById('startDate').value = now.toISOString().slice(0, 16);
-        
-        modal.style.display = 'block';
+
+        modal.classList.add('active');
+        clearErrors();
     }
+};
+
+window.closeModal = () => {
+    const modal = document.getElementById('bannerModal');
+    if (modal) modal.classList.remove('active');
 };
 
 window.editBanner = async (bannerId) => {
@@ -279,25 +231,143 @@ window.editBanner = async (bannerId) => {
         if (data.success) {
             showEditModal(data.data);
         } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: data.message || 'Failed to load banner details',
-                confirmButtonColor: '#ef4444'
-            });
+            Swal.fire('Error', data.message || 'Failed to load banner details', 'error');
         }
     } catch (error) {
-        console.error('Error editing banner:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Failed to load banner details. Please try again.',
-            confirmButtonColor: '#ef4444'
-        });
+        console.error('Error:', error);
+        Swal.fire('Error', 'Failed to load banner details. Please try again.', 'error');
     }
 };
 
-window.toggleBanner = async (bannerId) => {
+window.showEditModal = (banner) => {
+    const modal = document.getElementById('bannerModal');
+    const form = document.getElementById('bannerForm');
+
+    if (modal && form) {
+        document.getElementById('modalTitle').innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#007BFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px;">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg> Edit Banner
+        `;
+        document.getElementById('bannerId').value = banner._id;
+        document.getElementById('title').value = banner.title || '';
+        document.getElementById('subtitle').value = banner.subtitle || '';
+        document.getElementById('description').value = banner.description || '';
+        document.getElementById('image').value = banner.image || '';
+        document.getElementById('buttonText').value = banner.buttonText || 'Shop Now';
+        document.getElementById('buttonLink').value = banner.buttonLink || '';
+
+        document.getElementById('isActive').checked = banner.isActive;
+        document.getElementById('order').value = banner.order || 0;
+
+        if (banner.startDate) {
+            document.getElementById('startDate').value = new Date(banner.startDate).toISOString().slice(0, 16);
+        }
+        if (banner.endDate) {
+            document.getElementById('endDate').value = new Date(banner.endDate).toISOString().slice(0, 16);
+        }
+
+        form.dataset.originalValues = JSON.stringify({
+            title: document.getElementById('title').value,
+            subtitle: document.getElementById('subtitle').value,
+            description: document.getElementById('description').value,
+            image: document.getElementById('image').value,
+            buttonText: document.getElementById('buttonText').value,
+            buttonLink: document.getElementById('buttonLink').value,
+            isActive: document.getElementById('isActive').checked,
+            order: document.getElementById('order').value,
+            startDate: document.getElementById('startDate').value,
+            endDate: document.getElementById('endDate').value
+        });
+
+        modal.classList.add('active');
+        clearErrors();
+    }
+};
+
+window.deleteBanner = async (bannerId) => {
+    const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (result.isConfirmed) {
+        try {
+            const response = await fetch(`/api/admin/banners/${bannerId}`, {
+                method: 'DELETE'
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Deleted!',
+                    text: 'Banner has been deleted.',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => location.reload());
+            } else {
+                Swal.fire('Error!', data.message || 'Failed to delete banner', 'error');
+            }
+        } catch (error) {
+            Swal.fire('Error!', 'An error occurred', 'error');
+        }
+    }
+};
+
+window.openToggleModal = (bannerId, title, action) => {
+    const modal = document.getElementById('toggleModal');
+    if (!modal) return;
+
+    document.getElementById('toggleBannerId').value = bannerId;
+    document.getElementById('toggleModalAction').textContent = action;
+
+    // Set icon & texts based on action
+    const btn = document.getElementById('confirmToggleBtn');
+    const iconContainer = document.getElementById('toggleModalIcon');
+    const modalTitle = document.getElementById('toggleModalTitle');
+
+    if (action === 'activate') {
+        btn.textContent = 'Activate';
+        btn.classList.remove('btn-delete');
+        btn.style.backgroundColor = '#28a745';
+        modalTitle.textContent = "Activate Banner";
+        iconContainer.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#28a745" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+        `;
+    } else {
+        btn.textContent = 'Deactivate';
+        btn.classList.add('btn-delete');
+        btn.style.backgroundColor = '';
+        modalTitle.textContent = "Deactivate Banner";
+        iconContainer.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#DC3545" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+        `;
+    }
+
+    modal.classList.add('active');
+};
+
+window.closeToggleModal = () => {
+    const modal = document.getElementById('toggleModal');
+    if (modal) modal.classList.remove('active');
+};
+
+window.confirmToggle = async () => {
+    const bannerId = document.getElementById('toggleBannerId').value;
     try {
         const response = await fetch(`/api/admin/banners/${bannerId}/toggle`, {
             method: 'PATCH'
@@ -305,6 +375,7 @@ window.toggleBanner = async (bannerId) => {
         const data = await response.json();
 
         if (data.success) {
+            closeToggleModal();
             Swal.fire({
                 icon: 'success',
                 title: 'Success',
@@ -313,158 +384,41 @@ window.toggleBanner = async (bannerId) => {
                 showConfirmButton: false
             }).then(() => location.reload());
         } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: data.message || 'Failed to toggle banner status',
-                confirmButtonColor: '#ef4444'
-            });
+            Swal.fire('Error', data.message || 'Failed to toggle status', 'error');
         }
     } catch (error) {
-        console.error('Error toggling banner:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Failed to toggle banner status. Please try again.',
-            confirmButtonColor: '#ef4444'
-        });
+        Swal.fire('Error', 'An error occurred', 'error');
     }
 };
 
-window.deleteBanner = async (bannerId) => {
-    if (!confirm('Are you sure you want to delete this banner?')) return;
-
-    try {
-        const response = await fetch(`/api/admin/banners/${bannerId}`, {
-            method: 'DELETE'
-        });
-        const data = await response.json();
-
-        if (data.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Deleted',
-                text: 'Banner deleted successfully',
-                timer: 1500,
-                showConfirmButton: false
-            }).then(() => location.reload());
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: data.message || 'Failed to delete banner',
-                confirmButtonColor: '#ef4444'
-            });
-        }
-    } catch (error) {
-        console.error('Error deleting banner:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Failed to delete banner. Please try again.',
-            confirmButtonColor: '#ef4444'
-        });
-    }
-};
-
-window.goToPage = (page) => {
-    const url = new URL(window.location);
-    url.searchParams.set('page', page);
-    window.location.href = url.toString();
-};
-
-window.showEditModal = (banner) => {
-    const modal = document.getElementById('bannerModal');
-    const form = document.getElementById('bannerForm');
-    
-    if (modal && form) {
-        document.getElementById('modalTitle').textContent = 'Edit Banner';
-        document.getElementById('bannerId').value = banner._id;
-        document.getElementById('title').value = banner.title || '';
-        document.getElementById('subtitle').value = banner.subtitle || '';
-        document.getElementById('description').value = banner.description || '';
-        document.getElementById('image').value = banner.image || '';
-        document.getElementById('productId').value = banner.product?._id || '';
-        document.getElementById('buttonText').value = banner.buttonText || 'Shop Now';
-        document.getElementById('buttonLink').value = banner.buttonLink || '';
-        document.getElementById('isActive').value = banner.isActive.toString();
-        document.getElementById('order').value = banner.order || 0;
-        
-        if (banner.startDate) {
-            document.getElementById('startDate').value = new Date(banner.startDate).toISOString().slice(0, 16);
-        }
-        
-        if (banner.endDate) {
-            document.getElementById('endDate').value = new Date(banner.endDate).toISOString().slice(0, 16);
-        }
-        
-        updatePreview();
-        modal.style.display = 'block';
-    }
-};
-
-window.closeModal = () => {
-    const modal = document.getElementById('bannerModal');
-    if (modal) modal.style.display = 'none';
-};
-
-window.closeDeleteModal = () => {
-    const modal = document.getElementById('deleteModal');
-    if (modal) modal.style.display = 'none';
-};
-
-window.confirmDelete = () => {
-    const bannerId = document.getElementById('deleteBannerId').value;
-    deleteBanner(bannerId);
-    closeDeleteModal();
-};
-
-window.updatePreview = () => {
-    const title = document.getElementById('title').value;
-    const subtitle = document.getElementById('subtitle').value;
-    const image = document.getElementById('image').value;
-    const buttonText = document.getElementById('buttonText').value;
-    
-    const previewTitle = document.getElementById('previewTitle');
-    const previewSubtitle = document.getElementById('previewSubtitle');
-    const previewImage = document.getElementById('previewImage');
-    const previewButton = document.getElementById('previewButton');
-    
-    if (previewTitle) previewTitle.textContent = title || 'Banner Title';
-    if (previewSubtitle) previewSubtitle.textContent = subtitle || 'Subtitle';
-    if (previewImage) {
-        if (image) {
-            previewImage.src = image;
-            previewImage.style.display = 'block';
-        } else {
-            previewImage.style.display = 'none';
-        }
-    }
-    if (previewButton) previewButton.textContent = buttonText || 'Shop Now';
-};
-
-// Handle form submission
+// Form handle setup
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('bannerForm');
     if (form) {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            // Clear previous errors
+
             clearErrors();
-            
+
             const bannerId = document.getElementById('bannerId').value;
             const formData = new FormData(form);
             const data = Object.fromEntries(formData);
-            
-            // Validation
+
+            // Fix Checkbox for isActive since FormData will map 'on' or nothing.
+            data.isActive = document.getElementById('isActive').checked;
+
             let isValid = true;
-            
+
             if (!data.title || data.title.trim().length < 3) {
                 showError('titleError', 'Title must be at least 3 characters');
                 isValid = false;
             }
-            
+
+            if (!data.subtitle || data.subtitle.trim() === '') {
+                showError('subtitleError', 'Subtitle is required');
+                isValid = false;
+            }
+
             if (!data.image || data.image.trim().length === 0) {
                 showError('imageError', 'Image URL is required');
                 isValid = false;
@@ -472,25 +426,78 @@ document.addEventListener('DOMContentLoaded', () => {
                 showError('imageError', 'Please enter a valid URL');
                 isValid = false;
             }
-            
-            if (!isValid) return;
-            
+
+            if (!data.buttonText || data.buttonText.trim() === '') {
+                showError('buttonTextError', 'Button Text is required');
+                isValid = false;
+            }
+
+            if (!data.buttonLink || data.buttonLink.trim() === '') {
+                showError('buttonLinkError', 'Button Link is required');
+                isValid = false;
+            }
+
+            if (!data.startDate) {
+                showError('startDateError', 'Start Date is required');
+                isValid = false;
+            }
+
+            if (!data.endDate) {
+                showError('endDateError', 'End Date is required');
+                isValid = false;
+            } else if (new Date(data.endDate) <= new Date(data.startDate)) {
+                showError('endDateError', 'End Date must be after Start Date');
+                isValid = false;
+            }
+
+            const orderNum = parseInt(data.order);
+            if (isNaN(orderNum) || orderNum < 0) {
+                showError('orderError', 'Valid display order is required');
+                isValid = false;
+            }
+
+            if (!data.description || data.description.trim() === '') {
+                showError('descriptionError', 'Description is required');
+                isValid = false;
+            }
+
+            if (!isValid) {
+                Swal.fire('Error', 'Please fill all required fields correctly.', 'error');
+                return;
+            }
+
+            if (bannerId && form.dataset.originalValues) {
+                const currentValues = {
+                    title: document.getElementById('title').value,
+                    subtitle: document.getElementById('subtitle').value,
+                    description: document.getElementById('description').value,
+                    image: document.getElementById('image').value,
+                    buttonText: document.getElementById('buttonText').value,
+                    buttonLink: document.getElementById('buttonLink').value,
+                    isActive: document.getElementById('isActive').checked,
+                    order: document.getElementById('order').value,
+                    startDate: document.getElementById('startDate').value,
+                    endDate: document.getElementById('endDate').value
+                };
+
+                if (JSON.stringify(currentValues) === form.dataset.originalValues) {
+                    Swal.fire('No changes made', 'Please update at least one field before saving.', 'error');
+                    return;
+                }
+            }
+
             try {
-                const url = bannerId ? 
-                    `/api/admin/banners/${bannerId}` : 
-                    '/api/admin/banners';
+                const url = bannerId ? `/api/admin/banners/${bannerId}` : '/api/admin/banners';
                 const method = bannerId ? 'PUT' : 'POST';
-                
+
                 const response = await fetch(url, {
                     method: method,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     Swal.fire({
                         icon: 'success',
@@ -499,83 +506,29 @@ document.addEventListener('DOMContentLoaded', () => {
                         timer: 1500,
                         showConfirmButton: false
                     }).then(() => {
+                        form.reset();
                         closeModal();
                         location.reload();
                     });
                 } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: result.message || 'Failed to save banner',
-                        confirmButtonColor: '#ef4444'
-                    });
+                    Swal.fire('Error', result.message || 'Failed to save banner', 'error');
                 }
             } catch (error) {
-                console.error('Error saving banner:', error);
-                
-                // Show backend validation error if available
-                const errorMessage = error.response?.data?.message || 
-                                  error.response?.data?.error || 
-                                  'Failed to save banner. Please try again.';
-                
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: errorMessage,
-                    confirmButtonColor: '#ef4444'
-                });
-            }
-        });
-
-        // Real-time preview updates
-        const inputs = ['title', 'subtitle', 'image', 'buttonText'];
-        inputs.forEach(id => {
-            const input = document.getElementById(id);
-            if (input) {
-                input.addEventListener('input', () => {
-                    updatePreview();
-                    clearError(id + 'Error');
-                });
+                Swal.fire('Error', 'Failed to save banner. Please try again.', 'error');
             }
         });
     }
 
-    // Initialize banner management
     new BannerManagement();
 });
 
-// Helper functions for validation
 function showError(elementId, message) {
     const errorElement = document.getElementById(elementId);
-    if (errorElement) {
-        errorElement.textContent = message;
-        const formGroup = errorElement.closest('.form-group');
-        if (formGroup) {
-            formGroup.classList.add('error');
-        }
-    }
-}
-
-function clearError(elementId) {
-    const errorElement = document.getElementById(elementId);
-    if (errorElement) {
-        errorElement.textContent = '';
-        const formGroup = errorElement.closest('.form-group');
-        if (formGroup) {
-            formGroup.classList.remove('error');
-        }
-    }
+    if (errorElement) errorElement.textContent = message;
 }
 
 function clearErrors() {
-    const errorElements = document.querySelectorAll('.error-message');
-    errorElements.forEach(element => {
-        element.textContent = '';
-        const formGroup = element.closest('.form-group');
-        if (formGroup) {
-            formGroup.classList.remove('error');
-        }
-    });
+    document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
 }
 
 function isValidUrl(string) {

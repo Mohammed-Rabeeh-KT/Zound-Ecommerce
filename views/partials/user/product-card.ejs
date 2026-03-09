@@ -5,92 +5,119 @@
       <img src="<%= product.listingImage %>" alt="<%= product.productName %>" class="product-image">
 
       <!-- BADGES -->
-      <% if (product.featured) { %>
-        <span class="badge badge-featured">Featured</span>
-        <% } %>
+      <% if (product.primaryVariant && product.primaryVariant.stock <=0) { %>
+        <span class="badge" style="top:12px; left:12px; background: #ef4444; color: #FFFFFF;">Out of Stock</span>
+        <% } else if (product.featured) { %>
+          <span class="badge badge-featured">Featured</span>
+          <% } %>
 
-          <!-- OFFER BADGE - Upper Right (Shows Total Discount %) -->
-          <% if (product.offer && product.offer.hasOffer) { %>
-            <span class="badge badge-offer">
-              <%= product.offer.totalDiscountPercent %>% OFF
-            </span>
-            <% } else if (product.primaryVariant && product.primaryVariant.basePrice> product.primaryVariant.salePrice)
-              { %>
-              <span class="badge badge-sale">
-                <%= Math.round(((product.primaryVariant.basePrice - product.primaryVariant.salePrice) /
-                  product.primaryVariant.basePrice) * 100) %>% OFF
+            <!-- OFFER BADGE - Upper Right (Shows Total Discount %) -->
+            <% if (product.offer && product.offer.hasOffer) { %>
+              <span class="badge badge-offer">
+                <%= product.offer.totalDiscountPercent %>% OFF
               </span>
-              <% } %>
+              <% } else if (product.primaryVariant && product.primaryVariant.basePrice>
+                product.primaryVariant.salePrice)
+                { %>
+                <span class="badge badge-sale">
+                  <%= Math.round(((product.primaryVariant.basePrice - product.primaryVariant.salePrice) /
+                    product.primaryVariant.basePrice) * 100) %>% OFF
+                </span>
+                <% } %>
 
-                <!-- ACTION OVERLAY -->
-                <div class="card-action-overlay">
-                  <% if (product.primaryVariant && product.primaryVariant.stock> 0) { %>
-                    <button class="card-btn primary add-to-cart-card-btn" data-product-id="<%= product._id %>"
-                      data-variant-id="<%= product.primaryVariant._id %>"
-                      onclick="event.preventDefault(); event.stopPropagation(); addToCartQuick('<%= product._id %>', '<%= product.primaryVariant._id %>')">
-                      <svg viewBox="0 0 24 24">
-                        <circle cx="9" cy="21" r="1"></circle>
-                        <circle cx="20" cy="21" r="1"></circle>
-                        <path d="M1 1h4l2.68 13.39h9.72L23 6H6"></path>
-                      </svg>
-                      <span>Add to Cart</span>
-                    </button>
-                    <% } %>
+                  <!-- ACTION OVERLAY -->
+                  <div class="card-action-overlay">
+                    <% if (product.primaryVariant && product.primaryVariant.stock> 0) { %>
+                      <button class="card-btn primary add-to-cart-card-btn" data-product-id="<%= product._id %>"
+                        data-variant-id="<%= product.primaryVariant._id %>"
+                        onclick="event.preventDefault(); event.stopPropagation(); addToCartQuick('<%= product._id %>', '<%= product.primaryVariant._id %>')">
+                        <svg viewBox="0 0 24 24">
+                          <circle cx="9" cy="21" r="1"></circle>
+                          <circle cx="20" cy="21" r="1"></circle>
+                          <path d="M1 1h4l2.68 13.39h9.72L23 6H6"></path>
+                        </svg>
+                        <span>Add to Cart</span>
+                      </button>
+                      <% } %>
 
-                      <% var cardVariantId='' ; if (product.primaryVariant && product.primaryVariant._id) {
-                        cardVariantId=product.primaryVariant._id; } else if (product.variants &&
-                        product.variants.length> 0) {
-                        cardVariantId = product.variants[0]._id;
-                        }
+                        <% var cardVariantId='' ; if (product.primaryVariant && product.primaryVariant._id) {
+                          cardVariantId=product.primaryVariant._id; } else if (product.variants &&
+                          product.variants.length> 0) {
+                          cardVariantId = product.variants[0]._id;
+                          }
 
-                        var inWishlist = false;
-                        if (typeof wishlistProductIds !== 'undefined' &&
-                        wishlistProductIds.includes(product._id.toString())) {
-                        inWishlist = true;
-                        }
-                        %>
-                        <button class="card-btn secondary wishlist-btn <%= inWishlist ? 'active' : '' %>"
-                          data-product-id="<%= product._id %>" data-variant-id="<%= cardVariantId %>"
-                          onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist('<%= product._id %>', '<%= cardVariantId %>', this)">
-                          <svg class="wishlist-icon" viewBox="0 0 24 24"
-                            style="<%= inWishlist ? 'fill: #ef4444;' : 'fill: none;' %>">
-                            <path
-                              d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l7.78-7.78a5.5 5.5 0 0 0 0-7.78z" />
-                          </svg>
-                        </button>
-                </div>
+                          var inWishlist = false;
+                          if (typeof wishlistProductIds !== 'undefined' &&
+                          wishlistProductIds.includes(product._id.toString())) {
+                          inWishlist = true;
+                          }
+                          %>
+                          <button class="card-btn secondary wishlist-btn <%= inWishlist ? 'active' : '' %>"
+                            data-product-id="<%= product._id %>" data-variant-id="<%= cardVariantId %>"
+                            onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist('<%= product._id %>', '<%= cardVariantId %>', this)">
+                            <svg class="wishlist-icon" viewBox="0 0 24 24"
+                              style="<%= inWishlist ? 'fill: #ef4444;' : 'fill: none;' %>">
+                              <path
+                                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l7.78-7.78a5.5 5.5 0 0 0 0-7.78z" />
+                            </svg>
+                          </button>
+                  </div>
     </div>
 
     <div class="product-info">
       <div class="product-brand">
         <%= product.brand ? product.brand.brandName : 'ZOUND' %>
       </div>
-      <h3 class="product-name">
-        <%= product.productName %>
-      </h3>
 
-      <!-- PRICING WITH OFFER SUPPORT -->
-      <div class="product-pricing">
-        <% const displayVariant=product.primaryVariant || (product.variants && product.variants.length> 0 ?
-          product.variants[0] : null); %>
-          <% if (displayVariant) { %>
-            <% if (product.offer && product.offer.hasOffer) { %>
-              <span class="current-price">₹<%= product.offer.offerPrice.toLocaleString() %></span>
-              <!-- Show BASE PRICE crossed out -->
-              <span class="original-price">₹<%= product.offer.basePrice.toLocaleString() %></span>
-              <span class="discount-percent">
-                <%= product.offer.totalDiscountPercent %>% OFF
-              </span>
-              <% } else { %>
-                <span class="current-price">₹<%= displayVariant.salePrice.toLocaleString() %></span>
-                <% if (displayVariant.basePrice> displayVariant.salePrice) { %>
-                  <span class="original-price">₹<%= displayVariant.basePrice.toLocaleString() %></span>
+      <% if (product.averageRating> 0) { %>
+        <div class="product-card-rating" style="display:flex;align-items:center;gap:4px;margin:4px 0 2px;">
+          <div style="display:flex;align-items:center;gap:1px;">
+            <% for (let s=1; s <=5; s++) { %>
+              <% if (s <=Math.round(product.averageRating)) { %>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="#f59e0b" stroke="none">
+                  <polygon
+                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                  </polygon>
+                </svg>
+                <% } else { %>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="#e5e7eb" stroke="none">
+                    <polygon
+                      points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                    </polygon>
+                  </svg>
                   <% } %>
                     <% } %>
-                      <% } else { %>
-                        <span class="text-red-500">Price Unavailable</span>
+          </div>
+          <span style="font-size:11px;color:#6b7280;font-weight:500;">(<%= product.reviewCount || 0 %>)</span>
+        </div>
+        <% } %>
+
+          <h3 class="product-name">
+            <%= product.productName %>
+          </h3>
+
+          <!-- PRICING WITH OFFER SUPPORT -->
+          <div class="product-pricing">
+            <% const displayVariant=product.primaryVariant || (product.variants && product.variants.length> 0 ?
+              product.variants[0] : null); %>
+              <% if (displayVariant) { %>
+                <% if (product.offer && product.offer.hasOffer) { %>
+                  <span class="current-price">₹<%= product.offer.offerPrice.toLocaleString() %></span>
+                  <!-- Show BASE PRICE crossed out -->
+                  <span class="original-price">₹<%= product.offer.basePrice.toLocaleString() %></span>
+                  <span class="discount-percent">
+                    <%= product.offer.totalDiscountPercent %>% OFF
+                  </span>
+                  <% } else { %>
+                    <span class="current-price">₹<%= displayVariant.salePrice.toLocaleString() %></span>
+                    <% if (displayVariant.basePrice> displayVariant.salePrice) { %>
+                      <span class="original-price">₹<%= displayVariant.basePrice.toLocaleString() %></span>
+                      <% } %>
                         <% } %>
-      </div>
+                          <% } else { %>
+                            <span class="text-red-500">Price Unavailable</span>
+                            <% } %>
+          </div>
     </div>
   </div>
 </a>

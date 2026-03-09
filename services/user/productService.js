@@ -31,8 +31,7 @@ const getProductListingData = async (query) => {
         isDeleted: false,
         variants: {
             $elemMatch: {
-                status: "Active",
-                stock: { $gt: 0 }
+                status: "Active"
             }
         }
     };
@@ -198,13 +197,19 @@ const getProductDetailsData = async (productSlug) => {
         return { unavailable: true, reason: "notFound" };
     }
 
-    const activeVariants = product.variants.filter(v => v.status === 'Active' && v.stock > 0);
+    let activeVariants = product.variants.filter(v => v.status === 'Active' && v.stock > 0);
 
     // Sort variants by price ascending to default to the cheapest option
     activeVariants.sort((a, b) => Number(a.salePrice) - Number(b.salePrice));
 
     if (activeVariants.length === 0) {
-        return { unavailable: true, reason: "outOfStock" };
+        // Fallback to active variants even if out of stock
+        activeVariants = product.variants.filter(v => v.status === 'Active');
+        activeVariants.sort((a, b) => Number(a.salePrice) - Number(b.salePrice));
+
+        if (activeVariants.length === 0) {
+            return { unavailable: true, reason: "outOfStock" };
+        }
     }
 
     const relatedProductsRaw = await Product.find({
@@ -214,8 +219,7 @@ const getProductDetailsData = async (productSlug) => {
         isDeleted: false,
         variants: {
             $elemMatch: {
-                status: "Active",
-                stock: { $gt: 0 }
+                status: "Active"
             }
         }
     })
@@ -224,9 +228,12 @@ const getProductDetailsData = async (productSlug) => {
         .lean();
 
     const relatedProducts = relatedProductsRaw.map(prod => {
-        const activeVariant = prod.variants.find(
+        let activeVariant = prod.variants.find(
             v => v.status === 'Active' && v.stock > 0
         );
+        if (!activeVariant) {
+            activeVariant = prod.variants.find(v => v.status === 'Active');
+        }
 
         return {
             ...prod,

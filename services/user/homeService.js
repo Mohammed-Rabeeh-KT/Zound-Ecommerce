@@ -1,7 +1,7 @@
 import Category from "../../models/categorySchema.js";
 import Product from "../../models/productSchema.js";
 import Brand from "../../models/brandSchema.js";
-// import offerController from "../../controllers/admin/ssr/offerManagementController.js";
+import Banner from "../../models/bannerSchema.js";
 
 const getCategoryImage = (catName) => {
     const map = {
@@ -26,19 +26,18 @@ const getCategoryImage = (catName) => {
 
 // Process single product
 const processProduct = async (product) => {
-    const activeVariant = product.variants?.find(
+    let activeVariant = product.variants?.find(
         v => v.status === 'Active' && v.stock > 0
     );
+
+    if (!activeVariant) {
+        activeVariant = product.variants?.find(v => v.status === 'Active');
+    }
 
     let offerData = {
         discountAmount: 0,
         finalPrice: activeVariant?.salePrice || 0
     };
-
-    // Fallback if offerController is not yet implemented
-    // if (activeVariant) {
-    //     offerData = await offerController.calculateOfferPrice(product, activeVariant);
-    // }
 
     return {
         ...product.toObject(),
@@ -96,7 +95,20 @@ const getHomepageData = async () => {
 
     const brands = await Brand.find({ isListed: true }).limit(10);
 
+    // Fetch active banners
+    const now = new Date();
+    const activeBanners = await Banner.find({
+        isActive: true,
+        startDate: { $lte: now },
+        $or: [
+            { endDate: { $exists: false } },
+            { endDate: null },
+            { endDate: { $gt: now } }
+        ]
+    }).sort({ order: 1, createdAt: -1 });
+
     return {
+        banners: activeBanners,
         categories,
         latestProducts: latestProductsProcessed,
         topProducts: topProductsProcessed,

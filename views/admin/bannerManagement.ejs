@@ -1,244 +1,206 @@
-<link rel="stylesheet" href="/styles/admin/bannerManagement.css" />
+<!DOCTYPE html>
+<html lang="en">
 
-<%- include("../partials/admin/adminSidebar") %>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Banner Management</title>
+    <link rel="stylesheet" href="/styles/admin/bannerManagement.css" />
+</head>
 
-    <div class="main-content">
+<body>
+    <%- include("../partials/admin/adminSidebar") %>
 
-        <!-- HEADER -->
-        <div class="header">
-            <h1 class="page-title">Banner Management</h1>
-            <p class="page-subtitle">Manage dynamic banners for your website</p>
-            <button class="btn-primary" onclick="openAddModal()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                Add Banner
-            </button>
-        </div>
+        <div class="main-content">
+            <div class="header">
+                <div class="header-left">
+                    <h1 class="page-title">Banner Management</h1>
+                    <p class="page-subtitle">Manage dynamic banners for your website</p>
+                </div>
 
-        <!-- STATS CARDS -->
-        <div class="stats-container">
-            <div class="stat-card">
-                <div class="stat-icon total">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                        <line x1="9" y1="9" x2="15" y2="9"></line>
-                        <line x1="9" y1="15" x2="15" y2="15"></line>
+                <button class="add-banner-btn" id="addBannerBtn" onclick="openAddModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
-                </div>
-                <div class="stat-content">
-                    <h3 id="totalCount">0</h3>
-                    <p>Total Banners</p>
-                </div>
+                    Add Banner
+                </button>
             </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon active">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
-                </div>
-                <div class="stat-content">
-                    <h3 id="activeCount">0</h3>
-                    <p>Active Banners</p>
-                </div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon inactive">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="15" y1="9" x2="9" y2="15"></line>
-                        <line x1="9" y1="9" x2="15" y2="15"></line>
-                    </svg>
-                </div>
-                <div class="stat-content">
-                    <h3 id="inactiveCount">0</h3>
-                    <p>Inactive Banners</p>
-                </div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon with-product">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
-                        <line x1="7" y1="7" x2="7.01" y2="7"></line>
-                    </svg>
-                </div>
-                <div class="stat-content">
-                    <h3 id="withProductCount">0</h3>
-                    <p>With Products</p>
-                </div>
-            </div>
-        </div>
 
-        <!-- FILTERS AND SEARCH -->
-        <div class="filters-container">
-            <form method="GET" action="/admin/banners" id="filterForm">
-                <div class="filter-row">
-                    <div class="banner-search-wrapper">
-                        <span class="banner-search-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6c6c6c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="11" cy="11" r="8"></circle>
-                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                            </svg>
-                        </span>
-                        <input type="text" name="search" value="<%= search %>" class="banner-search-input" id="bannerSearchInput" placeholder="Search banners..." />
-                        <span class="banner-clear-icon" id="bannerClearSearchIcon" style="display: none;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="18" y1="6" x2="6" y2="18" />
-                                <line x1="6" y1="6" x2="18" y2="18" />
-                            </svg>
-                        </span>
-                    </div>
+            <div class="search-container">
+                <div class="search-wrapper">
+                    <span class="search-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="#6c6c6c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </span>
 
-                    <select name="isActive" class="banner-filter-select">
-                        <option value="">All Status</option>
-                        <option value="true" <%= isActive === 'true' ? 'selected' : '' %>>Active</option>
-                        <option value="false" <%= isActive === 'false' ? 'selected' : '' %>>Inactive</option>
+                    <input type="text" id="searchInput" class="search-input" value="<%= search || '' %>"
+                        placeholder="Search banners..." />
+
+                    <span class="clear-icon" id="clearSearchIcon" style="display:none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </span>
+                </div>
+
+                <div class="status-filter">
+                    <select id="statusSelect" class="status-select">
+                        <option value="">Status: All</option>
+                        <option value="true" <%=isActive==='true' ? 'selected' : '' %>>Active</option>
+                        <option value="false" <%=isActive==='false' ? 'selected' : '' %>>Inactive</option>
                     </select>
-
-                    <button type="submit" class="btn-primary">Apply Filters</button>
-                    <a href="/admin/banners" class="btn-secondary">Clear</a>
                 </div>
-            </form>
-        </div>
-
-        <!-- BANNERS GRID -->
-        <div class="banners-grid" id="bannersGrid">
-            <!-- Banners will be loaded here -->
-        </div>
-
-        <!-- PAGINATION -->
-        <div class="pagination" id="pagination">
-            <!-- Pagination will be loaded here -->
-        </div>
-    </div>
-
-    <!-- ADD/EDIT BANNER MODAL -->
-    <div class="modal" id="bannerModal">
-        <div class="modal-content large">
-            <div class="modal-header">
-                <h3 id="modalTitle">Add Banner</h3>
-                <span class="close" onclick="closeModal()">&times;</span>
             </div>
-            <div class="modal-body">
+
+            <div class="banners-grid" id="bannersGrid"></div>
+
+            <div class="pagination" id="paginationContainer"></div>
+        </div>
+
+        <!-- MODAL (Add/Edit) -->
+        <div class="modal-overlay" id="bannerModal">
+            <div class="modal-content large">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="modalTitle">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="#1e3a5f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            style="margin-right:8px;">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Add Banner
+                    </h2>
+                    <button class="modal-close" onclick="closeModal()">✕</button>
+                </div>
+
+                <p class="modal-subtitle">Configure your dynamic banner parameters.</p>
+
                 <form id="bannerForm">
                     <input type="hidden" id="bannerId">
-                    
+
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="title">Title *</label>
-                            <input type="text" id="title" name="title" placeholder="Enter banner title">
-                            <span class="error-message" id="titleError"></span>
+                            <label>Title *</label>
+                            <input type="text" id="title" name="title" placeholder="Enter banner title" />
+                            <span class="error-message" id="titleError"
+                                style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                         </div>
-                        
                         <div class="form-group">
-                            <label for="subtitle">Subtitle</label>
-                            <input type="text" id="subtitle" name="subtitle" placeholder="Enter subtitle (optional)">
+                            <label>Subtitle *</label>
+                            <input type="text" id="subtitle" name="subtitle" placeholder="Enter subtitle" />
+                            <span class="error-message" id="subtitleError"
+                                style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                         </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="description">Description</label>
-                        <textarea id="description" name="description" rows="3" placeholder="Enter banner description"></textarea>
+
+                    <div class="form-row">
+                        <div class="form-group" style="width: 100%;">
+                            <label>Image URL *</label>
+                            <input type="url" id="image" name="image" placeholder="https://example.com/banner.jpg" />
+                            <span class="error-message" id="imageError"
+                                style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
+                        </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="image">Image URL *</label>
-                            <input type="text" id="image" name="image" placeholder="https://example.com/image.jpg">
-                            <span class="error-message" id="imageError"></span>
+                            <label>Button Text *</label>
+                            <input type="text" id="buttonText" name="buttonText" value="Shop Now" />
+                            <span class="error-message" id="buttonTextError"
+                                style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                         </div>
-                        
                         <div class="form-group">
-                            <label for="productId">Product (Optional)</label>
-                            <select id="productId" name="productId">
-                                <option value="">No Product</option>
-                                <!-- Products will be loaded here -->
-                            </select>
+                            <label>Button Link *</label>
+                            <input type="text" id="buttonLink" name="buttonLink" placeholder="/products/target" />
+                            <span class="error-message" id="buttonLinkError"
+                                style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="buttonText">Button Text</label>
-                            <input type="text" id="buttonText" name="buttonText" value="Shop Now">
+                            <label>Start Date *</label>
+                            <input type="datetime-local" id="startDate" name="startDate" />
+                            <span class="error-message" id="startDateError"
+                                style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                         </div>
-                        
                         <div class="form-group">
-                            <label for="buttonLink">Button Link</label>
-                            <input type="text" id="buttonLink" name="buttonLink" placeholder="/products/some-product">
+                            <label>End Date *</label>
+                            <input type="datetime-local" id="endDate" name="endDate" />
+                            <span class="error-message" id="endDateError"
+                                style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="order">Display Order</label>
-                            <input type="number" id="order" name="order" value="0" min="0">
+                            <label>Display Order *</label>
+                            <input type="number" id="order" name="order" value="0" />
+                            <span class="error-message" id="orderError"
+                                style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
                         </div>
-                        
                         <div class="form-group">
-                            <label for="isActive">Status</label>
-                            <select id="isActive" name="isActive">
-                                <option value="true">Active</option>
-                                <option value="false">Inactive</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="startDate">Start Date</label>
-                            <input type="datetime-local" id="startDate" name="startDate">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="endDate">End Date (Optional)</label>
-                            <input type="datetime-local" id="endDate" name="endDate">
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Preview</label>
-                        <div class="banner-preview" id="bannerPreview">
-                            <img id="previewImage" src="" alt="Banner preview" style="display: none;">
-                            <div class="preview-content">
-                                <h3 id="previewTitle">Banner Title</h3>
-                                <p id="previewSubtitle">Subtitle</p>
-                                <button id="previewButton">Shop Now</button>
+                            <label>Status</label>
+                            <div class="toggle-wrapper" style="margin-top: 10px;">
+                                <span class="toggle-label inactive-label">Inactive</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="isActive" name="isActive" checked />
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <span class="toggle-label active-label">Active</span>
                             </div>
                         </div>
                     </div>
-                    
+
+                    <div class="form-group">
+                        <label>Description *</label>
+                        <textarea id="description" name="description" placeholder="Enter banner description"></textarea>
+                        <span class="error-message" id="descriptionError"
+                            style="color: #ef4444; font-size: 0.85rem; display: block; margin-top: 4px;"></span>
+                    </div>
+
                     <div class="modal-actions">
-                        <button type="submit" class="btn-primary">Save Banner</button>
-                        <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+                        <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+                        <button type="submit" class="btn-save">Save Banner</button>
                     </div>
                 </form>
             </div>
         </div>
-    </div>
 
-    <!-- DELETE CONFIRMATION MODAL -->
-    <div class="modal" id="deleteModal">
-        <div class="modal-content small">
-            <div class="modal-header">
-                <h3>Confirm Delete</h3>
-                <span class="close" onclick="closeDeleteModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete this banner? This action cannot be undone.</p>
+        <!-- TOGGLE MODAL -->
+        <div class="modal-overlay" id="toggleModal">
+            <div class="modal-content modal-small">
+                <div id="toggleModalIcon" class="delete-icon"></div>
+                <h2 id="toggleModalTitle" class="delete-title"></h2>
+                <p class="delete-message">
+                    Are you sure you want to <strong id="toggleModalAction"></strong> this banner?
+                </p>
+                <input type="hidden" id="toggleBannerId" />
+
                 <div class="modal-actions">
-                    <button class="btn-danger" onclick="confirmDelete()">Delete</button>
-                    <button class="btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                    <button type="button" class="btn-cancel" onclick="closeToggleModal()">Cancel</button>
+                    <button type="button" class="btn-delete" id="confirmToggleBtn"
+                        onclick="confirmToggle()">Toggle</button>
                 </div>
             </div>
         </div>
-    </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="/js/admin/bannerManagement.js"></script>
-<script src="/js/admin/bannerSearch.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script src="/js/admin/bannerManagement.js"></script>
+</body>
+
+</html>
+
+<style>
+    /* Ensure SweetAlert2 overlays always sit above page modals */
+    .swal2-container {
+        z-index: 2147483647 !important;
+    }
+</style>
