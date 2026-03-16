@@ -74,7 +74,6 @@ const couponSchema = new mongoose.Schema({
 });
 
 // Index for faster lookups
-couponSchema.index({ code: 1 });
 couponSchema.index({ isActive: 1, startDate: 1, endDate: 1 });
 
 const Coupon = mongoose.model('Coupon', couponSchema);

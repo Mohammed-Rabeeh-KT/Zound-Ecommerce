@@ -437,6 +437,11 @@ body {
     margin-bottom: 6px;
 }
 
+.required-star {
+    color: #dc3545;
+    font-weight: 600;
+}
+
 .form-group input[type="text"],
 .form-group input[type="url"],
 .form-group input[type="number"],
@@ -462,8 +467,33 @@ body {
     color: #dc3545;
     font-size: 12px;
     margin-top: 4px;
-    display: block;
-    min-height: 16px;
+    display: none;
+    align-items: center;
+    gap: 4px;
+    animation: errorSlideIn 0.25s ease-out;
+}
+
+.error-message.visible {
+    display: flex;
+}
+
+@keyframes errorSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Red border on invalid inputs */
+.form-group .input-error {
+    border-color: #dc3545 !important;
+    background: #fff5f5 !important;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.12);
 }
 
 /* Toggle Switch */
@@ -533,6 +563,15 @@ body {
     background: #f0f0f0;
     border: 1px solid #d0d0d0;
     cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+    background: #e2e2e2;
+    border-color: #b0b0b0;
 }
 
 .btn-save {
@@ -542,6 +581,20 @@ body {
     color: white;
     border: none;
     cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-save:hover {
+    background: #152a45;
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.35);
+    transform: translateY(-1px);
+}
+
+.btn-save:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(30, 58, 95, 0.25);
 }
 
 .btn-delete {
@@ -551,6 +604,43 @@ body {
     color: white;
     border: none;
     cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-delete:hover {
+    background: #c82333;
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.35);
+    transform: translateY(-1px);
+}
+
+.btn-delete:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(220, 53, 69, 0.25);
+}
+
+.btn-activate {
+    padding: 10px 18px;
+    border-radius: 8px;
+    background: #28a745;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-activate:hover {
+    background: #218838;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.35);
+    transform: translateY(-1px);
+}
+
+.btn-activate:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(40, 167, 69, 0.25);
 }
 
 .delete-icon {
@@ -565,7 +655,6 @@ body {
 .delete-icon svg {
     width: 80px !important;
     height: 80px !important;
-    stroke: none;
 }
 
 .delete-title {

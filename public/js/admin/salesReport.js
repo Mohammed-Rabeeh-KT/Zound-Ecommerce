@@ -12,6 +12,7 @@ let salesChart = null;
 let revenueChart = null;
 let paymentChart = null;
 let trendChart = null;
+let allProducts = []; // Store products for autocomplete filter
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function () {
@@ -39,9 +40,6 @@ function handleFilterChange() {
         return; // Don't auto-fetch, wait for Apply Filters
     }
 
-    // Hide custom panel for preset filters
-    document.getElementById('customFiltersPanel').style.display = 'none';
-
     // Auto-fetch for preset filters
     fetchSalesData();
 }
@@ -65,9 +63,10 @@ async function loadProducts() {
 
         if (data.success && data.products) {
             allProducts = data.products;
+            console.log('Products loaded for filter:', allProducts.length);
         }
     } catch (error) {
-        console.error('Error loading products:', error);
+        console.error('Error loading products for filter:', error);
     }
 }
 
@@ -79,6 +78,9 @@ document.getElementById('productSearch').addEventListener('input', function (e) 
     if (!query) {
         suggestionsDiv.style.display = 'none';
         document.getElementById('productFilter').value = ''; // Clear selected if input cleared
+        if (currentFilter !== 'custom') {
+            applyClientFilters({ summary: currentData.summary });
+        }
         return;
     }
 
@@ -100,6 +102,9 @@ window.selectProduct = function (id, name) {
     document.getElementById('productSearch').value = name;
     document.getElementById('productFilter').value = id;
     document.getElementById('productSuggestions').style.display = 'none';
+
+    // Apply filtering immediately for responsive feedback
+    applyClientFilters({ summary: currentData.summary });
 };
 
 // Close suggestions on click outside
@@ -131,6 +136,18 @@ function clearFilters() {
     fetchSalesData();
 }
 
+// Add event listener for min units change
+document.getElementById('minUnits')?.addEventListener('input', function () {
+    applyClientFilters({ summary: currentData.summary });
+});
+
+// Retry loading products on search focus if list is empty
+document.getElementById('productSearch')?.addEventListener('focus', function () {
+    if (allProducts.length === 0) {
+        loadProducts();
+    }
+});
+
 // Fetch sales data via AJAX
 async function fetchSalesData() {
     const filter = currentFilter;
@@ -142,7 +159,8 @@ async function fetchSalesData() {
     document.getElementById('loadingState').style.display = 'block';
 
     try {
-        const { data } = await axios.get(`/api/admin/sales/data?filter=${filter}&startDate=${startDate}&endDate=${endDate}`);
+        const status = document.getElementById('statusFilter')?.value || '';
+        const { data } = await axios.get(`/api/admin/sales/data?filter=${filter}&startDate=${startDate}&endDate=${endDate}&status=${status}`);
 
         if (data.success) {
             allOrders = data.orders || [];
@@ -203,7 +221,9 @@ function applyClientFilters(data) {
         totalOrderAmount: filteredOrders.reduce((sum, o) => sum + (o.totalPrice || 0), 0),
         offerDiscount: filteredOrders.reduce((sum, o) => sum + (o.offerDiscount || 0), 0),
         couponDeduction: filteredOrders.reduce((sum, o) => sum + (o.couponDiscount || 0), 0),
-        netRevenue: filteredOrders.reduce((sum, o) => sum + (o.finalAmount || 0), 0)
+        netRevenue: filteredOrders.reduce((sum, o) => sum + (o.finalAmount || 0), 0),
+        totalDiscount: filteredOrders.reduce((sum, o) => sum + (o.offerDiscount || 0) + (o.couponDiscount || 0), 0),
+        dateRange: data?.summary?.dateRange || currentData?.summary?.dateRange
     };
 
     currentData = { orders: filteredOrders, summary: filteredSummary };
@@ -628,7 +648,23 @@ function formatDate(dateStr) {
 }
 
 function getFilterLabel() {
+    const summary = currentData.summary;
+    if (summary && summary.dateRange && summary.dateRange.start && summary.dateRange.end) {
+        const start = formatDate(summary.dateRange.start);
+        const end = formatDate(summary.dateRange.end);
+        const label = { 'daily': 'Daily', 'weekly': 'Weekly', 'monthly': 'Monthly', 'yearly': 'Yearly' }[currentFilter] || 'Custom Range';
+        return `${label} (${start} - ${end})`;
+    }
     return { 'daily': 'Today', 'weekly': 'This Week', 'monthly': 'This Month', 'yearly': 'This Year', 'custom': 'Custom Range' }[currentFilter] || currentFilter;
+}
+
+function getStatusLabel() {
+    const status = document.getElementById('statusFilter')?.value;
+    return status || 'All (Delivered, Processing, Shipped, Pending)';
+}
+
+function getProductLabel() {
+    return document.getElementById('productSearch')?.value || 'All Products';
 }
 
 // =====================================================
@@ -668,11 +704,13 @@ function downloadPDF() {
     doc.text('Sales Report', 14, 28);
 
     // Report period badge (right side)
-    doc.setFontSize(10);
-    doc.text(getFilterLabel(), pageWidth - 14, 18, { align: 'right' });
-    doc.text(new Date().toLocaleDateString('en-IN', {
+    doc.setFontSize(9);
+    doc.text(`Period: ${getFilterLabel()}`, pageWidth - 14, 12, { align: 'right' });
+    doc.text(`Status: ${getStatusLabel()}`, pageWidth - 14, 19, { align: 'right' });
+    doc.text(`Product: ${getProductLabel()}`, pageWidth - 14, 26, { align: 'right' });
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-IN', {
         day: '2-digit', month: 'long', year: 'numeric'
-    }), pageWidth - 14, 26, { align: 'right' });
+    })}`, pageWidth - 14, 33, { align: 'right' });
 
     // ===== SUMMARY SECTION =====
     let yPos = 50;
@@ -815,7 +853,7 @@ function downloadPDF() {
     });
 
     // Save
-    doc.save(`ZOUND_Sales_Report_${getFilterLabel().replace(' ', '_')}.pdf`);
+    doc.save(`ZOUND_Sales_Report_${currentFilter.toUpperCase()}.pdf`);
 }
 
 // =====================================================
@@ -842,6 +880,8 @@ function downloadExcel() {
         ['Sales Report'],
         [''],
         ['Report Period:', getFilterLabel()],
+        ['Order Status:', getStatusLabel()],
+        ['Product Filter:', getProductLabel()],
         ['Generated On:', new Date().toLocaleDateString('en-IN', {
             weekday: 'long',
             day: '2-digit',
@@ -922,6 +962,6 @@ function downloadExcel() {
     XLSX.utils.book_append_sheet(wb, ws, 'Sales Report');
 
     // Save file
-    XLSX.writeFile(wb, `ZOUND_Sales_Report_${getFilterLabel().replace(' ', '_')}.xlsx`);
+    XLSX.writeFile(wb, `ZOUND_Sales_Report_${currentFilter.toUpperCase()}.xlsx`);
 }
 

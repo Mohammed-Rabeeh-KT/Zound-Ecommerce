@@ -203,12 +203,13 @@ const getProductDetailsData = async (productSlug) => {
     activeVariants.sort((a, b) => Number(a.salePrice) - Number(b.salePrice));
 
     if (activeVariants.length === 0) {
-        // Fallback to active variants even if out of stock
+
         activeVariants = product.variants.filter(v => v.status === 'Active');
         activeVariants.sort((a, b) => Number(a.salePrice) - Number(b.salePrice));
 
         if (activeVariants.length === 0) {
-            return { unavailable: true, reason: "outOfStock" };
+            activeVariants = product.variants;
+            activeVariants.sort((a, b) => Number(a.salePrice) - Number(b.salePrice));
         }
     }
 

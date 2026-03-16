@@ -41,9 +41,14 @@ const getSalesData = async (query) => {
     }
 
     const matchStage = {
-        createdOn: dateFilter,
-        status: { $in: ['Delivered', 'Processing', 'Shipped', 'Pending'] }
+        createdOn: dateFilter
     };
+
+    if (query.status && query.status !== '') {
+        matchStage.status = query.status;
+    } else {
+        matchStage.status = { $in: ['Delivered', 'Processing', 'Shipped', 'Pending', 'Cancelled', 'Return Request', 'Returned'] };
+    }
 
     const orders = await Order.find(matchStage)
         .populate('userId', 'name email')
@@ -117,14 +122,18 @@ const getSalesData = async (query) => {
             offerDiscount: Math.round(totalOfferDiscount),
             couponDeduction: Math.round(totalCouponDeduction),
             totalDiscount: Math.round(totalOfferDiscount + totalCouponDeduction),
-            netRevenue: Math.round(netRevenue)
+            netRevenue: Math.round(netRevenue),
+            dateRange: {
+                start: dateFilter.$gte,
+                end: dateFilter.$lte
+            }
         },
         orders: formattedOrders
     };
 };
 
 const getProducts = async () => {
-    return await Product.find({ isBlocked: false, isDeleted: false })
+    return await Product.find({ status: 'Active', isDeleted: false })
         .select('productName _id')
         .sort({ productName: 1 })
         .lean();

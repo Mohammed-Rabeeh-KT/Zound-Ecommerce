@@ -348,33 +348,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- 6. INITIALIZATION HELPERS ---
-    function updateStockUI(stock) {
-        if (!quantityInput || !stockStatusContainer) return;
-
-        quantityInput.max = stock;
-        if (parseInt(quantityInput.value) > stock) {
-            quantityInput.value = stock > 0 ? 1 : 0;
-        }
-
-        let stockHTML = '';
-        if (stock > 10) {
-            stockHTML = `<div class="stock-badge in-stock"><div class="stock-dot"></div><span>In Stock</span></div>`;
-            addToCartBtn.disabled = false;
-            addToCartBtn.innerHTML = 'Add to Cart';
-        } else if (stock > 0) {
-            stockHTML = `<div class="stock-badge low-stock"><div class="stock-dot"></div><span>Only ${stock} left</span></div>`;
-            addToCartBtn.disabled = false;
-            addToCartBtn.innerHTML = 'Add to Cart';
-        } else {
-            stockHTML = `<div class="stock-badge out-of-stock"><div class="stock-dot"></div><span>Out of Stock</span></div>`;
-            addToCartBtn.disabled = true;
-            addToCartBtn.innerHTML = 'Out of Stock';
-        }
-        stockStatusContainer.innerHTML = stockHTML;
-    }
 
 
-    // --- 7. INITIAL EXECUTION (FIXED FOR SINGLE VARIANT) ---
 
     const defaultVariantEl = document.getElementById('defaultVariantData');
     const activeBtn =
@@ -832,3 +807,140 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
+// =============================================
+// WRITE REVIEW MODAL (SweetAlert2)
+// =============================================
+function openReviewModal() {
+    const addToCartBtn = document.getElementById('addToCartBtn');
+    const wishlistBtn = document.getElementById('wishlistBtn');
+    const productId = addToCartBtn?.dataset?.productId || wishlistBtn?.dataset?.productId;
+
+    if (!productId) {
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Product not found.', confirmButtonColor: '#002366' });
+        return;
+    }
+
+    Swal.fire({
+        title: 'Write a Review',
+        html: `
+            <div style="text-align:left;">
+                <label style="font-weight:600;font-size:14px;color:#374151;display:block;margin-bottom:8px;">Your Rating</label>
+                <div id="swalStarRating" style="display:flex;gap:6px;margin-bottom:20px;cursor:pointer;">
+                    ${[1, 2, 3, 4, 5].map(i => `
+                        <span class="swal-star" data-value="${i}" style="font-size:32px;color:#d1d5db;transition:color 0.15s;">★</span>
+                    `).join('')}
+                </div>
+                <input type="hidden" id="swalRatingValue" value="0">
+                <label style="font-weight:600;font-size:14px;color:#374151;display:block;margin-bottom:8px;">Your Review</label>
+                <textarea id="swalReviewComment" rows="4" placeholder="Share your experience with this product..."
+                    style="width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;resize:vertical;font-family:inherit;outline:none;transition:border-color 0.2s;"
+                    onfocus="this.style.borderColor='#002366'" onblur="this.style.borderColor='#e5e7eb'"></textarea>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Submit Review',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#002366',
+        cancelButtonColor: '#6b7280',
+        customClass: { popup: 'swal-review-popup' },
+        didOpen: () => {
+            const stars = document.querySelectorAll('#swalStarRating .swal-star');
+            const ratingInput = document.getElementById('swalRatingValue');
+
+            stars.forEach(star => {
+                star.addEventListener('mouseenter', function () {
+                    const val = parseInt(this.dataset.value);
+                    stars.forEach((s, idx) => {
+                        s.style.color = idx < val ? '#f59e0b' : '#d1d5db';
+                    });
+                });
+
+                star.addEventListener('click', function () {
+                    ratingInput.value = this.dataset.value;
+                    const val = parseInt(this.dataset.value);
+                    stars.forEach((s, idx) => {
+                        s.style.color = idx < val ? '#f59e0b' : '#d1d5db';
+                        s.dataset.selected = idx < val ? '1' : '0';
+                    });
+                });
+            });
+
+            document.getElementById('swalStarRating').addEventListener('mouseleave', () => {
+                const selected = parseInt(ratingInput.value) || 0;
+                stars.forEach((s, idx) => {
+                    s.style.color = idx < selected ? '#f59e0b' : '#d1d5db';
+                });
+            });
+        },
+        preConfirm: () => {
+            const rating = parseInt(document.getElementById('swalRatingValue').value);
+            const comment = document.getElementById('swalReviewComment').value.trim();
+
+            if (!rating || rating < 1) {
+                Swal.showValidationMessage('Please select a rating');
+                return false;
+            }
+            if (!comment) {
+                Swal.showValidationMessage('Please write a comment');
+                return false;
+            }
+
+            return { rating, comment };
+        }
+    }).then(async (result) => {
+        if (!result.isConfirmed) return;
+
+        const { rating, comment } = result.value;
+        const activeVariantBtn = document.querySelector('.variant-btn.active');
+        const variantId = activeVariantBtn?.dataset?.variantId || null;
+
+        try {
+            const response = await axios.post('/api/user/reviews', {
+                productId,
+                rating,
+                comment,
+                variantId
+            });
+
+            if (response.data.success) {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true
+                });
+                Toast.fire({
+                    icon: 'success',
+                    title: 'Review submitted successfully!'
+                }).then(() => {
+                    location.reload();
+                });
+            }
+        } catch (error) {
+            if (error.response?.status === 401) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Login Required',
+                    text: 'Please login to write a review.',
+                    showConfirmButton: true,
+                    confirmButtonText: 'Login Now',
+                    showCancelButton: true,
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#002366'
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        window.location.href = '/user/login';
+                    }
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.response?.data?.message || 'Failed to submit review. Please try again.',
+                    confirmButtonColor: '#002366'
+                });
+            }
+        }
+    });
+}

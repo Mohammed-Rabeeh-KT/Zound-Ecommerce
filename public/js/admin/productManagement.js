@@ -383,17 +383,10 @@ async function persistVariantChanges() {
         });
         const res = await axios.put(`/api/admin/products/${editingId}`, formData);
 
-        let json;
-        try {
-            json = await res.json();
-        } catch (err) {
-            const text = await res.text().catch(() => '');
-            console.error('Non-JSON response from server:', text);
-            Swal.fire('Error', 'Server returned an invalid response. Please check server logs.', 'error');
-            return;
-        }
+        // Axios parses JSON automatically and puts it in `res.data`
+        const json = res.data;
 
-        if (json.success) {
+        if (json && json.success) {
             Swal.fire({
                 icon: 'success',
                 title: 'Saved',
@@ -404,12 +397,18 @@ async function persistVariantChanges() {
                 location.reload();
             });
         } else {
-            throw new Error(json.message);
+            throw new Error(json?.message || 'Failed to update variant');
         }
 
     } catch (error) {
         console.error("Persist Error:", error);
-        Swal.fire('Error', 'Failed to save changes to server: ' + error.message, 'error');
+
+        // Handle Axios specific error responses
+        if (error.response && error.response.data) {
+            Swal.fire('Error', error.response.data.message || 'Failed to save changes to server', 'error');
+        } else {
+            Swal.fire('Error', 'Failed to save changes to server: ' + error.message, 'error');
+        }
     }
 }
 
@@ -452,12 +451,18 @@ if (dropZone && fileInput) {
         }
     });
 
+    dropZone.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+
     dropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
         dropZone.classList.add('dragover');
     });
 
-    dropZone.addEventListener('dragleave', () => {
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
         dropZone.classList.remove('dragover');
     });
 
@@ -478,12 +483,18 @@ const variantDropZone = document.getElementById('variantDropZone');
 const variantInput = document.getElementById('variantImageInput');
 
 if (variantDropZone && variantInput) {
+    variantDropZone.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        variantDropZone.classList.add('dragover');
+    });
+
     variantDropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
         variantDropZone.classList.add('dragover');
     });
 
-    variantDropZone.addEventListener('dragleave', () => {
+    variantDropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
         variantDropZone.classList.remove('dragover');
     });
 
@@ -495,6 +506,13 @@ if (variantDropZone && variantInput) {
         }
     });
 }
+
+// Global drop prevention to ensure dropped files outside the dropzone don't navigate away
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    document.body.addEventListener(eventName, (e) => {
+        e.preventDefault();
+    });
+});
 
 function handleFiles(files, context = 'main') {
     // Clear any existing queue if it's a new context
@@ -906,7 +924,7 @@ async function submitProduct(e) {
         }
     } catch (err) {
         console.error('Product submission error:', err);
-        
+
         // Handle axios error response
         if (err.response) {
             const errorMessage = err.response.data?.message || err.response.data?.error || 'Server error occurred';

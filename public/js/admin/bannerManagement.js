@@ -4,12 +4,12 @@ class BannerManagement {
         this.currentPage = 1;
         this.banners = [];
         this.stats = {};
+        this.searchDebounceTimer = null;
         this.init();
     }
 
     init() {
         this.loadBanners();
-        this.loadProducts();
         this.setupEventListeners();
     }
 
@@ -20,25 +20,30 @@ class BannerManagement {
             statusSelect.addEventListener('change', () => this.handleSearch());
         }
 
-        // Search functionality is mostly handled by bannerSearch.js, but if we need to link it:
+        // Search input
         const searchInput = document.getElementById('searchInput');
-        const searchForm = document.getElementById('searchForm'); // Note: we removed form in EJS, let's catch Enter key
         if (searchInput) {
+            // Enter key triggers immediate search
             searchInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
+                    clearTimeout(this.searchDebounceTimer);
                     this.handleSearch();
                 }
             });
 
+            // Live search with debounce (400ms delay)
             searchInput.addEventListener('input', (e) => {
                 const clearIcon = document.getElementById('clearSearchIcon');
                 if (clearIcon) {
                     clearIcon.style.display = e.target.value.trim() ? 'block' : 'none';
                 }
+                clearTimeout(this.searchDebounceTimer);
+                this.searchDebounceTimer = setTimeout(() => this.handleSearch(), 400);
             });
         }
 
+        // Clear search icon
         const clearIcon = document.getElementById('clearSearchIcon');
         if (clearIcon) {
             clearIcon.addEventListener('click', () => {
@@ -46,6 +51,7 @@ class BannerManagement {
                 if (searchInput) {
                     searchInput.value = '';
                     clearIcon.style.display = 'none';
+                    clearTimeout(this.searchDebounceTimer);
                     this.handleSearch();
                 }
             });
@@ -170,17 +176,19 @@ class BannerManagement {
         const searchInput = document.getElementById('searchInput');
         const statusSelect = document.getElementById('statusSelect');
 
-        const params = new URLSearchParams(window.location.search);
+        const params = new URLSearchParams();
 
-        if (searchInput && searchInput.value) params.set('search', searchInput.value);
-        else params.delete('search');
-
+        if (searchInput && searchInput.value.trim()) params.set('search', searchInput.value.trim());
         if (statusSelect && statusSelect.value) params.set('isActive', statusSelect.value);
-        else params.delete('isActive');
 
         params.set('page', '1');
 
-        window.location.href = `/admin/banners?${params.toString()}`;
+        // Update URL without full page reload
+        const newUrl = `/admin/banners?${params.toString()}`;
+        window.history.pushState({}, '', newUrl);
+
+        // Re-fetch banners with new filters
+        this.loadBanners();
     }
 }
 
@@ -188,7 +196,12 @@ class BannerManagement {
 window.goToPage = (page) => {
     const url = new URL(window.location);
     url.searchParams.set('page', page);
-    window.location.href = url.toString();
+    // Update URL without full page reload
+    window.history.pushState({}, '', url.toString());
+    // Re-fetch banners for the new page
+    if (window.bannerManager) {
+        window.bannerManager.loadBanners();
+    }
 };
 
 window.openAddModal = () => {
@@ -214,7 +227,7 @@ window.openAddModal = () => {
         document.getElementById('startDate').value = now.toISOString().slice(0, 16);
 
         modal.classList.add('active');
-        clearErrors();
+        clearFieldErrors();
     }
 };
 
@@ -282,7 +295,7 @@ window.showEditModal = (banner) => {
         });
 
         modal.classList.add('active');
-        clearErrors();
+        clearFieldErrors();
     }
 };
 
@@ -336,7 +349,7 @@ window.openToggleModal = (bannerId, title, action) => {
     if (action === 'activate') {
         btn.textContent = 'Activate';
         btn.classList.remove('btn-delete');
-        btn.style.backgroundColor = '#28a745';
+        btn.classList.add('btn-activate');
         modalTitle.textContent = "Activate Banner";
         iconContainer.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#28a745" stroke-width="2">
@@ -346,8 +359,8 @@ window.openToggleModal = (bannerId, title, action) => {
         `;
     } else {
         btn.textContent = 'Deactivate';
+        btn.classList.remove('btn-activate');
         btn.classList.add('btn-delete');
-        btn.style.backgroundColor = '';
         modalTitle.textContent = "Deactivate Banner";
         iconContainer.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#DC3545" stroke-width="2">
@@ -398,7 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            clearErrors();
+            clearFieldErrors();
 
             const bannerId = document.getElementById('bannerId').value;
             const formData = new FormData(form);
@@ -409,60 +422,93 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let isValid = true;
 
-            if (!data.title || data.title.trim().length < 3) {
-                showError('titleError', 'Title must be at least 3 characters');
+            // Title validation
+            if (!data.title || data.title.trim() === '') {
+                showFieldError('titleError', 'Title is required');
+                isValid = false;
+            } else if (data.title.trim().length < 3) {
+                showFieldError('titleError', 'Title must be at least 3 characters');
+                isValid = false;
+            } else if (data.title.trim().length > 100) {
+                showFieldError('titleError', 'Title cannot exceed 100 characters');
                 isValid = false;
             }
 
+            // Subtitle validation
             if (!data.subtitle || data.subtitle.trim() === '') {
-                showError('subtitleError', 'Subtitle is required');
+                showFieldError('subtitleError', 'Subtitle is required');
+                isValid = false;
+            } else if (data.subtitle.trim().length > 150) {
+                showFieldError('subtitleError', 'Subtitle cannot exceed 150 characters');
                 isValid = false;
             }
 
-            if (!data.image || data.image.trim().length === 0) {
-                showError('imageError', 'Image URL is required');
+            // Image URL validation
+            if (!data.image || data.image.trim() === '') {
+                showFieldError('imageError', 'Image URL is required');
                 isValid = false;
-            } else if (!isValidUrl(data.image)) {
-                showError('imageError', 'Please enter a valid URL');
+            } else if (!isValidUrl(data.image.trim())) {
+                showFieldError('imageError', 'Please enter a valid image URL (e.g. https://example.com/image.jpg)');
                 isValid = false;
             }
 
+            // Button Text validation
             if (!data.buttonText || data.buttonText.trim() === '') {
-                showError('buttonTextError', 'Button Text is required');
+                showFieldError('buttonTextError', 'Button text is required');
+                isValid = false;
+            } else if (data.buttonText.trim().length > 30) {
+                showFieldError('buttonTextError', 'Button text cannot exceed 30 characters');
                 isValid = false;
             }
 
+            // Button Link validation
             if (!data.buttonLink || data.buttonLink.trim() === '') {
-                showError('buttonLinkError', 'Button Link is required');
+                showFieldError('buttonLinkError', 'Button link is required');
                 isValid = false;
             }
 
+            // Start Date validation
             if (!data.startDate) {
-                showError('startDateError', 'Start Date is required');
+                showFieldError('startDateError', 'Start date is required');
                 isValid = false;
             }
 
+            // End Date validation
             if (!data.endDate) {
-                showError('endDateError', 'End Date is required');
+                showFieldError('endDateError', 'End date is required');
                 isValid = false;
-            } else if (new Date(data.endDate) <= new Date(data.startDate)) {
-                showError('endDateError', 'End Date must be after Start Date');
+            } else if (data.startDate && new Date(data.endDate) <= new Date(data.startDate)) {
+                showFieldError('endDateError', 'End date must be after start date');
                 isValid = false;
             }
 
+            // Display Order validation
             const orderNum = parseInt(data.order);
-            if (isNaN(orderNum) || orderNum < 0) {
-                showError('orderError', 'Valid display order is required');
+            if (data.order === '' || data.order === undefined || data.order === null) {
+                showFieldError('orderError', 'Display order is required');
+                isValid = false;
+            } else if (isNaN(orderNum)) {
+                showFieldError('orderError', 'Display order must be a valid number');
+                isValid = false;
+            } else if (orderNum < 0) {
+                showFieldError('orderError', 'Display order cannot be negative');
+                isValid = false;
+            } else if (orderNum > 999) {
+                showFieldError('orderError', 'Display order cannot exceed 999');
                 isValid = false;
             }
 
+            // Description validation
             if (!data.description || data.description.trim() === '') {
-                showError('descriptionError', 'Description is required');
+                showFieldError('descriptionError', 'Description is required');
+                isValid = false;
+            } else if (data.description.trim().length > 500) {
+                showFieldError('descriptionError', 'Description cannot exceed 500 characters');
                 isValid = false;
             }
 
             if (!isValid) {
-                Swal.fire('Error', 'Please fill all required fields correctly.', 'error');
+                scrollToFirstFieldError();
                 return;
             }
 
@@ -481,7 +527,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
 
                 if (JSON.stringify(currentValues) === form.dataset.originalValues) {
-                    Swal.fire('No changes made', 'Please update at least one field before saving.', 'error');
+                    Swal.fire('No changes made', 'Please update at least one field before saving.', 'info');
                     return;
                 }
             }
@@ -511,7 +557,35 @@ document.addEventListener('DOMContentLoaded', () => {
                         location.reload();
                     });
                 } else {
-                    Swal.fire('Error', result.message || 'Failed to save banner', 'error');
+                    // Map server-side errors to input fields
+                    const msg = result.message || 'Failed to save banner';
+                    let mapped = false;
+
+                    const serverErrorMap = [
+                        { keyword: 'title', errorId: 'titleError' },
+                        { keyword: 'subtitle', errorId: 'subtitleError' },
+                        { keyword: 'image', errorId: 'imageError' },
+                        { keyword: 'button text', errorId: 'buttonTextError' },
+                        { keyword: 'button link', errorId: 'buttonLinkError' },
+                        { keyword: 'start date', errorId: 'startDateError' },
+                        { keyword: 'end date', errorId: 'endDateError' },
+                        { keyword: 'order', errorId: 'orderError' },
+                        { keyword: 'description', errorId: 'descriptionError' }
+                    ];
+
+                    const msgLower = msg.toLowerCase();
+                    for (const entry of serverErrorMap) {
+                        if (msgLower.includes(entry.keyword)) {
+                            showFieldError(entry.errorId, msg);
+                            scrollToFirstFieldError();
+                            mapped = true;
+                            break;
+                        }
+                    }
+
+                    if (!mapped) {
+                        Swal.fire('Error', msg, 'error');
+                    }
                 }
             } catch (error) {
                 Swal.fire('Error', 'Failed to save banner. Please try again.', 'error');
@@ -519,16 +593,56 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    new BannerManagement();
+    window.bannerManager = new BannerManagement();
 });
+// Error ID to input ID mapping
+const errorToInputMap = {
+    'titleError': 'title',
+    'subtitleError': 'subtitle',
+    'imageError': 'image',
+    'buttonTextError': 'buttonText',
+    'buttonLinkError': 'buttonLink',
+    'startDateError': 'startDate',
+    'endDateError': 'endDate',
+    'orderError': 'order',
+    'descriptionError': 'description'
+};
 
-function showError(elementId, message) {
-    const errorElement = document.getElementById(elementId);
-    if (errorElement) errorElement.textContent = message;
+function showFieldError(errorId, message) {
+    const errorElement = document.getElementById(errorId);
+    if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.classList.add('visible');
+    }
+
+    // Also highlight the corresponding input with red border
+    const inputId = errorToInputMap[errorId];
+    if (inputId) {
+        const inputEl = document.getElementById(inputId);
+        if (inputEl) {
+            inputEl.classList.add('input-error');
+        }
+    }
 }
 
-function clearErrors() {
-    document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+function clearFieldErrors() {
+    // Clear error text and hide
+    document.querySelectorAll('.error-message').forEach(el => {
+        el.textContent = '';
+        el.classList.remove('visible');
+    });
+
+    // Remove red border from all inputs
+    document.querySelectorAll('.input-error').forEach(el => {
+        el.classList.remove('input-error');
+    });
+}
+
+function scrollToFirstFieldError() {
+    const firstError = document.querySelector('.error-message.visible');
+    if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 }
 
 function isValidUrl(string) {

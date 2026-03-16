@@ -6,13 +6,8 @@ import { STATUS, MESSAGE } from "../../utils/response.js";
 import nodemailer from "nodemailer";
 import bcrypt from "bcrypt";
 import crypto from 'crypto';
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
 import razorpay from '../../config/razorpay.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 const otpStore = {};
 
 const getProfileData = async (userId) => {
@@ -202,25 +197,8 @@ const updateProfilePicture = async (userId, file) => {
         throw new AppError("User not found", STATUS.NOT_FOUND);
     }
 
-    // Delete old profile picture if exists
-    if (user.profile_picture) {
-        // Need to make sure the path is absolute from the project root
-        const publicDir = path.join(__dirname, '../../public');
-        const oldImagePath = path.join(publicDir, user.profile_picture);
-        if (fs.existsSync(oldImagePath)) {
-            try {
-                fs.unlinkSync(oldImagePath);
-                console.log('Old profile picture deleted:', oldImagePath);
-            } catch (err) {
-                console.error('Error deleting old profile picture:', err);
-            }
-        }
-    }
+    const imageUrl = file.path;
 
-    // Generate the public URL path for the new image
-    const imageUrl = `/uploads/profile-pictures/${file.filename}`;
-
-    // Update user's profile picture
     await User.findByIdAndUpdate(userId, { profile_picture: imageUrl });
 
     return imageUrl;

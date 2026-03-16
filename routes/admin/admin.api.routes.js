@@ -83,12 +83,7 @@ router.get("/sales/products", salesReportApiController.getProducts);
 router.get("/reviews", reviewManagementApiController.getReviews);
 router.get("/reviews/stats", reviewManagementApiController.getReviewStats);
 router.get("/reviews/:id", reviewManagementApiController.getReviewById);
-router.patch("/reviews/:id/approve", reviewManagementApiController.approveReview);
-router.patch("/reviews/:id/reject", reviewManagementApiController.rejectReview);
-router.put("/reviews/:id", reviewManagementApiController.updateReview);
 router.delete("/reviews/:id", reviewManagementApiController.deleteReview);
-router.post("/reviews/bulk-approve", reviewManagementApiController.bulkApprove);
-router.post("/reviews/bulk-reject", reviewManagementApiController.bulkReject);
 
 // BANNER MANAGEMENT
 router.get("/banners", bannerManagementApiController.getBanners);

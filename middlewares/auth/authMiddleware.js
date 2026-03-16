@@ -16,8 +16,6 @@ export const authenticateUser = async (req, res, next) => {
 
         // 1. Prioritize Passport session (Google Auth)       
         if (req.isAuthenticated && req.isAuthenticated()) {
-            // req.user is already populated by passport.deserializeUser
-            // We just need to make sure it's not blocked
             if (req.user.isBlocked) {
                 res.clearCookie("authToken");
                 req.logout(() => { }); // Logout if blocked

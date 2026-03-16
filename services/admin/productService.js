@@ -46,7 +46,7 @@ const addProduct = async (body, files) => {
     const mainImages = (files || []).filter(f => f.fieldname === 'images');
     const variantFiles = (files || []).filter(f => f.fieldname.startsWith('variantImage_'));
 
-    const imagePaths = mainImages.map(file => `/uploads/products/${file.filename}`);
+    const imagePaths = mainImages.map(file => file.path);
     console.log('Product service - main images count:', mainImages.length);
 
     if (imagePaths.length < 1) {
@@ -100,7 +100,7 @@ const addProduct = async (body, files) => {
             const index = parseInt(file.fieldname.split('_')[1]);
             if (parsedVariants[index]) {
                 if (!parsedVariants[index].images) parsedVariants[index].images = [];
-                parsedVariants[index].images.push(`/uploads/products/${file.filename}`);
+                parsedVariants[index].images.push(file.path);
             }
         });
 
@@ -200,7 +200,7 @@ const updateProduct = async (productId, body, files) => {
         keptImages = originalProductImages;
     }
 
-    const newImagePaths = mainImages.map(file => `/uploads/products/${file.filename}`);
+    const newImagePaths = mainImages.map(file => file.path);
     const nextProductImages = [...keptImages, ...newImagePaths];
     if (nextProductImages.length < 1) {
         throw new AppError("Please keep/upload at least one product image", STATUS.BAD_REQUEST);
@@ -237,7 +237,7 @@ const updateProduct = async (productId, body, files) => {
         const index = parseInt(file.fieldname.split('_')[1]);
         if (parsedVariants[index]) {
             if (!parsedVariants[index].images) parsedVariants[index].images = [];
-            parsedVariants[index].images.push(`/uploads/products/${file.filename}`);
+            parsedVariants[index].images.push(file.path);
         }
     });
 

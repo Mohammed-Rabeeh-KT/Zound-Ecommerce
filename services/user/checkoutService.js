@@ -280,7 +280,10 @@ const placeOrder = async (userId, data) => {
     if (paymentMethod === 'wallet') {
         paymentStatus = 'Paid';
     } else if (paymentMethod === 'razorpay') {
-        paymentStatus = data.paymentFailure ? 'Failed' : 'Paid';
+        if (data.paymentFailure) {
+            throw new AppError('Payment failed. Order was not created.', STATUS.BAD_REQUEST);
+        }
+        paymentStatus = 'Paid';
     }
 
     let appliedCouponId = null;
@@ -325,32 +328,28 @@ const placeOrder = async (userId, data) => {
     });
 
     if (paymentMethod === 'wallet') {
-        const session = await mongoose.startSession();
-        session.startTransaction();
         try {
             await User.findByIdAndUpdate(userId, {
                 $inc: { wallet: -finalAmount }
-            }, { session });
+            });
 
             // Record wallet debit
-            await WalletTransaction.create([{
+            await WalletTransaction.create({
                 userId,
                 amount: finalAmount,
                 type: 'Debit',
                 description: `Payment for Order #${order.orderId}`,
                 date: new Date()
-            }], { session });
+            });
 
-            await session.commitTransaction();
-            session.endSession();
+            await order.save();
         } catch (error) {
-            await session.abortTransaction();
-            session.endSession();
+            console.error('Wallet transaction inner error:', error);
             throw new AppError('Wallet transaction failed. Try again.', STATUS.INTERNAL_SERVER_ERROR);
         }
+    } else {
+        await order.save();
     }
-
-    await order.save();
 
     if (appliedCouponId) {
         await recordCouponUsage(appliedCouponId, userId, discount);

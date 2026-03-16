@@ -2,6 +2,7 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import User from '../models/userSchema.js';
 
+
 passport._sm = {
   logIn(req, user, done) {
     req.session = req.session || {};
@@ -31,7 +32,9 @@ passport.use(
         let user = await User.findOne({ googleId });
 
         if (user) {
-          // User exists with this Google account
+          // User exists with this Google account - update profile picture
+          user.profile_picture = profilePicture;
+          await user.save();
           return done(null, user);
         }
 
@@ -41,7 +44,7 @@ passport.use(
         if (user) {
           // Link Google account to existing user
           user.googleId = googleId;
-           if (!user.profile_picture) {
+          if (!user.profile_picture) {
             user.profile_picture = profilePicture;
           }
           await user.save();

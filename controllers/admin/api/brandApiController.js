@@ -25,7 +25,7 @@ const addBrand = catchAsync(async (req, res, next) => {
 
     let logoPath = null;
     if (req.file) {
-        logoPath = `/uploads/brand-logos/${req.file.filename}`;
+        logoPath = req.file.path;
     }
 
     const brand = await brandService.addBrand({ brandName, isListed, logoPath });
@@ -50,7 +50,7 @@ const updateBrand = catchAsync(async (req, res, next) => {
 
     let logoPath = null;
     if (req.file) {
-        logoPath = `/uploads/brand-logos/${req.file.filename}`;
+        logoPath = req.file.path;
     }
 
     const brand = await brandService.updateBrand(id, { brandName, isListed, logoPath });

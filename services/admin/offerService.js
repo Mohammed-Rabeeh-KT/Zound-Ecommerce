@@ -430,21 +430,21 @@ const getBestOfferForProduct = async (productId, categoryId, brandId, productPri
     };
 
     const [productOffer, categoryOffer, brandOffer] = await Promise.all([
-        Offer.findOne({
+        productId ? Offer.findOne({
             ...baseQuery,
             productId,
             apply_for: 'product'
-        }).lean(),
-        Offer.findOne({
+        }).lean() : Promise.resolve(null),
+        categoryId ? Offer.findOne({
             ...baseQuery,
             categoryId,
             apply_for: 'category'
-        }).lean(),
-        Offer.findOne({
+        }).lean() : Promise.resolve(null),
+        brandId ? Offer.findOne({
             ...baseQuery,
             brandId,
             apply_for: 'brand'
-        }).lean()
+        }).lean() : Promise.resolve(null)
     ]);
 
     // Collect all valid offers with their source
@@ -470,8 +470,11 @@ const getBestOfferForProduct = async (productId, categoryId, brandId, productPri
 
     const maxAllowedDiscount = productPrice * 0.9;
 
-    // Filter out offers that exceed 90% discount
+    // Filter out offers that exceed 90% discount and those requiring higher min purchase amount
     const validOffers = offersWithDeduction.filter(item => {
+        if (item.offer.min_purchase_amount && productPrice < item.offer.min_purchase_amount) {
+            return false;
+        }
         if (item.deduction > maxAllowedDiscount) {
             return false;
         }
@@ -516,8 +519,10 @@ const calculateOfferPrice = async (product, variantIndex = 0) => {
     if (!bestOffer) {
         return {
             originalPrice: basePrice,
+            basePrice: basePrice, // ADDED for frontend compat
             salePrice: salePrice,
             finalPrice: salePrice,
+            offerPrice: salePrice, // ADDED for frontend compat
             saleDiscountPercent: saleDiscountPercent,
             saleDiscountAmount: saleDiscountAmount,
             offerDiscountPercent: 0,
@@ -528,7 +533,8 @@ const calculateOfferPrice = async (product, variantIndex = 0) => {
             totalDiscountAmount: saleDiscountAmount,
             offerSource: null,
             offerTitle: null,
-            offerId: null
+            offerId: null,
+            hasOffer: false // ADDED for frontend compat
         };
     }
 
@@ -551,8 +557,10 @@ const calculateOfferPrice = async (product, variantIndex = 0) => {
 
     return {
         originalPrice: basePrice,
+        basePrice: basePrice, // ADDED for frontend compat
         salePrice: salePrice,
         finalPrice: finalPrice,
+        offerPrice: finalPrice, // ADDED for frontend compat
         saleDiscountPercent: saleDiscountPercent,
         saleDiscountAmount: saleDiscountAmount,
         offerDiscountPercent: offerDiscountPercent,
@@ -563,7 +571,8 @@ const calculateOfferPrice = async (product, variantIndex = 0) => {
         totalDiscountAmount: totalDiscountAmount,
         offerSource: bestOffer.source,
         offerTitle: bestOffer.title,
-        offerId: bestOffer._id
+        offerId: bestOffer._id,
+        hasOffer: true
     };
 };
 

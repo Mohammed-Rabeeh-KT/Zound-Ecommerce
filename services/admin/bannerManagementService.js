@@ -21,12 +21,15 @@ const bannerManagementService = {
     // Get all banners with filtering and pagination
     async getBanners(query = {}) {
         const {
-            page = 1,
-            limit = 10,
+            page: rawPage = 1,
+            limit: rawLimit = 10,
             isActive,
             productId,
             search
         } = query;
+
+        const page = parseInt(rawPage) || 1;
+        const limit = parseInt(rawLimit) || 10;
 
         // Build filter
         const filter = {};
@@ -45,7 +48,7 @@ const bannerManagementService = {
 
         const banners = await Banner.find(filter)
             .sort({ order: 1, createdAt: -1 })
-            .limit(limit * 1)
+            .limit(limit)
             .skip((page - 1) * limit);
 
         const total = await Banner.countDocuments(filter);
@@ -158,7 +161,7 @@ const bannerManagementService = {
 
             // Basic URL validation
             try {
-                new URL(trimmedButtonLink);
+                new URL(trimmedButtonLink, 'http://localhost');
             } catch (error) {
                 throw new AppError('Button link must be a valid URL', STATUS.BAD_REQUEST);
             }

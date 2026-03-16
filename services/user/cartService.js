@@ -144,8 +144,8 @@ const addItemToCart = async (userId, data) => {
         selectedVariant = product.variants.find(v => v.status === 'Active' && v.stock > 0);
     }
 
-    if (!selectedVariant) {
-        throw new AppError('No available variant found for this product', STATUS.BAD_REQUEST);
+    if (!selectedVariant || selectedVariant.status !== 'Active') {
+        throw new AppError('This variant is currently unavailable', STATUS.BAD_REQUEST);
     }
 
     // Check stock
@@ -212,6 +212,7 @@ const addItemToCart = async (userId, data) => {
         }
     }
 
+    cart.userId = userId;
     await cart.save();
     return { cartCount: cart.items.length };
 };

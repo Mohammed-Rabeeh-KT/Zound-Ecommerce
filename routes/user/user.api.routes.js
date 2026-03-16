@@ -3,9 +3,7 @@ const router = express.Router();
 import { authenticateUser } from '../../middlewares/auth/authMiddleware.js';
 import uploadProfilePicture from '../../middlewares/upload/uploadProfilePicture.js';
 
-// ==========================================
 // Controllers (API)
-// ==========================================
 import authApiController from '../../controllers/user/api/authApiController.js';
 import userApiController from '../../controllers/user/api/userApiController.js';
 import cartApiController from '../../controllers/user/api/cartApiController.js';
@@ -14,23 +12,19 @@ import paymentApiController from '../../controllers/user/api/paymentApiControlle
 import wishlistApiController from '../../controllers/user/api/wishlistApiController.js';
 import reviewApiController from '../../controllers/user/api/reviewApiController.js';
 import bannerManagementApiController from '../../controllers/admin/api/bannerManagementApiController.js';
+import { authLimiter } from '../../middlewares/core/rateLimiter.js';
 
-// ==========================================
 // Auth API Endpoints (Not protected)
-// ==========================================
-router.post('/login', authApiController.login);
-router.post('/signup', authApiController.signup);
-router.post('/verify-otp', authApiController.verifyOTP);
-router.post('/resend-otp', authApiController.resendOTP);
-router.post('/fp-verify-otp', authApiController.verifyFpOTP);
-router.post('/fp-resend-otp', authApiController.resendFpOTP);
-router.post('/fp-reset-password', authApiController.resetPassword);
-router.get('/check-email', authApiController.checkEmail); // Utility
+router.post('/login', authLimiter, authApiController.login);
+router.post('/signup', authLimiter, authApiController.signup);
+router.post('/verify-otp', authLimiter, authApiController.verifyOTP);
+router.post('/resend-otp', authLimiter, authApiController.resendOTP);
+router.post('/fp-verify-otp', authLimiter, authApiController.verifyFpOTP);
+router.post('/fp-resend-otp', authLimiter, authApiController.resendFpOTP);
+router.post('/fp-reset-password', authLimiter, authApiController.resetPassword);
+router.get('/check-email', authLimiter, authApiController.checkEmail); // Utility
 
-// ==========================================
 // Protected User API routes
-// ==========================================
-// Apply authentication middleware to all subsequent routes
 router.use(authenticateUser);
 
 // Profile

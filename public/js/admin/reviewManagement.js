@@ -43,10 +43,6 @@ async function viewReview(id) {
                         <span>${r.comment || 'No comment provided'}</span>
                     </div>
                     <div class="detail-item">
-                        <label>Status</label>
-                        <span class="status-badge status-${r.status}">${r.status}</span>
-                    </div>
-                    <div class="detail-item">
                         <label>Date</label>
                         <span>${new Date(r.createdAt).toLocaleString('en-IN')}</span>
                     </div>
@@ -61,52 +57,6 @@ async function viewReview(id) {
 
 function closeModal() {
     document.getElementById('reviewModal').classList.remove('active');
-}
-
-// Approve
-async function approveReview(id) {
-    const result = await Swal.fire({
-        title: 'Approve Review?',
-        text: 'This review will be visible to customers.',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#16a34a',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Approve'
-    });
-    if (!result.isConfirmed) return;
-    try {
-        const { data } = await axios.patch('/api/admin/reviews/' + id + '/approve');
-        if (data.success) {
-            Swal.fire({ icon: 'success', title: 'Approved!', text: 'Review has been approved.', confirmButtonColor: '#002366', timer: 1500 })
-                .then(() => location.reload());
-        }
-    } catch (err) {
-        Swal.fire({ icon: 'error', title: 'Error', text: err.response?.data?.message || 'Failed to approve', confirmButtonColor: '#002366' });
-    }
-}
-
-// Reject
-async function rejectReview(id) {
-    const result = await Swal.fire({
-        title: 'Reject Review?',
-        text: 'This review will not be visible to customers.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Reject'
-    });
-    if (!result.isConfirmed) return;
-    try {
-        const { data } = await axios.patch('/api/admin/reviews/' + id + '/reject');
-        if (data.success) {
-            Swal.fire({ icon: 'success', title: 'Rejected!', text: 'Review has been rejected.', confirmButtonColor: '#002366', timer: 1500 })
-                .then(() => location.reload());
-        }
-    } catch (err) {
-        Swal.fire({ icon: 'error', title: 'Error', text: err.response?.data?.message || 'Failed to reject', confirmButtonColor: '#002366' });
-    }
 }
 
 // Delete

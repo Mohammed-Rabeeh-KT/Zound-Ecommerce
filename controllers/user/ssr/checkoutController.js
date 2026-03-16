@@ -105,9 +105,25 @@ const getOrders = catchAsync(async (req, res, next) => {
     }
 });
 
+const paymentFailed = catchAsync(async (req, res, next) => {
+    const userId = req.user._id;
+    try {
+        const cartData = await checkoutService.getCheckoutData(userId);
+        res.render('user/paymentFailed', {
+            layout: 'layout',
+            user: req.user,
+            cartTotal: cartData.cartTotal,
+            itemCount: cartData.cart.items.length
+        });
+    } catch (error) {
+        res.redirect('/user/checkout');
+    }
+});
+
 export default {
     loadCheckout,
     orderConfirmation,
     getOrderDetails,
-    getOrders
+    getOrders,
+    paymentFailed
 };

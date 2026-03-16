@@ -4,14 +4,20 @@ const reviewApiController = {
     // Add a new review
     async addReview(req, res, next) {
         try {
-            const userId = req.user.id;
+            if (!req.user) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Please login to write a review'
+                });
+            }
+            const userId = req.user.id || req.user._id;
             const reviewData = req.body;
 
             const review = await reviewService.addReview(userId, reviewData);
 
             res.status(201).json({
                 success: true,
-                message: 'Review submitted successfully. It will be visible after approval.',
+                message: 'Review submitted successfully!',
                 data: review
             });
 

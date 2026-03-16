@@ -10,43 +10,21 @@
         <div class="page-header">
             <div>
                 <h1 class="page-title">Review Management</h1>
-                <p class="page-subtitle">Manage customer reviews and ratings</p>
+                <p class="page-subtitle">View and manage all customer reviews</p>
             </div>
         </div>
 
         <!-- Stats Cards -->
         <div class="stats-row">
             <div class="stat-card">
-                <div class="stat-icon pending">
-                    <i class="bi bi-clock-history"></i>
-                </div>
-                <div class="stat-content">
-                    <h3>
-                        <%= stats.pending || 0 %>
-                    </h3>
-                    <p>Pending</p>
-                </div>
-            </div>
-            <div class="stat-card">
                 <div class="stat-icon approved">
-                    <i class="bi bi-check-circle"></i>
+                    <i class="bi bi-chat-square-text"></i>
                 </div>
                 <div class="stat-content">
                     <h3>
-                        <%= stats.approved || 0 %>
+                        <%= stats.total || 0 %>
                     </h3>
-                    <p>Approved</p>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon rejected">
-                    <i class="bi bi-x-circle"></i>
-                </div>
-                <div class="stat-content">
-                    <h3>
-                        <%= stats.rejected || 0 %>
-                    </h3>
-                    <p>Rejected</p>
+                    <p>Total Reviews</p>
                 </div>
             </div>
             <div class="stat-card">
@@ -76,13 +54,6 @@
                     <% } %>
             </div>
 
-            <select class="filter-select" onchange="applyFilter('status', this.value)">
-                <option value="">Status: All</option>
-                <option value="pending" <%=filters.status==='pending' ? 'selected' : '' %>>Pending</option>
-                <option value="approved" <%=filters.status==='approved' ? 'selected' : '' %>>Approved</option>
-                <option value="rejected" <%=filters.status==='rejected' ? 'selected' : '' %>>Rejected</option>
-            </select>
-
             <select class="filter-select" onchange="applyFilter('rating', this.value)">
                 <option value="">Rating: All</option>
                 <option value="5" <%=filters.rating==='5' ? 'selected' : '' %>>5 Stars</option>
@@ -92,7 +63,7 @@
                 <option value="1" <%=filters.rating==='1' ? 'selected' : '' %>>1 Star</option>
             </select>
 
-            <% if (filters.status || filters.search || filters.rating) { %>
+            <% if (filters.search || filters.rating) { %>
                 <a href="/admin/reviews" class="btn-reset">
                     <i class="bi bi-arrow-counterclockwise"></i> Reset
                 </a>
@@ -106,11 +77,10 @@
                     <tr>
                         <th width="5%">#</th>
                         <th width="25%">Product</th>
-                        <th width="18%">Customer</th>
+                        <th width="20%">Customer</th>
                         <th width="10%">Rating</th>
-                        <th width="17%">Comment</th>
-                        <th width="10%">Status</th>
-                        <th width="15%" style="text-align:right;">Actions</th>
+                        <th width="30%">Comment</th>
+                        <th width="10%" style="text-align:right;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -163,38 +133,23 @@
                                         <%= review.comment || '—' %>
                                     </span>
                                 </td>
-                                <td>
-                                    <span class="status-badge status-<%= review.status %>">
-                                        <%= review.status %>
-                                    </span>
-                                </td>
                                 <td style="text-align:right;">
                                     <div class="action-btns">
                                         <button class="action-btn view" onclick="viewReview('<%= review._id %>')"
                                             title="View">
                                             <i class="bi bi-eye"></i>
                                         </button>
-                                        <% if (review.status==='pending' ) { %>
-                                            <button class="action-btn approve"
-                                                onclick="approveReview('<%= review._id %>')" title="Approve">
-                                                <i class="bi bi-check-lg"></i>
-                                            </button>
-                                            <button class="action-btn reject"
-                                                onclick="rejectReview('<%= review._id %>')" title="Reject">
-                                                <i class="bi bi-x-lg"></i>
-                                            </button>
-                                            <% } %>
-                                                <button class="action-btn delete"
-                                                    onclick="deleteReview('<%= review._id %>')" title="Delete">
-                                                    <i class="bi bi-trash3"></i>
-                                                </button>
+                                        <button class="action-btn delete"
+                                            onclick="deleteReview('<%= review._id %>')" title="Delete">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
                             <% }); %>
                                 <% } else { %>
                                     <tr>
-                                        <td colspan="7">
+                                        <td colspan="6">
                                             <div class="no-results">
                                                 <i class="bi bi-star" style="font-size: 2rem;"></i>
                                                 <h3>No reviews found</h3>

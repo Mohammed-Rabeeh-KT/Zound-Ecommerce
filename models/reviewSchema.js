@@ -29,12 +29,6 @@ const reviewSchema = new Schema({
     variantId: {
         type: Schema.Types.ObjectId,
         default: null
-    },
-
-    status: {
-        type: String,
-        enum: ["pending", "approved", "rejected"],
-        default: "pending"
     }
 
 }, { timestamps: true });

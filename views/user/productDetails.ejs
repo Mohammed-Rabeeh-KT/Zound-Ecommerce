@@ -251,7 +251,7 @@
 
                             <!-- Action Buttons -->
                             <div class="action-buttons">
-                                <% if (firstVariant && firstVariant.stock> 0) { %>
+                                <% if (firstVariant && firstVariant.status==='Active' && firstVariant.stock> 0) { %>
                                     <button class="btn-primary add-to-cart-btn" id="addToCartBtn"
                                         data-product-id="<%= product._id %>">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -388,7 +388,7 @@
                                                             <% if (variant.salePrice < variant.basePrice) { %>
                                                                 <span class="table-original-price">₹<%=
                                                                         variant.basePrice.toLocaleString('en-IN') %>
-                                                                        </span>
+                                                                </span>
                                                                 <% } %>
                                                         </td>
                                                         <td>

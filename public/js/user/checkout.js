@@ -351,14 +351,7 @@ async function handleRazorpayPayment(placeOrderBtn, originalContent) {
 
                 if (orderResponse.data.success) {
                     const order = orderResponse.data.data;
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Payment Successful!',
-                        text: 'Your order has been placed successfully.',
-                        confirmButtonColor: '#002366'
-                    }).then(() => {
-                        window.location.href = `/user/orders/confirmation/${order.orderId}`;
-                    });
+                    window.location.href = `/user/orders/confirmation/${order.orderId}`;
                 } else {
                     throw new Error(orderResponse.data.message || 'Failed to place order');
                 }
@@ -381,102 +374,19 @@ async function handleRazorpayPayment(placeOrderBtn, originalContent) {
             color: '#002366'
         },
         modal: {
-            ondismiss: async function () {
-                // User closed without payment - Create order with Failed status
-                try {
-                    Swal.fire({
-                        title: 'Processing...',
-                        text: 'Saving your order details...',
-                        allowOutsideClick: false,
-                        didOpen: () => Swal.showLoading()
-                    });
-
-                    const orderResponse = await axios.post('/api/user/checkout/place-order', {
-                        addressId: selectedAddressId,
-                        paymentMethod: 'razorpay',
-                        couponCode: appliedCouponCode,
-                        paymentFailure: true,
-                        paymentDetails: {
-                            razorpay_order_id: razorpayData.razorpayOrderId
-                        }
-                    });
-
-                    if (orderResponse.data.success) {
-                        const order = orderResponse.data.data;
-                        window.location.href = `/user/orders/confirmation/${order.orderId}`;
-                    } else {
-                        throw new Error(orderResponse.data.message || 'Failed to place order');
-                    }
-                } catch (error) {
-                    console.error('Failed order creation error:', error);
-                    placeOrderBtn.disabled = false;
-                    placeOrderBtn.innerHTML = originalContent;
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Payment Cancelled',
-                        text: 'Your payment was cancelled and order could not be saved.',
-                        confirmButtonText: 'Try Again',
-                        confirmButtonColor: '#002366'
-                    });
-                }
+            ondismiss: function () {
+                // User closed without payment - redirect to payment failed page
+                window.location.href = '/user/checkout/payment-failed';
             }
         }
     };
 
     const razorpay = new Razorpay(options);
 
-    razorpay.on('payment.failed', async function (response) {
-        // Payment failed - Create order with Failed status
-        try {
-            Swal.fire({
-                title: 'Processing...',
-                text: 'Saving your failed payment details...',
-                allowOutsideClick: false,
-                didOpen: () => Swal.showLoading()
-            });
-
-            const orderResponse = await axios.post('/api/user/checkout/place-order', {
-                addressId: selectedAddressId,
-                paymentMethod: 'razorpay',
-                couponCode: appliedCouponCode,
-                paymentFailure: true,
-                paymentDetails: {
-                    razorpay_order_id: razorpayData.razorpayOrderId,
-                    razorpay_payment_id: response.error.metadata.payment_id || null
-                }
-            });
-
-            if (orderResponse.data.success) {
-                const order = orderResponse.data.data;
-                window.location.href = `/user/orders/confirmation/${order.orderId}`;
-            } else {
-                throw new Error(orderResponse.data.message || 'Failed to place order');
-            }
-        } catch (error) {
-            console.error('Failed order creation error:', error);
-            placeOrderBtn.disabled = false;
-            placeOrderBtn.innerHTML = originalContent;
-
-            Swal.fire({
-                icon: 'error',
-                title: 'Payment Failed',
-                html: `
-                    <p>${response.error?.description || 'Your payment could not be processed.'}</p>
-                    <p class="text-muted mt-2">Order saving failed. You can try again.</p>
-                `,
-                confirmButtonText: 'Retry Checkout',
-                showCancelButton: true,
-                cancelButtonText: 'Go to Cart',
-                confirmButtonColor: '#002366',
-                cancelButtonColor: '#6c757d'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    placeOrder();
-                } else {
-                    window.location.href = '/user/cart';
-                }
-            });
-        }
+    razorpay.on('payment.failed', function (response) {
+        // Payment failed - redirect to payment failed page
+        console.error('Payment failed:', response.error);
+        window.location.href = '/user/checkout/payment-failed';
     });
 
     razorpay.open();

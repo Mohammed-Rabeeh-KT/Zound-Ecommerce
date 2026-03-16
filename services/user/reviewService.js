@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Review from '../../models/reviewSchema.js';
 import Product from '../../models/productSchema.js';
 import Order from '../../models/orderSchema.js';
@@ -15,16 +16,6 @@ const reviewService = {
             throw new AppError('Product not found', STATUS.NOT_FOUND);
         }
 
-        // Check if user has purchased and received the product
-        const hasPurchased = await Order.findOne({
-            userId: userId,
-            'orderedItems.product': productId,
-            status: 'Delivered'
-        });
-
-        if (!hasPurchased) {
-            throw new AppError('You can only review products you have purchased and received', STATUS.FORBIDDEN);
-        }
 
         // Check if user has already reviewed this product
         const existingReview = await Review.findOne({
@@ -58,8 +49,7 @@ const reviewService = {
         const { page = 1, limit = 10 } = query;
 
         const reviews = await Review.find({
-            product: productId,
-            status: 'approved'
+            product: productId
         })
             .populate('user', 'name profileImage')
             .sort({ createdAt: -1 })
@@ -67,13 +57,12 @@ const reviewService = {
             .skip((page - 1) * limit);
 
         const total = await Review.countDocuments({
-            product: productId,
-            status: 'approved'
+            product: productId
         });
 
         // Get rating distribution
         const ratingStats = await Review.aggregate([
-            { $match: { product: productId, status: 'approved' } },
+            { $match: { product: new mongoose.Types.ObjectId(productId) } },
             {
                 $group: {
                     _id: '$rating',
@@ -171,10 +160,7 @@ const reviewService = {
             throw new AppError('Review not found', STATUS.NOT_FOUND);
         }
 
-        // Only allow updating pending reviews
-        if (review.status !== 'pending') {
-            throw new AppError('Cannot update approved or rejected reviews', STATUS.BAD_REQUEST);
-        }
+
 
         review.rating = rating || review.rating;
         review.comment = comment || review.comment;
@@ -209,7 +195,7 @@ const reviewService = {
     async updateProductRating(productId) {
         try {
             const ratingStats = await Review.aggregate([
-                { $match: { product: productId, status: 'approved' } },
+                { $match: { product: new mongoose.Types.ObjectId(productId) } },
                 {
                     $group: {
                         _id: null,
