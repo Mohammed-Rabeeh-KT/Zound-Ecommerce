@@ -3,15 +3,13 @@ version: '3.8'
 services:
   app:
     build: .
-    ports:
-      - "3000:3000"
     env_file:
       - .env
     environment:
       - NODE_ENV=production
     volumes:
       - ./uploads:/app/uploads
-    restart: unless-stopped
+    restart: always
     networks:
       - zound-network
 
@@ -24,7 +22,7 @@ services:
       - ./public:/app/public:ro
     depends_on:
       - app
-    restart: unless-stopped
+    restart: always
     networks:
       - zound-network
 
