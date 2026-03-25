@@ -118,10 +118,18 @@ window.showToast = function (message, icon = 'success') {
         }
     });
 
-    Toast.fire({
+    return Toast.fire({
         icon: icon,
         title: message
     });
+};
+
+// Aliases for shorter calls (especially for scripts already using toast.xxx)
+window.toast = {
+    success: (msg) => window.showToast(msg, 'success'),
+    error: (msg) => window.showToast(msg, 'error'),
+    warning: (msg) => window.showToast(msg, 'warning'),
+    info: (msg) => window.showToast(msg, 'info')
 };
 
 // Also Expose as object if preferred
@@ -130,5 +138,6 @@ window.SwalUtils = {
     showError: window.showError,
     showWarning: window.showWarning,
     confirmAction: window.confirmAction,
-    showToast: window.showToast
+    showToast: window.showToast,
+    toast: window.toast
 };

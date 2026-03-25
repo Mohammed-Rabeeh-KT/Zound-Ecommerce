@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.data.success) {
                 window.showToast("Login successful!", "success");
                 setTimeout(() => {
-                    window.location.href = response.data.redirectUrl || '/user/home';
+                    window.location.href = response.data.redirectUrl || '/';
                 }, 1000);
             }
         } catch (err) {

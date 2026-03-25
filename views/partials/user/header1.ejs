@@ -2,16 +2,16 @@
   <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
 
     <!-- Logo -->
-    <a href="/user/home" class="flex items-center gap-2">
+    <a href="/" class="flex items-center gap-2">
       <span class="font-bold text-2xl tracking-wide">ZOUND</span>
     </a>
 
     <!-- Primary Nav Links -->
     <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-neutral-700">
       <a href="/user/products" class="hover:text-black">Products</a>
-      <a href="/user/brands" class="hover:text-black">Brands</a>
-      <a href="/user/deals" class="hover:text-black">Deals</a>
-      <a href="/user/support" class="hover:text-black">Support</a>
+      <a href="/brands" class="hover:text-black">Brands</a>
+      <a href="/deals" class="hover:text-black">Deals</a>
+      <a href="/support" class="hover:text-black">Support</a>
     </nav>
 
     <!-- Right Side Controls -->
@@ -36,7 +36,7 @@
           <span class="material-icons text-neutral-700 text-[20px]">favorite_border</span>
 
           <% if (typeof wishlistCount !=='undefined' && wishlistCount> 0) { %>
-            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full px-1">
+            <span class="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full border-2 border-white shadow-sm">
               <%= wishlistCount %>
             </span>
             <% } %>
@@ -47,7 +47,7 @@
           <span class="material-icons text-neutral-700 text-[20px]">shopping_cart</span>
 
           <% if (typeof cartCount !=='undefined' && cartCount> 0) { %>
-            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full px-1">
+            <span class="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full border-2 border-white shadow-sm">
               <%= cartCount %>
             </span>
             <% } %>
@@ -110,7 +110,7 @@
             <span class="material-icons text-neutral-700 text-[20px]">shopping_cart</span>
 
             <% if (typeof cartCount !=='undefined' && cartCount> 0) { %>
-              <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full px-1">
+              <span class="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full border-2 border-white shadow-sm">
                 <%= cartCount %>
               </span>
               <% } %>

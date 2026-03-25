@@ -85,7 +85,7 @@ export const requireAdmin = (req, res, next) => {
 
     if (req.user.role !== "admin") {
         // Logged in but not admin → redirect properly
-        return res.redirect('/user/home');
+        return res.redirect('/');
     }
 
     next();

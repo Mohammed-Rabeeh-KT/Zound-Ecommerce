@@ -3,16 +3,12 @@ const router = express.Router();
 import { authenticateUser, requireUser } from '../../middlewares/auth/authMiddleware.js';
 
 // Controllers (SSR)
-import homeController from '../../controllers/user/ssr/homeController.js';
 import authController from '../../controllers/user/ssr/authController.js';
 import userController from '../../controllers/user/ssr/userController.js';
 import productController from '../../controllers/user/ssr/productController.js';
 import cartController from '../../controllers/user/ssr/cartController.js';
 import checkoutController from '../../controllers/user/ssr/checkoutController.js';
 import wishlistController from '../../controllers/user/ssr/wishlistController.js';
-import brandController from '../../controllers/user/ssr/brandController.js';
-import dealController from '../../controllers/user/ssr/dealController.js';
-import supportController from '../../controllers/user/ssr/supportController.js';
 import { getProductReviewsPage, getUserReviewsPage } from '../../controllers/user/ssr/reviewController.js';
 
 // Authentication SSR Routes
@@ -24,12 +20,6 @@ router.post('/forgot-password', authController.forgotPassword); // SSR POST
 router.get('/fp-verify-otp', authController.loadFpVerifyOTP);
 router.get('/fp-reset-password', authController.loadResetPassword);
 router.get('/logout', authController.logout);
-
-// Homepage & Static SSR Routes
-router.get('/home', homeController.loadHomepage);
-router.get('/brands', brandController.getBrandsPage);
-router.get('/deals', dealController.getDealsPage);
-router.get('/support', supportController.getSupportPage);
 
 // Product SSR Routes
 router.get('/products', productController.getProductListing);

@@ -16,6 +16,8 @@ import userSsrRouter from './routes/user/user.ssr.routes.js';
 import userApiRouter from './routes/user/user.api.routes.js';
 import adminSsrRouter from './routes/admin/admin.ssr.routes.js';
 import adminApiRouter from './routes/admin/admin.api.routes.js';
+import publicRouter from './routes/public.routes.js';
+
 import authRouter from './routes/auth.routes.js';
 import { authenticateUser } from './middlewares/auth/authMiddleware.js';
 import cacheControlMiddleware from './middlewares/core/cacheControlMiddleware.js';
@@ -67,6 +69,7 @@ app.use(localsMiddleware);
 
 app.use('/auth', authRouter);
 
+app.use('/', publicRouter);
 app.use('/user', userSsrRouter);
 app.use('/api/user', userApiRouter);
 app.use('/admin', adminSsrRouter);
@@ -78,9 +81,8 @@ app.use(globalErrorHandler);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}/user/home`)
+  console.log(`Server running on http://localhost:${PORT}/`)
 })
 
 export default app;
-
 

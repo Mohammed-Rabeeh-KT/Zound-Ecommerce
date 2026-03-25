@@ -9,7 +9,7 @@ import authService from "../../../services/user/authService.js";
 const loadLogin = catchAsync(async (req, res, next) => {
     // Redirect authenticated users away from login
     if (req.user) {
-        return res.redirect('/user/home');
+        return res.redirect('/');
     }
     return res.render("user/login", {
         layout: "layout",
@@ -22,7 +22,7 @@ const loadLogin = catchAsync(async (req, res, next) => {
 const loadSignup = (req, res) => {
     // Redirect authenticated users away from signup
     if (req.user) {
-        return res.redirect('/user/home');
+        return res.redirect('/');
     }
     const referralCode = req.query.ref || '';
     res.render("user/signup", {
@@ -133,10 +133,10 @@ const logout = (req, res) => {
             if (err)
                 console.error("Session destroy error:", err);
 
-            return res.redirect("/user/home");
+            return res.redirect("/");
         });
     } else {
-        return res.redirect("/user/home");
+        return res.redirect("/");
     }
 };
 
@@ -164,7 +164,7 @@ const googleCallback = (req, res, next) => {
                 sameSite: "lax"
             });
             res.cookie("authToken", token, cookieOptions);
-            return res.redirect("/user/home");
+            return res.redirect("/");
         }
     )(req, res, next);
 };

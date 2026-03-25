@@ -30,7 +30,7 @@ const login = catchAsync(async (req, res, next) => {
 
     res.json({
         success: true,
-        redirectUrl: "/user/home"
+        redirectUrl: "/"
     });
 });
 

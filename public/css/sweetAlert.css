@@ -48,7 +48,31 @@
 .zound-toast-popup {
     background: #ffffff !important;
     color: #1e293b !important;
-    border-left: 4px solid !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
-    border-radius: 0.5rem !important;
+    border-left: 4px solid #002366 !important; /* Default primary */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+    border-radius: 0.75rem !important;
+    padding: 1rem !important;
+}
+
+.swal2-toast.swal2-icon-success {
+    border-left-color: #10b981 !important;
+}
+
+.swal2-toast.swal2-icon-error {
+    border-left-color: #ef4444 !important;
+}
+
+.swal2-toast.swal2-icon-warning {
+    border-left-color: #f59e0b !important;
+}
+
+.swal2-toast.swal2-icon-info {
+    border-left-color: #3b82f6 !important;
+}
+
+.zound-toast-popup .swal2-title {
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    margin: 0 0 0 0.5rem !important;
 }

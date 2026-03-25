@@ -85,7 +85,7 @@
         <h1 class="error-code">404</h1>
         <h2 class="error-message">Page Not Found</h2>
         <p class="error-desc">Sorry, we couldn't find the page you're looking for.</p>
-        <a href="<%= typeof isAdmin !== 'undefined' && isAdmin ? '/admin/dashboard' : '/user/home' %>"
+        <a href="<%= typeof isAdmin !== 'undefined' && isAdmin ? '/admin/dashboard' : '/' %>"
             class="error-btn">
             <%= typeof isAdmin !=='undefined' && isAdmin ? 'Go to Dashboard' : 'Return to home' %>
         </a>
