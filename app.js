@@ -54,6 +54,7 @@ app.use(passport.session());
 app.use(cacheControlMiddleware);
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/utils', express.static(path.join(__dirname, 'utils')));
 
 app.set('view engine', 'ejs');

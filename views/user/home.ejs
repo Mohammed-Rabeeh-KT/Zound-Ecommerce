@@ -136,26 +136,14 @@
         </div>
       </div>
 
-      <!-- HERO IMAGE / VISUAL (Interactive 3D Tilt) -->
-      <div class="relative z-10 animate-fade-up perspective-1000">
-        <!-- Interactive Container -->
-        <div id="heroProductContainer"
-          class="relative w-full aspect-square max-w-md mx-auto transition-transform duration-100 ease-out"
-          style="transform-style: preserve-3d;">
-
-          <!-- Sound Wave Background Animation -->
-          <div class="absolute inset-0 flex items-center justify-center z-0">
-            <div class="w-64 h-64 border border-blue-100 rounded-full animate-ping opacity-20"
-              style="animation-duration: 2s;"></div>
-            <div class="absolute w-80 h-80 border border-blue-50 rounded-full animate-ping opacity-10"
-              style="animation-duration: 3s; animation-delay: 0.5s;"></div>
+      <!-- HERO 3D MODEL VISUAL -->
+      <div class="relative z-10 animate-fade-up overflow-visible">
+        <div id="hero3DContainer" class="relative w-full aspect-square max-w-lg mx-auto cursor-grab active:cursor-grabbing" 
+             style="height: 500px;">
+          <!-- Fallback Image while 3D loads -->
+          <div id="modelLoader" class="absolute inset-0 flex items-center justify-center z-20">
+            <div class="w-12 h-12 border-4 border-blue-100 border-t-[#002366] rounded-full animate-spin"></div>
           </div>
-
-          <!-- Product Image with 3D Depth -->
-          <img id="heroProduct" class="hero-image" src="/images/hero-headphone-premium.png" loading="eager"
-            onerror="this.src='https://assets.bose.com/content/dam/Bose_DAM/Web/consumer_electronics/global/products/headphones/qc45/product_silo_images/QC45_Black_Ecom_01.png'"
-            class="relative z-10 w-full h-full object-contain drop-shadow-2xl" style="transform: translateZ(50px);"
-            alt="Premium Headphone">
         </div>
       </div>
     </div>
@@ -390,6 +378,117 @@
   </section>
 
 </div>
+
+<!-- Three.js Library & Core Dependencies -->
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+</script>
+
+<script type="module">
+  import * as THREE from 'three';
+  import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+  import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+  function initHero3D() {
+    const container = document.getElementById('hero3DContainer');
+    if (!container) return;
+
+    const loaderEl = document.getElementById('modelLoader');
+
+    // Scene setup
+    const scene = new THREE.Scene();
+    
+    // Camera setup
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera.position.set(0, 0, 5);
+
+    // Renderer setup
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.5; // Slightly boosted exposure for better detailing
+    container.appendChild(renderer.domElement);
+
+    // Controls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.enableZoom = false;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 2.0;
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 3.0);
+    directionalLight.position.set(5, 10, 7.5);
+    scene.add(directionalLight);
+
+    const pointLight = new THREE.PointLight(0x002366, 3, 10);
+    pointLight.position.set(-5, -5, 5);
+    scene.add(pointLight);
+
+    // Load Local Model
+    const loader = new GLTFLoader();
+    const MODEL_URL = '/uploads/airpods_max_clone.glb';
+
+    loader.load(
+      MODEL_URL,
+      (gltf) => {
+        const model = gltf.scene;
+        
+        // Center and scale model properly
+        const box = new THREE.Box3().setFromObject(model);
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        
+        // Reset model position to center its geometry
+        model.position.x += (model.position.x - center.x);
+        model.position.y += (model.position.y - center.y);
+        model.position.z += (model.position.z - center.z);
+        
+        // Scale to fit viewport nicely
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const targetScale = 3.5 / maxDim;
+        model.scale.setScalar(targetScale);
+        
+        scene.add(model);
+        if (loaderEl) {
+          loaderEl.style.opacity = '0';
+          setTimeout(() => { loaderEl.style.display = 'none'; }, 500);
+        }
+        
+        function animate() {
+          requestAnimationFrame(animate);
+          controls.update();
+          renderer.render(scene, camera);
+        }
+        animate();
+      },
+      undefined,
+      (error) => {
+        console.error('An error happened during local 3D model loading:', error);
+        if (loaderEl) loaderEl.innerHTML = '<span class="text-slate-400 text-xs">Failed to load local model</span>';
+      }
+    );
+
+    // Handle Resize
+    window.addEventListener('resize', () => {
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', initHero3D);
+</script>
 
 <script src="/js/user/dynamicBanner.js"></script>
 <script src="/js/user/home.js"></script>
