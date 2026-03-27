@@ -76,3 +76,12 @@
     color: #1e293b !important;
     margin: 0 0 0 0.5rem !important;
 }
+
+/* Ensure all alerts and toasts are on top of everything (including header z-10001) */
+.swal2-container {
+    z-index: 999999 !important;
+}
+
+.zound-swal-popup, .zound-toast-popup {
+    z-index: 1000000 !important;
+}
