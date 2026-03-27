@@ -312,14 +312,31 @@ const deleteAddress = async (userId, addressId) => {
 // =====================================================
 // WALLET (using separate WalletTransaction collection)
 // =====================================================
-const getWalletData = async (userId) => {
+const getWalletData = async (userId, page = 1, limit = 10) => {
     const user = await User.findById(userId);
 
-    // Fetch wallet history from the separate WalletTransaction collection
-    const walletHistory = await WalletTransaction.find({ userId })
-        .sort({ date: -1 });
+    const skip = (page - 1) * limit;
 
-    return { user, walletHistory };
+    // Fetch wallet history from the separate WalletTransaction collection
+    const totalItems = await WalletTransaction.countDocuments({ userId });
+    const totalPages = Math.ceil(totalItems / limit);
+
+    const walletHistory = await WalletTransaction.find({ userId })
+        .sort({ date: -1 })
+        .skip(skip)
+        .limit(limit);
+
+    return { 
+        user, 
+        walletHistory,
+        pagination: {
+            currentPage: page,
+            totalPages,
+            totalItems,
+            hasNextPage: page < totalPages,
+            hasPrevPage: page > 1
+        }
+    };
 };
 
 const addMoneyToWallet = async (amount) => {

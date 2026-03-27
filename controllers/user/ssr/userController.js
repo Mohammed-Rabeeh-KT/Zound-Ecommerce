@@ -41,12 +41,21 @@ const loadAddresses = catchAsync(async (req, res, next) => {
 // Load Wallet Page
 const getWallet = catchAsync(async (req, res, next) => {
     const userId = req.user._id;
+    const page = parseInt(req.query.page) || 1;
 
-    const data = await userService.getWalletData(userId);
+    const data = await userService.getWalletData(userId, page);
+
+    if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+        return res.json({
+            transactions: data.walletHistory,
+            pagination: data.pagination
+        });
+    }
 
     res.render('user/wallet', {
         user: data.user,
         walletHistory: data.walletHistory,
+        pagination: data.pagination,
         currentPage: 'wallet'
     });
 });

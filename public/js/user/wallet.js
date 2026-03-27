@@ -1,3 +1,52 @@
+// =======================
+// PAGINATION RENDERER
+// =======================
+window.renderWalletTransactions = function(data) {
+    const transactions = data.transactions || [];
+    
+    if (transactions.length === 0) {
+        return `
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <span class="material-icons">account_balance_wallet</span>
+                </div>
+                <h3>No transactions found</h3>
+                <p>There are no transactions on this page.</p>
+            </div>
+        `;
+    }
+
+    return transactions.map(t => {
+        const isCredit = t.type === 'Credit';
+        const iconClass = isCredit ? 'credit' : 'debit';
+        const iconName = isCredit ? 'arrow_downward' : 'arrow_upward';
+        const title = t.description || (isCredit ? 'Money Added' : 'Payment');
+        const sign = isCredit ? '+' : '-';
+        const amountStr = Number(t.amount).toFixed(2);
+        
+        const dateStr = new Date(t.date).toLocaleDateString('en-US', {
+            day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+
+        return `
+            <div class="transaction-item">
+                <div class="t-left">
+                    <div class="t-icon ${iconClass}">
+                        <span class="material-icons">${iconName}</span>
+                    </div>
+                    <div class="t-details">
+                        <h4>${title}</h4>
+                        <p>${dateStr}</p>
+                    </div>
+                </div>
+                <div class="t-right">
+                    <span class="t-amount ${iconClass}">${sign}₹${amountStr}</span>
+                    <span class="t-status">Success</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+};
 
 // =======================
 // DROPDOWN VARIANT LOGIC
@@ -45,7 +94,7 @@ if (dropdown) {
 async function processAddMoney() {
     const amount = amountInput.value;
     if (!amount || amount <= 0) {
-        Swal.fire('Error', 'Please enter a valid amount', 'error');
+        toast.error('Please enter a valid amount');
         return;
     }
 
@@ -57,7 +106,7 @@ async function processAddMoney() {
         }
     } catch (error) {
         console.error(error);
-        Swal.fire('Error', 'Something went wrong', 'error');
+        toast.error('Something went wrong');
     }
 }
 
@@ -122,7 +171,7 @@ document.addEventListener('keydown', function (e) {
 async function processModalAddMoney() {
     const amount = modalAmountInput.value;
     if (!amount || amount <= 0) {
-        Swal.fire('Error', 'Please enter a valid amount', 'error');
+        toast.error('Please enter a valid amount');
         return;
     }
 
@@ -135,7 +184,7 @@ async function processModalAddMoney() {
         }
     } catch (error) {
         console.error(error);
-        Swal.fire('Error', 'Something went wrong', 'error');
+        toast.error('Something went wrong');
     }
 }
 
@@ -143,7 +192,7 @@ async function processModalAddMoney() {
 function initiateRazorpay(order) {
     if (typeof razorpayKeyId === 'undefined') {
         console.error('Razorpay Key ID not defined');
-        Swal.fire('Error', 'Configuration error', 'error');
+        toast.error('Configuration error');
         return;
     }
 
@@ -163,14 +212,14 @@ function initiateRazorpay(order) {
                 });
 
                 if (verifyRes.data.success) {
-                    Swal.fire('Success', 'Money added successfully!', 'success')
-                        .then(() => location.reload());
+                    toast.success('Money added successfully!');
+                    setTimeout(() => location.reload(), 1000);
                 } else {
-                    Swal.fire('Error', 'Payment verification failed', 'error');
+                    toast.error('Payment verification failed');
                 }
             } catch (err) {
                 console.error(err);
-                Swal.fire('Error', 'Verification error', 'error');
+                toast.error('Verification error');
             }
         },
         "theme": {

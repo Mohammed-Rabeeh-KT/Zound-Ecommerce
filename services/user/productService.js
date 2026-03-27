@@ -99,21 +99,23 @@ const getProductListingData = async (query) => {
         };
     }
 
-    //sorting
-    let sortOrder = { createdAt: -1 }; // newest (default)
+    // sorting
+    let sortOrder = { createdAt: -1 }; // default: newest
 
     if (sort === "price-low") sortOrder = { "variants.salePrice": 1 };
     if (sort === "price-high") sortOrder = { "variants.salePrice": -1 };
     if (sort === "name-asc") sortOrder = { productName: 1 };
-    if (sort === "name-desc") sortOrder = { productName: -1 };
+    if (sort === "name-desc") sortOrder = { productName: -1, createdAt: -1 };
+    if (sort === "popularity") sortOrder = { averageRating: -1, reviewCount: -1, createdAt: -1 };
+    if (sort === "featured") sortOrder = { isBestSeller: -1, createdAt: -1 };
 
     const totalProducts = await Product.countDocuments(filter);
-
 
     const products = await Product.find(filter)
         .populate('brand')
         .populate('category')
         .sort(sortOrder)
+        .collation({ locale: 'en', strength: 2, numericOrdering: true })
         .skip(skip)
         .limit(limit)
 
@@ -197,20 +199,18 @@ const getProductDetailsData = async (productSlug) => {
         return { unavailable: true, reason: "notFound" };
     }
 
-    let activeVariants = product.variants.filter(v => v.status === 'Active' && v.stock > 0);
+    let activeVariants = product.variants.filter(v => v.status === 'Active');
 
-    // Sort variants by price ascending to default to the cheapest option
-    activeVariants.sort((a, b) => Number(a.salePrice) - Number(b.salePrice));
+    // Sort variants: In-stock first, then by price ascending
+    activeVariants.sort((a, b) => {
+        if (a.stock > 0 && b.stock <= 0) return -1;
+        if (a.stock <= 0 && b.stock > 0) return 1;
+        return Number(a.salePrice) - Number(b.salePrice);
+    });
 
     if (activeVariants.length === 0) {
-
-        activeVariants = product.variants.filter(v => v.status === 'Active');
+        activeVariants = product.variants;
         activeVariants.sort((a, b) => Number(a.salePrice) - Number(b.salePrice));
-
-        if (activeVariants.length === 0) {
-            activeVariants = product.variants;
-            activeVariants.sort((a, b) => Number(a.salePrice) - Number(b.salePrice));
-        }
     }
 
     const relatedProductsRaw = await Product.find({

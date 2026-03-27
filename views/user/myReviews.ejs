@@ -29,7 +29,7 @@
 
 
                     <!-- Reviews List -->
-                    <div style="display:flex;flex-direction:column;gap:16px;">
+                    <div id="reviews-list" style="display:flex;flex-direction:column;gap:16px;">
                         <% reviews.forEach(function(review) { %>
                             <div class="premium-card" style="overflow:hidden;">
                                 <div style="display:flex;align-items:flex-start;gap:16px;padding:24px;">
@@ -147,18 +147,17 @@
                             <% }); %>
                     </div>
 
-                    <!-- Pagination -->
-                    <% if (pagination.pages> 1) { %>
-                        <div style="display:flex;justify-content:center;gap:8px;margin-top:32px;">
-                            <% for (let p=1; p <=pagination.pages; p++) { %>
-                                <a href="/user/profile/reviews?page=<%= p %>"
-                                    style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;transition:all 0.2s;
-                                    <%= p === pagination.current ? 'background:#002366;color:#fff;' : 'background:#f8fafc;color:#374151;border:1px solid #e2e8f0;' %>">
-                                    <%= p %>
-                                </a>
-                                <% } %>
-                        </div>
-                        <% } %>
+                    <!-- AJAX Pagination -->
+                    <%- include('../partials/user/ajax-pagination', {
+                        paginationConfig: {
+                            containerId: 'reviews-list',
+                            fetchUrl: '/user/profile/reviews',
+                            totalPages: pagination.pages,
+                            currentPage: pagination.current,
+                            renderFn: 'renderUserReviews',
+                            extraParams: {}
+                        }
+                    }) %>
 
                             <% } else { %>
 
@@ -196,34 +195,104 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
-        async function deleteReview(reviewId) {
-            const result = await Swal.fire({
-                title: 'Delete Review?',
-                text: 'This action cannot be undone.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc2626',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: 'Yes, Delete',
-                cancelButtonText: 'Cancel'
-            });
+        window.renderUserReviews = function(data) {
+            const reviews = data.reviews || [];
+            
+            if (reviews.length === 0) {
+                return `
+                    <section class="premium-card" style="text-align:center;padding:60px 24px;">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#d1d5db"
+                            stroke-width="1.5" style="margin:0 auto 16px;display:block;">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                        <h3 style="font-size:18px;font-weight:700;color:#0f172a;margin:0 0 8px;">No Reviews</h3>
+                        <p style="font-size:14px;color:#64748b;margin:0 0 24px;">There are no reviews on this page.</p>
+                    </section>
+                `;
+            }
 
-            if (result.isConfirmed) {
+            return reviews.map(review => {
+                let reviewImage = '/images/placeholder.png';
+                const p = review.product;
+                if (p) {
+                    if (review.variantId && p.variants && p.variants.length > 0) {
+                        const variant = p.variants.find(v => v._id.toString() === review.variantId.toString());
+                        if (variant && variant.images && variant.images.length > 0) {
+                            reviewImage = variant.images[0];
+                        }
+                    }
+                    if (reviewImage === '/images/placeholder.png' && p.productImages && p.productImages.length > 0) {
+                        reviewImage = p.productImages[0];
+                    }
+                }
+
+                let starsHtml = '';
+                for (let s = 1; s <= 5; s++) {
+                    const color = s <= review.rating ? '#f59e0b' : '#e5e7eb';
+                    starsHtml += `<svg width="16" height="16" viewBox="0 0 24 24" fill="${color}" stroke="none">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                  </svg>`;
+                }
+
+                const commentHtml = review.comment ? `
+                    <p style="font-size:14px;color:#4b5563;line-height:1.6;margin:0 0 12px;font-style:italic;">
+                        "${review.comment}"
+                    </p>` : '';
+
+                const dateStr = new Date(review.createdAt).toLocaleDateString('en-IN', {
+                    day: 'numeric', month: 'long', year: 'numeric'
+                });
+
+                const productTitleHtml = p 
+                    ? `<a href="/user/products/${p.slug}" style="font-weight:700;font-size:16px;color:#0f172a;text-decoration:none;">${p.productName}</a>`
+                    : `<span style="font-weight:700;font-size:16px;color:#9ca3af;">Product Unavailable</span>`;
+
+                const productImgHtml = p
+                    ? `<a href="/user/products/${p.slug}" style="flex-shrink:0;">
+                        <img src="${reviewImage}" alt="${p.productName}" style="width:80px;height:80px;object-fit:cover;border-radius:12px;border:1px solid #e2e8f0;">
+                       </a>`
+                    : ``;
+
+                return `
+                <div class="premium-card" style="overflow:hidden;">
+                    <div style="display:flex;align-items:flex-start;gap:16px;padding:24px;">
+                        ${productImgHtml}
+                        <div style="flex:1;min-width:0;">
+                            <div style="margin-bottom:8px;">${productTitleHtml}</div>
+                            <div style="display:flex;align-items:center;gap:2px;margin-bottom:12px;">
+                                ${starsHtml}
+                                <span style="font-size:13px;font-weight:600;color:#374151;margin-left:6px;">${review.rating}.0</span>
+                            </div>
+                            ${commentHtml}
+                            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-top:16px;border-top:1px solid #f3f4f6;">
+                                <span style="font-size:12px;color:#9ca3af;">Reviewed on ${dateStr}</span>
+                                <button onclick="deleteReview('${review._id}')" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;background:#fee2e2;color:#dc2626;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="m19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        };
+
+        function deleteReview(reviewId) {
+            confirmAction('This review will be permanently deleted.', async () => {
                 try {
                     const response = await axios.delete('/api/user/reviews/' + reviewId);
                     if (response.data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Deleted!',
-                            text: 'Your review has been deleted.',
-                            confirmButtonColor: '#002366'
-                        }).then(function () { window.location.reload(); });
+                        toast.success('Your review has been deleted');
+                        setTimeout(() => window.location.reload(), 1000);
                     }
                 } catch (error) {
                     var errorMsg = error.response && error.response.data && error.response.data.message ? error.response.data.message : 'Failed to delete review.';
-                    Swal.fire({ icon: 'error', title: 'Error', text: errorMsg, confirmButtonColor: '#002366' });
+                    toast.error(errorMsg);
                 }
-            }
+            });
         }
     </script>
 

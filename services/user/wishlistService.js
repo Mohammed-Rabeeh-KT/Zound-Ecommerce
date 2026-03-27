@@ -3,9 +3,10 @@ import Product from '../../models/productSchema.js';
 import Cart from '../../models/cartSchema.js';
 import AppError from '../../utils/AppError.js';
 import { STATUS } from '../../utils/response.js';
+import offerService from '../admin/offerService.js';
 
-// Get wishlist data for the user
-const getWishlistData = async (userId) => {
+// Get wishlist data for the user (with pagination)
+const getWishlistData = async (userId, page = 1, limit = 9) => {
     const wishlist = await Wishlist.findOne({ userId }).populate({
         path: 'products.productId',
         populate: [
@@ -14,7 +15,80 @@ const getWishlistData = async (userId) => {
         ]
     });
 
-    return { wishlist: wishlist || { products: [] } };
+    if (!wishlist || !wishlist.products || wishlist.products.length === 0) {
+        return {
+            wishlist: { products: [] },
+            totalItems: 0,
+            pagination: {
+                currentPage: 1,
+                totalPages: 0,
+                totalItems: 0,
+                hasNextPage: false,
+                hasPrevPage: false
+            }
+        };
+    }
+
+    // Filter out items with deleted/null products
+    const validProducts = wishlist.products.filter(item => item.productId);
+    const totalItems = validProducts.length;
+    const totalPages = Math.ceil(totalItems / limit);
+    const skip = (page - 1) * limit;
+
+    // Slice for pagination
+    const paginatedProducts = validProducts.slice(skip, skip + limit);
+
+    // Apply offer data to each paginated item
+    const productsWithOffers = await Promise.all(
+        paginatedProducts.map(async (item) => {
+            const product = item.productId;
+            let offerData = null;
+
+            // Find matching variant
+            let variantIndex = 0;
+            if (item.variantId && product.variants) {
+                const idx = product.variants.findIndex(
+                    v => v._id.toString() === item.variantId.toString()
+                );
+                if (idx !== -1) variantIndex = idx;
+            }
+
+            try {
+                offerData = await offerService.calculateOfferPrice(product, variantIndex);
+            } catch (e) {
+                // Offer calculation failed — continue without offer
+            }
+
+            // Attach offer info to the item object
+            const itemObj = item.toObject ? item.toObject() : { ...item };
+            if (offerData && offerData.hasOffer) {
+                itemObj.offer = {
+                    hasOffer: true,
+                    offerPrice: offerData.offerPrice,
+                    originalPrice: offerData.originalPrice,
+                    discount: offerData.discount,
+                    discountType: offerData.discountType,
+                    offerTitle: offerData.offerTitle
+                };
+            } else {
+                itemObj.offer = { hasOffer: false };
+            }
+
+            return itemObj;
+        })
+    );
+
+    return {
+        wishlist: { ...wishlist.toObject(), products: productsWithOffers },
+        totalItems,
+        pagination: {
+            currentPage: page,
+            totalPages,
+            totalItems,
+            hasNextPage: page < totalPages,
+            hasPrevPage: page > 1
+        }
+    };
 };
 
 // Get wishlist count

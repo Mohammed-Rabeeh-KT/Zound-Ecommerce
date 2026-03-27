@@ -21,10 +21,10 @@
                     <div class="header-content">
                         <h1 class="headline">My Wishlist</h1>
                         <p class="subheadline">
-                            <% if (wishlist && wishlist.products && wishlist.products.length> 0) { %>
+                            <% if (typeof totalItems !== 'undefined' && totalItems > 0) { %>
                                 You have <span class="count-highlight">
-                                    <%= wishlist.products.length %>
-                                </span> item<%= wishlist.products.length> 1 ? 's' : '' %> saved
+                                    <%= totalItems %>
+                                </span> item<%= totalItems > 1 ? 's' : '' %> saved
                                     <% } else { %>
                                         Save your favorite items here
                                         <% } %>
@@ -56,7 +56,7 @@
                         </a>
                     </section>
                     <% } else { %>
-                        <section class="wishlist-grid">
+                        <section class="wishlist-grid" id="wishlist-grid">
                             <% for (var i=0; i < wishlist.products.length; i++) { var item=wishlist.products[i]; var
                                 product=item.productId; if (!product) continue; var variant=null; var
                                 itemVariantId=item.variantId ? item.variantId.toString() : null; if (itemVariantId &&
@@ -197,6 +197,19 @@
                                     </div>
                                     <% } %>
                         </section>
+
+                        <!-- AJAX Pagination -->
+                        <%- include('../partials/user/ajax-pagination', {
+                            paginationConfig: {
+                                containerId: 'wishlist-grid',
+                                fetchUrl: '/user/wishlist',
+                                totalPages: pagination.totalPages,
+                                currentPage: pagination.currentPage,
+                                renderFn: 'renderWishlistItems',
+                                extraParams: {}
+                            }
+                        }) %>
+
                         <% } %>
             </main>
     </div>

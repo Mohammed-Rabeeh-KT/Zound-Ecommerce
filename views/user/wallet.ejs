@@ -88,7 +88,7 @@
                     </div>
 
                     <% if (walletHistory && walletHistory.length> 0) { %>
-                        <div class="transaction-list">
+                        <div class="transaction-list" id="wallet-transactions">
                             <% walletHistory.forEach(transaction=> { %>
                                 <div class="transaction-item">
                                     <div class="t-left">
@@ -121,7 +121,17 @@
                                 <% }); %>
                         </div>
 
-                        <%# Pagination (if needed) - Add later %>
+                        <!-- AJAX Pagination -->
+                        <%- include('../partials/user/ajax-pagination', {
+                            paginationConfig: {
+                                containerId: 'wallet-transactions',
+                                fetchUrl: '/user/wallet',
+                                totalPages: pagination.totalPages,
+                                currentPage: pagination.currentPage,
+                                renderFn: 'renderWalletTransactions',
+                                extraParams: {}
+                            }
+                        }) %>
 
                             <% } else { %>
                                 <div class="empty-state">

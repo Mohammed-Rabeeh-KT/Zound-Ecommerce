@@ -447,12 +447,7 @@ async function handleProfileUpdate(e) {
 
     // Validate all fields first
     if (!validateAllFields()) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Validation Error',
-            text: 'Please fix the errors in the form before saving.',
-            confirmButtonColor: '#002366'
-        });
+        toast.error('Please fix the errors in the form before saving.');
         return;
     }
 
@@ -478,20 +473,17 @@ async function handleProfileUpdate(e) {
         const { data: data } = await axios.put('/api/user/profile/edit', formData);
 
         if (data.success) {
-            await Swal.fire({
-                icon: 'success',
-                title: 'Profile Updated',
-                showConfirmButton: false,
-                timer: 1500
-            });
-            window.location.href = '/user/profile';
+            toast.success('Profile Updated Successfully');
+            setTimeout(() => {
+                window.location.href = '/user/profile';
+            }, 1000);
         } else {
             throw new Error(data.message || 'Failed to update profile');
         }
     } catch (err) {
         console.error('Update error:', err);
         const errorMsg = err.response?.data?.message || err.message || 'Something went wrong';
-        Swal.fire('Error', errorMsg, 'error');
+        toast.error(errorMsg);
     } finally {
         if (saveBtn) {
             saveBtn.innerHTML = originalText;

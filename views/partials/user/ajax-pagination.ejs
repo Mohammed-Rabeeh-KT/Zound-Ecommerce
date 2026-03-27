@@ -1,0 +1,399 @@
+<!--
+  AJAX Pagination Partial — Luxury Zound Design
+  
+  Usage: include('../partials/user/ajax-pagination', { paginationConfig: { ... } })
+  
+  Required paginationConfig properties:
+    - containerId:    (string) The ID of the container whose content will be replaced
+    - fetchUrl:       (string) The base API URL to fetch paginated data
+    - totalPages:     (number) Total number of pages (from server)
+    - currentPage:    (number) Current active page (from server)
+    - renderFn:       (string) Name of a global JS function that takes (data) and returns HTML string
+    - extraParams:    (object, optional) Additional query params to send with each request
+-->
+
+<% const config=typeof paginationConfig !=='undefined' ? paginationConfig : {}; const containerId=config.containerId
+    || 'paginated-content' ; const fetchUrl=config.fetchUrl || '' ; const totalPages=config.totalPages || 1; const
+    currentPage=config.currentPage || 1; const renderFn=config.renderFn || 'renderPaginatedItems' ; const
+    extraParams=config.extraParams || {}; const paginationId='zound-pagination-' + containerId; %>
+
+    <!-- Pagination UI -->
+    <% if (totalPages> 1) { %>
+        <nav class="zound-pagination" id="<%= paginationId %>" aria-label="Page navigation" data-url="<%= fetchUrl %>"
+            data-total="<%= totalPages %>" data-current="<%= currentPage %>" data-container="<%= containerId %>"
+            data-render="<%= renderFn %>" data-extra='<%= JSON.stringify(extraParams) %>'>
+
+            <!-- Previous Button -->
+            <button class="zp-btn zp-prev" aria-label="Previous page" <%=currentPage <=1 ? 'disabled' : '' %>>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
+
+            <!-- Page Numbers -->
+            <div class="zp-pages">
+                <% for (let i=1; i <=totalPages; i++) { %>
+                    <% if (totalPages <=7 || i===1 || i===totalPages || (i>= currentPage - 1 && i <= currentPage + 1)) {
+                            %>
+                            <button class="zp-page <%= i === currentPage ? 'active' : '' %>" data-page="<%= i %>">
+                                <%= i %>
+                            </button>
+                            <% } else if (i===currentPage - 2 || i===currentPage + 2) { %>
+                                <span class="zp-ellipsis">•••</span>
+                                <% } %>
+                                    <% } %>
+            </div>
+
+            <!-- Next Button -->
+            <button class="zp-btn zp-next" aria-label="Next page" <%=currentPage>= totalPages ? 'disabled' : '' %>>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </button>
+
+            <!-- Page Info -->
+            <div class="zp-info">
+                Page <span class="zp-info-current">
+                    <%= currentPage %>
+                </span> of <span class="zp-info-total">
+                    <%= totalPages %>
+                </span>
+            </div>
+
+            <!-- Loading Overlay (for the content container) -->
+            <div class="zp-loader" id="<%= paginationId %>-loader">
+                <div class="zp-spinner">
+                    <div class="zp-dot"></div>
+                    <div class="zp-dot"></div>
+                    <div class="zp-dot"></div>
+                </div>
+            </div>
+        </nav>
+        <% } %>
+
+
+            <!-- ======================== -->
+            <!-- STYLES                   -->
+            <!-- ======================== -->
+            <style>
+                .zound-pagination {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 6px;
+                    padding: 28px 0 12px;
+                    position: relative;
+                    user-select: none;
+                }
+
+                /* Arrow Buttons */
+                .zp-btn {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%; /* Circle */
+                    border: 1px solid var(--border-color, #e5e7eb);
+                    background: var(--bg-card, #ffffff);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    color: var(--text-primary, #111827);
+                    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                    flex-shrink: 0;
+                }
+
+                .zp-btn:hover:not(:disabled) {
+                    background: var(--text-primary, #111827);
+                    border-color: var(--text-primary, #111827);
+                    color: #ffffff;
+                }
+
+                .zp-btn:active:not(:disabled) {
+                    transform: scale(0.95);
+                }
+
+                .zp-btn:disabled {
+                    opacity: 0.35;
+                    cursor: not-allowed;
+                    background: #f9fafb;
+                }
+
+                .zp-btn svg {
+                    transition: inherit;
+                }
+
+                /* Page Numbers Container */
+                .zp-pages {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px; /* Increased gap to match orders */
+                }
+
+                /* Page Number Buttons */
+                .zp-page {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%; /* Circle */
+                    border: none;
+                    background: transparent;
+                    font-family: inherit;
+                    font-size: 0.9rem;
+                    font-weight: 500;
+                    color: var(--text-secondary, #6b7280);
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                    position: relative;
+                }
+
+                .zp-page:hover:not(.active) {
+                    background: #f1f5f9;
+                    color: var(--text-primary, #111827);
+                }
+
+                /* Active Page */
+                .zp-page.active {
+                    background: var(--text-primary, #111827);
+                    color: #ffffff;
+                }
+
+                /* Removed bottom bar for active state */
+
+                /* Ellipsis */
+                .zp-ellipsis {
+                    width: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 0.75rem;
+                    color: #9ca3af;
+                    letter-spacing: 2px;
+                    pointer-events: none;
+                }
+
+                /* Page Info Text */
+                .zp-info {
+                    position: absolute;
+                    right: 0;
+                    bottom: -8px;
+                    font-size: 0.75rem;
+                    color: #9ca3af;
+                    font-weight: 500;
+                    letter-spacing: 0.02em;
+                }
+
+                .zp-info-current {
+                    color: var(--text-primary, #111827);
+                    font-weight: 700;
+                }
+
+                /* ---- Loading Overlay ---- */
+                .zp-loader {
+                    display: none;
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(255, 255, 255, 0.55);
+                    backdrop-filter: blur(3px);
+                    -webkit-backdrop-filter: blur(3px);
+                    z-index: 999;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .zp-loader.show {
+                    display: flex;
+                }
+
+                .zp-spinner {
+                    display: flex;
+                    gap: 8px;
+                    align-items: center;
+                }
+
+                .zp-dot {
+                    width: 10px;
+                    height: 10px;
+                    border-radius: 50%;
+                    background: var(--text-primary, #111827);
+                    animation: zpBounce 1.4s ease-in-out infinite;
+                }
+
+                .zp-dot:nth-child(2) {
+                    animation-delay: 0.16s;
+                }
+
+                .zp-dot:nth-child(3) {
+                    animation-delay: 0.32s;
+                }
+
+                @keyframes zpBounce {
+
+                    0%,
+                    80%,
+                    100% {
+                        transform: scale(0.4);
+                        opacity: 0.4;
+                    }
+
+                    40% {
+                        transform: scale(1);
+                        opacity: 1;
+                    }
+                }
+
+                /* ---- Responsive ---- */
+                @media (max-width: 600px) {
+                    .zound-pagination {
+                        gap: 4px;
+                        flex-wrap: wrap;
+                        padding: 20px 0 24px;
+                    }
+
+                    .zp-btn,
+                    .zp-page {
+                        width: 36px;
+                        height: 36px;
+                        border-radius: 8px;
+                        font-size: 0.8rem;
+                    }
+
+                    .zp-info {
+                        position: static;
+                        width: 100%;
+                        text-align: center;
+                        margin-top: 8px;
+                    }
+                }
+            </style>
+
+
+            <!-- ======================== -->
+            <!-- SCRIPT                   -->
+            <!-- ======================== -->
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    document.querySelectorAll('.zound-pagination').forEach(initPagination);
+
+                    function initPagination(nav) {
+                        const state = {
+                            url: nav.dataset.url,
+                            total: parseInt(nav.dataset.total),
+                            current: parseInt(nav.dataset.current),
+                            container: document.getElementById(nav.dataset.container),
+                            renderFnName: nav.dataset.render,
+                            extra: JSON.parse(nav.dataset.extra || '{}'),
+                            loader: document.getElementById(nav.id + '-loader'),
+                            nav: nav
+                        };
+
+                        if (!state.container || !window[state.renderFnName]) {
+                            console.warn('[ZoundPagination] Missing container or render function for:', nav.id, '- renderFn:', state.renderFnName);
+                            return;
+                        }
+
+                        // Bind page buttons
+                        nav.querySelectorAll('.zp-page').forEach(btn => {
+                            btn.addEventListener('click', () => goToPage(state, parseInt(btn.dataset.page)));
+                        });
+
+                        // Bind prev/next
+                        nav.querySelector('.zp-prev')?.addEventListener('click', () => {
+                            if (state.current > 1) goToPage(state, state.current - 1);
+                        });
+
+                        nav.querySelector('.zp-next')?.addEventListener('click', () => {
+                            if (state.current < state.total) goToPage(state, state.current + 1);
+                        });
+                    }
+
+                    async function goToPage(state, page) {
+                        if (page === state.current || page < 1 || page > state.total) return;
+
+                        // Resolve render function lazily
+                        const renderFn = window[state.renderFnName];
+                        if (!renderFn) {
+                            console.error('[ZoundPagination] Render function not found:', state.renderFnName);
+                            return;
+                        }
+
+                        // Show loader
+                        if (state.loader) state.loader.classList.add('show');
+
+                        try {
+                            // Build query string
+                            const params = new URLSearchParams({ page, ...state.extra });
+                            const url = `${state.url}?${params.toString()}`;
+
+                            const response = await axios.get(url, {
+                                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                            });
+
+                            const data = response.data;
+
+                            // Update content
+                            const html = renderFn(data);
+                            state.container.innerHTML = html;
+
+                            // Update state
+                            state.current = page;
+
+                            // Update pagination UI
+                            updatePaginationUI(state);
+
+                            // Smooth scroll to top of container
+                            state.container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                        } catch (error) {
+                            console.error('[ZoundPagination] Fetch error:', error);
+                            if (typeof showToast === 'function') {
+                                showToast('Failed to load page. Please try again.', 'error');
+                            }
+                        } finally {
+                            if (state.loader) state.loader.classList.remove('show');
+                        }
+                    }
+
+                    function updatePaginationUI(state) {
+                        const nav = state.nav;
+                        const { current, total } = state;
+
+                        // Update prev/next disabled state
+                        const prevBtn = nav.querySelector('.zp-prev');
+                        const nextBtn = nav.querySelector('.zp-next');
+                        if (prevBtn) prevBtn.disabled = current <= 1;
+                        if (nextBtn) nextBtn.disabled = current >= total;
+
+                        // Rebuild page numbers with smart ellipsis
+                        const pagesContainer = nav.querySelector('.zp-pages');
+                        if (!pagesContainer) return;
+
+                        let pagesHTML = '';
+
+                        for (let i = 1; i <= total; i++) {
+                            if (total <= 7 || i === 1 || i === total || (i >= current - 1 && i <= current + 1)) {
+                                pagesHTML += `<button class="zp-page ${i === current ? 'active' : ''}" data-page="${i}">${i}</button>`;
+                            } else if (i === current - 2 || i === current + 2) {
+                                pagesHTML += `<span class="zp-ellipsis">•••</span>`;
+                            }
+                        }
+
+                        pagesContainer.innerHTML = pagesHTML;
+
+                        // Re-bind page click listeners
+                        pagesContainer.querySelectorAll('.zp-page').forEach(btn => {
+                            btn.addEventListener('click', () => goToPage(state, parseInt(btn.dataset.page)));
+                        });
+
+                        // Update info text
+                        const infoCurrentEl = nav.querySelector('.zp-info-current');
+                        if (infoCurrentEl) infoCurrentEl.textContent = current;
+                    }
+                });
+            </script>
