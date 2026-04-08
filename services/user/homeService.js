@@ -12,8 +12,6 @@ const getCategoryImage = (catName) => {
         "Earphones": "/images/cat/earphones.png",
         "Earbuds": "/images/cat/earbuds.png",
         "Hi-Fi Speakers": "/images/cat/hifi-speakers.png",
-        "Music Players": "/images/cat/music-players.png",
-        "Turntables": "/images/cat/turntables.png",
         "Studio Gear": "/images/cat/studio-gear.png",
         "Wireless Audio": "/images/cat/wireless-audio.png",
         "Accessories": "/images/cat/accessories.png",
