@@ -2,9 +2,9 @@ import { catchAsync } from "../../../utils/catchAsync.js";
 import orderService from "../../../services/admin/orderService.js";
 
 const getOrderManagement = catchAsync(async (req, res, next) => {
-    const { page, search, status } = req.query;
+    const { page, search, status , paymentMethod , date} = req.query;
 
-    const data = await orderService.getOrderManagementPageData(page, search, status);
+    const data = await orderService.getOrderManagementPageData(page, search, status , paymentMethod , date);
 
     res.render('admin/orderManagement', {
         ...data,
