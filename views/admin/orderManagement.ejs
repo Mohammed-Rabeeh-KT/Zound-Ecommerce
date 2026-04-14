@@ -45,6 +45,20 @@
                         <% } %>
                 </div>
 
+                <!-- payment Filter -->
+                 <select class="filter-select" onchange="applyFilter('paymentMethod', this.value)">
+                                        <option value="">Payment: All</option>
+                    <option value="Wallet" <%=filters.paymentMethod==='Wallet' ? 'selected' : '' %>>Wallet</option>
+                    <option value="Razorpay" <%=filters.paymentMethod==='Razorpay' ? 'selected' : '' %>>Razorpay</option>
+                    <option value="COD" <%=filters.paymentMethod==='COD' ? 'selected' : '' %>>COD</option>
+
+                 </select>
+
+                <!-- payment Filter -->
+
+
+                 
+
                 <!-- Status Filter -->
                 <select class="filter-select" onchange="applyFilter('status', this.value)">
                     <option value="">Status: All</option>

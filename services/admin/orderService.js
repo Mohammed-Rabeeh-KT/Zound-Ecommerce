@@ -174,6 +174,11 @@ const updateItemStatus = async (orderId, itemId, status) => {
         throw new AppError('Invalid item status', STATUS.BAD_REQUEST);
     }
 
+     const allowedPayment = ['COD', 'Razorpay', 'Wallet'];
+    if (!allowedStatuses.includes(status)) {
+        throw new AppError('Invalid item status', STATUS.BAD_REQUEST);
+    }
+
     const order = await Order.findById(orderId);
 
     if (!order) {
@@ -194,7 +199,7 @@ const updateItemStatus = async (orderId, itemId, status) => {
     return order;
 };
 
-const getOrderManagementPageData = async (pageQuery, searchQuery, statusQuery) => {
+const getOrderManagementPageData = async (pageQuery, searchQuery, statusQuery , paymentQuery , dateQuery) => {
     const page = parseInt(pageQuery) || 1;
     const limit = 10;
     const skip = (page - 1) * limit;
@@ -204,6 +209,12 @@ const getOrderManagementPageData = async (pageQuery, searchQuery, statusQuery) =
     if (statusQuery && statusQuery !== '') {
         query.status = statusQuery;
     }
+
+    if(paymentQuery && paymentQuery !== ''){
+        query.paymentMethod = paymentQuery;
+    }
+
+    console.log(query)
 
     if (searchQuery && searchQuery.trim() !== '') {
         const searchRegex = new RegExp(searchQuery.trim(), 'i');
@@ -245,7 +256,9 @@ const getOrderManagementPageData = async (pageQuery, searchQuery, statusQuery) =
         },
         filters: {
             search: searchQuery || '',
-            status: statusQuery || ''
+            status: statusQuery || '',
+            paymentMethod: paymentQuery || '',
+            date: dateQuery || ''
         }
     };
 };
