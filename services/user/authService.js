@@ -78,6 +78,46 @@ async function validateLoginInput(email, password) {
     return errors;
 }
 
+async function validateSignupInput(name, email, password) {
+    const errors = {};
+
+    // Name: 3-40 chars, letters, spaces, dots, hyphens, apostrophes
+    if (!name || name.trim().length < 3) {
+        errors.name = "Name must be at least 3 characters";
+    } else if (name.trim().length > 40) {
+        errors.name = "Name cannot exceed 40 characters";
+    } else if (!/^[a-zA-Z\s.'-]+$/.test(name.trim())) {
+        errors.name = "Name can only contain letters, spaces, dots, hyphens, and apostrophes";
+    }
+
+    // Email: Standard robust format
+    if (!email || email.trim() === "") {
+        errors.email = "Email is required";
+    } else {
+        const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+        if (!emailRegex.test(email.trim())) {
+            errors.email = "Please enter a valid email address";
+        } else if (email.trim().length > 254) {
+            errors.email = "Email is too long";
+        }
+    }
+
+    // Password: 8+ chars, Upper + Lower + Number + Special
+    if (!password || password.trim() === "") {
+        errors.password = "Password is required";
+    } else {
+        if (password.length < 8) {
+            errors.password = "Password must be at least 8 characters long";
+        } else if (password.length > 30) {
+            errors.password = "Password cannot exceed 30 characters";
+        } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])/.test(password)) {
+            errors.password = "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character";
+        }
+    }
+
+    return errors;
+}
+
 async function authenticateUser(email, password) {
     const sanitizedEmail = email.trim().toLowerCase();
     const user = await User.findOne({ email: sanitizedEmail });
@@ -259,9 +299,15 @@ async function findUserByEmail(email) {
 }
 
 function validateFpOTPSession(session) {
-    if (!session.fpOTP) {
+    if (!session.fpOTP || !session.fpTimestamp) {
         return { error: "Session expired. Please try again.", status: 400 };
     }
+
+    const otpAge = Date.now() - session.fpTimestamp;
+    if (otpAge > 120000) {
+        return { error: "OTP has expired. Please try again.", status: 400, expired: true };
+    }
+
     return { valid: true };
 }
 
@@ -308,6 +354,7 @@ export default {
     generateAndSendOTP,
     verifyOTPCode,
     validateLoginInput,
+    validateSignupInput,
     authenticateUser,
     generateAuthToken,
     checkExistingUser,

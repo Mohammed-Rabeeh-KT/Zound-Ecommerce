@@ -1,17 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
+<link rel="stylesheet" href="/styles/admin/admindashboard.css">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Zound</title>
-    <link rel="stylesheet" href="/styles/admin/adminDashboard.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-
-<body>
-    <div class="admin-layout">
+<div class="admin-layout">
 
         <!-- INCLUDE SIDEBAR PARTIAL -->
         <%- include('../partials/admin/adminSidebar', { currentPage: 'dashboard' , adminName: adminName, adminEmail:
@@ -329,6 +318,3 @@
         window.categoryData = <%- JSON.stringify(categoryChartData) %>;
     </script>
     <script src="/js/admin/dashboard.js"></script>
-</body>
-
-</html>

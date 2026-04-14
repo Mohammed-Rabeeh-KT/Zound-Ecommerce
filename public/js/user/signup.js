@@ -33,12 +33,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Validation Logic
     const validateName = () => {
         const value = nameInput.value.trim();
-        const pattern = /^[\p{L} .'-]{3,40}$/u;
+        const pattern = /^[a-zA-Z\s.'-]+$/;
         if (!value) {
             showError(error1, "Name is required");
             return false;
+        } else if (value.length < 3) {
+            showError(error1, "Name must be at least 3 characters");
+            return false;
+        } else if (value.length > 40) {
+            showError(error1, "Name cannot exceed 40 characters");
+            return false;
         } else if (!pattern.test(value)) {
-            showError(error1, "Name should be 3-40 characters (letters only)");
+            showError(error1, "Name can only contain letters, spaces, dots, hyphens, and apostrophes");
             return false;
         }
         hideError(error1);
@@ -47,12 +53,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const validateEmail = () => {
         const value = emailInput.value.trim();
-        const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const pattern = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
         if (!value) {
             showError(error2, "Email is required");
             return false;
         } else if (!pattern.test(value)) {
-            showError(error2, "Invalid email format");
+            showError(error2, "Please enter a valid email address");
+            return false;
+        } else if (value.length > 254) {
+            showError(error2, "Email is too long");
             return false;
         }
         hideError(error2);
@@ -62,18 +71,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const validatePasswords = () => {
         const pass = passwordInput.value;
         const confirm = confirmInput.value;
-        const alpha = /[A-Za-z]/;
-        const digit = /\d/;
+        const passPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])/;
         let isValid = true;
 
         if (!pass) {
             showError(error3, "Password is required");
             isValid = false;
         } else if (pass.length < 8) {
-            showError(error3, "Minimum 8 characters");
+            showError(error3, "Password must be at least 8 characters long");
             isValid = false;
-        } else if (!alpha.test(pass) || !digit.test(pass)) {
-            showError(error3, "Must contain letters and numbers");
+        } else if (pass.length > 30) {
+            showError(error3, "Password cannot exceed 30 characters");
+            isValid = false;
+        } else if (!passPattern.test(pass)) {
+            showError(error3, "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character");
             isValid = false;
         } else {
             hideError(error3);
@@ -164,6 +175,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (response.data.success) {
+                // Clear any existing timer so the next page starts fresh
+                localStorage.removeItem('otp_expiry_signup');
+
                 window.showToast(response.data.message || 'OTP sent to your email!', 'success');
                 setTimeout(() => {
                     window.location.href = response.data.redirectUrl || '/user/verify-otp';

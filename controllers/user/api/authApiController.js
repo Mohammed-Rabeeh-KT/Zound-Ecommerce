@@ -37,7 +37,21 @@ const login = catchAsync(async (req, res, next) => {
 
 
 const signup = catchAsync(async (req, res, next) => {
-    const { name, email, password, confirmPassword, referralCode } = req.body;
+    let { name, email, password, confirmPassword, referralCode } = req.body;
+
+    // Sanitize
+    name = name?.trim();
+    email = email?.trim()?.toLowerCase();
+
+    // Validate input
+    const errors = await authService.validateSignupInput(name, email, password);
+
+    if (Object.keys(errors).length > 0) {
+        return res.status(400).json({
+            success: false,
+            message: Object.values(errors)[0]
+        });
+    }
 
     if (password !== confirmPassword) {
         return res.status(400).json({

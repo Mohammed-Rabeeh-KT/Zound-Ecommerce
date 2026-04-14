@@ -35,9 +35,19 @@ const loadSignup = (req, res) => {
 
 const loadVerifyOTP = catchAsync(async (req, res) => {
     console.log(req.session.userData);
-    if (!req.session.userData) {
+    if (!req.session.userData || !req.session.otpTimestamp) {
         return res.redirect('/user/signup');
     }
+
+    // Check if OTP is expired (2 minutes)
+    const otpAge = Date.now() - req.session.otpTimestamp;
+    if (otpAge > 120000) {
+        delete req.session.userOTP;
+        delete req.session.otpTimestamp;
+        // Redirect back to signup if expired
+        return res.redirect('/user/signup');
+    }
+
     res.render("user/verify-otp", {
         layout: "layout",
         user: req.user || null,
@@ -53,9 +63,18 @@ const loadForgotPassword = catchAsync(async (req, res, next) => {
 });
 
 const loadFpVerifyOTP = catchAsync(async (req, res, next) => {
-    if (!req.session.fpOTP) {
+    if (!req.session.fpOTP || !req.session.fpTimestamp) {
         return res.redirect('/user/forgot-password');
     }
+
+    const otpAge = Date.now() - req.session.fpTimestamp;
+    if (otpAge > 120000) {
+        delete req.session.fpOTP;
+        delete req.session.fpTimestamp;
+        delete req.session.fpEmail;
+        return res.redirect('/user/forgot-password');
+    }
+
     res.render('user/fp-verify-otp', {
         layout: "layout",
         user: req.user || null,
