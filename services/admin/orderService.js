@@ -5,13 +5,20 @@ import Coupon from "../../models/couponSchema.js";
 import WalletTransaction from "../../models/walletTransactionSchema.js";
 import AppError from "../../utils/AppError.js";
 import { STATUS } from "../../utils/response.js";
+import {
+    ORDER_STATUS, ORDER_STATUS_FLOW, ALL_ORDER_STATUSES,
+    ITEM_STATUS, ALL_ITEM_STATUSES,
+    PAYMENT_METHOD, ALL_PAYMENT_METHODS,
+    PAYMENT_STATUS,
+    WALLET_TRANSACTION_TYPE,
+} from "../../utils/orderConstants.js";
 
 const updateOrderStatus = async (orderId, status) => {
     if (!orderId || !status) {
         throw new AppError('Order ID and Status are required', STATUS.BAD_REQUEST);
     }
 
-    const allowedStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned'];
+    const allowedStatuses = [ORDER_STATUS.PENDING, ORDER_STATUS.PROCESSING, ORDER_STATUS.SHIPPED, ORDER_STATUS.DELIVERED, ORDER_STATUS.CANCELLED, ORDER_STATUS.RETURNED];
 
     if (!allowedStatuses.includes(status)) {
         throw new AppError('Invalid Order status', STATUS.BAD_REQUEST);
@@ -23,30 +30,29 @@ const updateOrderStatus = async (orderId, status) => {
         throw new AppError('Order not found', STATUS.NOT_FOUND);
     }
 
-    if (order.status === 'Delivered' && status === 'Cancelled') {
+    if (order.status === ORDER_STATUS.DELIVERED && status === ORDER_STATUS.CANCELLED) {
         throw new AppError('Delivered orders cannot be cancelled. Customer can request a return instead.', STATUS.BAD_REQUEST);
     }
 
-    if (order.status === 'Cancelled') {
+    if (order.status === ORDER_STATUS.CANCELLED) {
         throw new AppError('Cancelled orders cannot be modified', STATUS.BAD_REQUEST);
     }
 
-    if (order.status === 'Returned') {
+    if (order.status === ORDER_STATUS.RETURNED) {
         throw new AppError('Returned orders cannot be modified', STATUS.BAD_REQUEST);
     }
 
-    const statusOrder = ['Pending', 'Processing', 'Shipped', 'Delivered'];
-    const currentIndex = statusOrder.indexOf(order.status);
-    const newIndex = statusOrder.indexOf(status);
+    const currentIndex = ORDER_STATUS_FLOW.indexOf(order.status);
+    const newIndex = ORDER_STATUS_FLOW.indexOf(status);
 
-    if (currentIndex !== -1 && newIndex !== -1 && newIndex < currentIndex && status !== 'Cancelled') {
+    if (currentIndex !== -1 && newIndex !== -1 && newIndex < currentIndex && status !== ORDER_STATUS.CANCELLED) {
         throw new AppError(`Cannot change status from ${order.status} to ${status}`, STATUS.BAD_REQUEST);
     }
 
     order.status = status;
 
-    if (status === 'Delivered') {
-        order.paymentStatus = 'Paid';
+    if (status === ORDER_STATUS.DELIVERED) {
+        order.paymentStatus = PAYMENT_STATUS.PAID;
     }
 
     await order.save();
@@ -78,12 +84,12 @@ const handleReturnRequest = async (orderId, itemId, action, rejectReason) => {
 
     const item = order.orderedItems[itemIndex];
 
-    if (item.itemStatus !== 'Return Requested') {
+    if (item.itemStatus !== ITEM_STATUS.RETURN_REQUESTED) {
         throw new AppError('This item does not have a pending return request', STATUS.BAD_REQUEST);
     }
 
     if (action === 'approve') {
-        order.orderedItems[itemIndex].itemStatus = 'Returned';
+        order.orderedItems[itemIndex].itemStatus = ITEM_STATUS.RETURNED;
 
         if (item.product) {
             const Product = (await import('../../models/productSchema.js')).default;
@@ -109,26 +115,26 @@ const handleReturnRequest = async (orderId, itemId, action, rejectReason) => {
             await WalletTransaction.create({
                 userId: order.userId,
                 amount: refundAmount,
-                type: 'Credit',
+                type: WALLET_TRANSACTION_TYPE.CREDIT,
                 description: `Refund for returned item - Order #${order.orderId}`,
                 orderId: order._id,
                 date: new Date()
             });
         }
     } else {
-        order.orderedItems[itemIndex].itemStatus = 'Return Rejected';
+        order.orderedItems[itemIndex].itemStatus = ITEM_STATUS.RETURN_REJECTED;
         if (rejectReason) {
             order.orderedItems[itemIndex].returnRejectReason = rejectReason;
         }
     }
 
     const nonDeliverableItems = order.orderedItems.filter(
-        item => item.itemStatus === 'Returned' || item.itemStatus === 'Cancelled'
+        item => item.itemStatus === ITEM_STATUS.RETURNED || item.itemStatus === ITEM_STATUS.CANCELLED
     );
 
     if (nonDeliverableItems.length === order.orderedItems.length) {
-        const hasReturnedItems = order.orderedItems.some(item => item.itemStatus === 'Returned');
-        order.status = hasReturnedItems ? 'Returned' : 'Cancelled';
+        const hasReturnedItems = order.orderedItems.some(item => item.itemStatus === ITEM_STATUS.RETURNED);
+        order.status = hasReturnedItems ? ORDER_STATUS.RETURNED : ORDER_STATUS.CANCELLED;
 
         if (order.couponApplied) {
             try {
@@ -151,11 +157,11 @@ const handleReturnRequest = async (orderId, itemId, action, rejectReason) => {
             }
         }
     } else {
-        const hasReturnRequested = order.orderedItems.some(item => item.itemStatus === 'Return Requested');
-        if (!hasReturnRequested && order.status === 'Return Request') {
-            order.status = 'Delivered';
-            if (order.paymentStatus === 'Pending') {
-                order.paymentStatus = 'Paid';
+        const hasReturnRequested = order.orderedItems.some(item => item.itemStatus === ITEM_STATUS.RETURN_REQUESTED);
+        if (!hasReturnRequested && order.status === ORDER_STATUS.RETURN_REQUEST) {
+            order.status = ORDER_STATUS.DELIVERED;
+            if (order.paymentStatus === PAYMENT_STATUS.PENDING) {
+                order.paymentStatus = PAYMENT_STATUS.PAID;
             }
         }
     }
@@ -169,12 +175,12 @@ const updateItemStatus = async (orderId, itemId, status) => {
         throw new AppError('Order ID, Item ID and Status are required', STATUS.BAD_REQUEST);
     }
 
-    const allowedStatuses = ['Active', 'Cancelled', 'Return Requested', 'Returned', 'Return Rejected'];
+    const allowedStatuses = ALL_ITEM_STATUSES.filter(s => s !== ITEM_STATUS.DELIVERED);
     if (!allowedStatuses.includes(status)) {
         throw new AppError('Invalid item status', STATUS.BAD_REQUEST);
     }
 
-     const allowedPayment = ['COD', 'Razorpay', 'Wallet'];
+     const allowedPayment = ALL_PAYMENT_METHODS;
     if (!allowedStatuses.includes(status)) {
         throw new AppError('Invalid item status', STATUS.BAD_REQUEST);
     }

@@ -161,6 +161,11 @@ const logout = (req, res) => {
 
 
 const googleLogin = (req, res, next) => {
+    // Store referral code in session before redirecting to Google
+    if (req.query.ref) {
+        req.session.googleReferralCode = req.query.ref;
+    }
+
     passport.authenticate("google", {
         scope: ["profile", "email"]
     })(req, res, next);

@@ -1,5 +1,6 @@
 import Order from "../../models/orderSchema.js";
 import Product from "../../models/productSchema.js";
+import { ALL_ORDER_STATUSES } from "../../utils/orderConstants.js";
 
 const getSalesData = async (query) => {
     const { filter, startDate, endDate } = query;
@@ -47,7 +48,7 @@ const getSalesData = async (query) => {
     if (query.status && query.status !== '') {
         matchStage.status = query.status;
     } else {
-        matchStage.status = { $in: ['Delivered', 'Processing', 'Shipped', 'Pending', 'Cancelled', 'Return Request', 'Returned'] };
+        matchStage.status = { $in: ALL_ORDER_STATUSES };
     }
 
     const orders = await Order.find(matchStage)

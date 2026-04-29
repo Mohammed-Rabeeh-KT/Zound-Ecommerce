@@ -31,8 +31,8 @@ router.use(authenticateUser);
 router.put('/profile/edit', userApiController.updateProfile);
 router.post('/send-email-otp', userApiController.sendEmailOtp);
 router.post('/verify-email-otp', userApiController.verifyEmailOtp);
-router.post('/change-password', userApiController.changePassword);
-router.post('/upload-profile-picture', uploadProfilePicture.single('profileImage'), userApiController.uploadProfilePicture);
+router.patch('/change-password', userApiController.changePassword);
+router.patch('/upload-profile-picture', uploadProfilePicture.single('profileImage'), userApiController.uploadProfilePicture);
 
 // Address API
 router.post('/addresses', userApiController.addAddress);
@@ -62,13 +62,13 @@ router.post('/wishlist/move-to-cart', wishlistApiController.moveToCart);
 
 // Checkout & Orders API
 router.post('/checkout/apply-coupon', checkoutApiController.applyCoupon);
-router.post('/checkout/remove-coupon', checkoutApiController.removeCoupon);
+router.delete('/checkout/remove-coupon', checkoutApiController.removeCoupon);
 router.get('/checkout/coupons', checkoutApiController.getAvailableCoupons);
 router.post('/checkout/validate', checkoutApiController.validateOrder);
 router.post('/checkout/place-order', checkoutApiController.placeOrder);
 
-router.post('/orders/cancel', checkoutApiController.cancelOrderItems);
-router.post('/orders/return', checkoutApiController.returnOrderItems);
+router.patch('/orders/cancel', checkoutApiController.cancelOrderItems);
+router.patch('/orders/return', checkoutApiController.returnOrderItems);
 router.get('/orders/search', checkoutApiController.searchOrders);
 router.get('/orders/:orderId/invoice', checkoutApiController.downloadInvoice);
 

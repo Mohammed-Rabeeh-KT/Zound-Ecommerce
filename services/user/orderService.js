@@ -6,6 +6,12 @@ import AppError from '../../utils/AppError.js';
 import { STATUS } from '../../utils/response.js';
 import mongoose from 'mongoose';
 import checkoutService from './checkoutService.js';
+import {
+    ORDER_STATUS, ORDER_STATUS_FLOW,
+    ITEM_STATUS,
+    PAYMENT_STATUS,
+    WALLET_TRANSACTION_TYPE,
+} from '../../utils/orderConstants.js';
 
 const getOrdersData = async (userId, page = 1, status = 'all', limit = 10) => {
     const skip = (page - 1) * limit;
@@ -61,10 +67,10 @@ const getOrderDetailsData = async (userId, orderId) => {
         throw new AppError('Order not found', STATUS.NOT_FOUND);
     }
 
-    const statusSteps = ['Pending', 'Processing', 'Shipped', 'Delivered'];
+    const statusSteps = ORDER_STATUS_FLOW;
     const currentStepIndex = statusSteps.indexOf(order.status);
-    const isCancelled = order.status === 'Cancelled';
-    const isReturned = order.status === 'Returned' || order.status === 'Return Request';
+    const isCancelled = order.status === ORDER_STATUS.CANCELLED;
+    const isReturned = order.status === ORDER_STATUS.RETURNED || order.status === ORDER_STATUS.RETURN_REQUEST;
 
     return { order, statusSteps, currentStepIndex, isCancelled, isReturned };
 };
@@ -85,7 +91,7 @@ const cancelOrderItems = async (userId, data) => {
 
     if (!order) throw new AppError('Order not found', STATUS.NOT_FOUND);
 
-    if (!['Pending', 'Processing'].includes(order.status)) {
+    if (![ORDER_STATUS.PENDING, ORDER_STATUS.PROCESSING].includes(order.status)) {
         throw new AppError(`Cannot cancel items from an order with status: ${order.status}`, STATUS.BAD_REQUEST);
     }
 
@@ -98,9 +104,9 @@ const cancelOrderItems = async (userId, data) => {
         if (itemIndex === -1) continue;
 
         const item = order.orderedItems[itemIndex];
-        if (item.itemStatus === 'Cancelled') continue;
+        if (item.itemStatus === ITEM_STATUS.CANCELLED) continue;
 
-        order.orderedItems[itemIndex].itemStatus = 'Cancelled';
+        order.orderedItems[itemIndex].itemStatus = ITEM_STATUS.CANCELLED;
         order.orderedItems[itemIndex].cancelReason = fullReason;
 
         if (item.product && item.variantId) {
@@ -121,9 +127,9 @@ const cancelOrderItems = async (userId, data) => {
         throw new AppError('No items were cancelled. Items may already be cancelled.', STATUS.BAD_REQUEST);
     }
 
-    const activeItems = order.orderedItems.filter(item => item.itemStatus !== 'Cancelled');
+    const activeItems = order.orderedItems.filter(item => item.itemStatus !== ITEM_STATUS.CANCELLED);
     if (activeItems.length === 0 || cancelAll) {
-        order.status = 'Cancelled';
+        order.status = ORDER_STATUS.CANCELLED;
         if (order.couponApplied && order.couponApplied !== 'false' && order.couponApplied !== 'null') {
             await checkoutService.reverseCouponUsage(order.couponApplied, userId, order.discount || 0);
         }
@@ -133,7 +139,7 @@ const cancelOrderItems = async (userId, data) => {
     let totalDiscountRemaining = 0;
 
     for (const item of order.orderedItems) {
-        if (item.itemStatus !== 'Cancelled') {
+        if (item.itemStatus !== ITEM_STATUS.CANCELLED) {
             newTotalPrice += item.price * item.quantity;
             totalDiscountRemaining += (item.discountAllocated || 0);
         }
@@ -150,7 +156,7 @@ const cancelOrderItems = async (userId, data) => {
 
     await order.save();
 
-    const shouldRefund = order.paymentStatus === 'Paid';
+    const shouldRefund = order.paymentStatus === PAYMENT_STATUS.PAID;
     if (shouldRefund && totalRefundAmount > 0) {
         await User.findByIdAndUpdate(userId, {
             $inc: { wallet: totalRefundAmount }
@@ -160,14 +166,14 @@ const cancelOrderItems = async (userId, data) => {
         await WalletTransaction.create({
             userId,
             amount: totalRefundAmount,
-            type: 'Credit',
+            type: WALLET_TRANSACTION_TYPE.CREDIT,
             description: `Refund for cancelled items - Order #${order.orderId}`,
             orderId: order._id,
             date: new Date()
         });
     }
 
-    let message = order.status === 'Cancelled' ? 'Your order has been cancelled successfully.' : `${cancelledItemsCount} item${cancelledItemsCount > 1 ? 's' : ''} cancelled successfully.`;
+    let message = order.status === ORDER_STATUS.CANCELLED ? 'Your order has been cancelled successfully.' : `${cancelledItemsCount} item${cancelledItemsCount > 1 ? 's' : ''} cancelled successfully.`;
 
     return {
         message,
@@ -194,7 +200,7 @@ const returnOrderItems = async (userId, data) => {
     });
 
     if (!order) throw new AppError('Order not found', STATUS.NOT_FOUND);
-    if (order.status !== 'Delivered') throw new AppError(`Cannot return items from an order with status: ${order.status}. Only delivered orders can be returned.`, STATUS.BAD_REQUEST);
+    if (order.status !== ORDER_STATUS.DELIVERED) throw new AppError(`Cannot return items from an order with status: ${order.status}. Only delivered orders can be returned.`, STATUS.BAD_REQUEST);
 
     let returnedItemsCount = 0;
     let totalRefundAmount = 0;
@@ -205,9 +211,9 @@ const returnOrderItems = async (userId, data) => {
         if (itemIndex === -1) continue;
 
         const item = order.orderedItems[itemIndex];
-        if (item.itemStatus === 'Cancelled' || item.itemStatus === 'Returned' || item.itemStatus === 'Return Requested') continue;
+        if (item.itemStatus === ITEM_STATUS.CANCELLED || item.itemStatus === ITEM_STATUS.RETURNED || item.itemStatus === ITEM_STATUS.RETURN_REQUESTED) continue;
 
-        order.orderedItems[itemIndex].itemStatus = 'Return Requested';
+        order.orderedItems[itemIndex].itemStatus = ITEM_STATUS.RETURN_REQUESTED;
         order.orderedItems[itemIndex].returnReason = fullReason;
 
         const refundAmount = (item.price * item.quantity) - (item.discountAllocated || 0);
@@ -220,14 +226,14 @@ const returnOrderItems = async (userId, data) => {
         throw new AppError('No items were processed for return. Items may already be cancelled or returned.', STATUS.BAD_REQUEST);
     }
 
-    const activeItems = order.orderedItems.filter(item => item.itemStatus === 'Active');
+    const activeItems = order.orderedItems.filter(item => item.itemStatus === ITEM_STATUS.ACTIVE);
     if (activeItems.length === 0 || returnAll) {
-        order.status = 'Return Request';
+        order.status = ORDER_STATUS.RETURN_REQUEST;
     }
 
     await order.save();
 
-    let message = order.status === 'Return Request' ? 'Your return request has been successfully submitted.' : `Return request submitted for ${returnedItemsCount} item${returnedItemsCount > 1 ? 's' : ''}.`;
+    let message = order.status === ORDER_STATUS.RETURN_REQUEST ? 'Your return request has been successfully submitted.' : `Return request submitted for ${returnedItemsCount} item${returnedItemsCount > 1 ? 's' : ''}.`;
 
     return {
         message,
@@ -327,7 +333,7 @@ function generateInvoiceHTMLString(order) {
     let itemNumber = 0;
 
     order.orderedItems.forEach((item) => {
-        if (item.itemStatus === 'Cancelled' || item.itemStatus === 'Returned') return;
+        if (item.itemStatus === ITEM_STATUS.CANCELLED || item.itemStatus === ITEM_STATUS.RETURNED) return;
 
         itemNumber++;
         const product = item.product;
@@ -340,7 +346,7 @@ function generateInvoiceHTMLString(order) {
         const itemTotal = item.price * item.quantity;
         subtotal += itemTotal;
 
-        let statusLabel = item.itemStatus === 'Return Requested' ? '<br><small style="color: #b45309; font-weight: 600;">⏳ Return Requested</small>' : '';
+        let statusLabel = item.itemStatus === ITEM_STATUS.RETURN_REQUESTED ? '<br><small style="color: #b45309; font-weight: 600;">⏳ Return Requested</small>' : '';
 
         itemsHTML += `
             <tr>

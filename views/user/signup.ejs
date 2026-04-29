@@ -49,6 +49,20 @@
     <!-- SUBMIT BUTTON -->
     <button type="submit" class="signup-btn">Create Account</button>
 
+    <!-- DIVIDER -->
+    <div class="divider-row">
+      <div class="line"></div>
+      <span>Or continue with</span>
+      <div class="line"></div>
+    </div>
+
+    <!-- GOOGLE SIGN-IN -->
+    <div class="social-buttons">
+      <a href="/auth/google<%= (typeof referralCode !== 'undefined' && referralCode) ? '?ref=' + referralCode : '' %>" class="social-btn" id="google-signup-btn">
+        <img src="/images/icons/google.svg" alt="Google sign-in" width="20" height="20" /> Sign up with Google
+      </a>
+    </div>
+
     <!-- LOGIN LINK -->
     <p class="bottom-text">
       Already have an account?

@@ -1068,7 +1068,7 @@ async function toggleVariantStatus(productId, variantId, currentStatus) {
 
     if (result.isConfirmed) {
         try {
-            const res = await axios.post('/api/admin/product/variant/toggle', { productId, variantId, status: newStatus });
+            const res = await axios.patch('/api/admin/product/variant/toggle', { productId, variantId, status: newStatus });
             const json = res.data;
 
             if (json.success) {

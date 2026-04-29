@@ -136,6 +136,33 @@ label {
   background: #001a4d;
 }
 
+/* DIVIDER */
+.divider-row {
+  display: flex;
+  align-items: center;
+  margin: 25px 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.divider-row .line {
+  flex: 1;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.divider-row span {
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
+/* SOCIAL BUTTONS */
+.social-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
 /* LOGIN TEXT */
 .bottom-text {
   margin-top: 15px;

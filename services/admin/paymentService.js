@@ -1,6 +1,7 @@
 import Order from "../../models/orderSchema.js";
 import AppError from "../../utils/AppError.js";
 import { STATUS } from "../../utils/response.js";
+import { ITEM_STATUS, PAYMENT_STATUS } from "../../utils/orderConstants.js";
 
 const getPaymentPageData = async (pageQuery) => {
     const page = parseInt(pageQuery) || 1;
@@ -18,7 +19,7 @@ const getPaymentPageData = async (pageQuery) => {
 
     // Calculate Revenue (Total of 'Paid' orders)
     const revenueAggregation = await Order.aggregate([
-        { $match: { paymentStatus: 'Paid' } },
+        { $match: { paymentStatus: PAYMENT_STATUS.PAID } },
         { $group: { _id: null, total: { $sum: "$finalAmount" } } }
     ]);
     const revenue = revenueAggregation.length > 0 ? revenueAggregation[0].total : 0;
@@ -26,7 +27,7 @@ const getPaymentPageData = async (pageQuery) => {
     // Calculate Refunds (Total of 'Returned' items)
     const refundAggregation = await Order.aggregate([
         { $unwind: "$orderedItems" },
-        { $match: { "orderedItems.itemStatus": "Returned" } },
+        { $match: { "orderedItems.itemStatus": ITEM_STATUS.RETURNED } },
         {
             $group: {
                 _id: null,
@@ -55,14 +56,14 @@ const getRefundPageData = async (pageQuery, search, status, exportType) => {
 
     // Base Match Stage (Return Statuses Only)
     let baseMatch = {
-        "orderedItems.itemStatus": { $in: ["Return Requested", "Returned", "Return Rejected"] }
+        "orderedItems.itemStatus": { $in: [ITEM_STATUS.RETURN_REQUESTED, ITEM_STATUS.RETURNED, ITEM_STATUS.RETURN_REJECTED] }
     };
 
     // Apply Status Filter
     if (status) {
-        if (status === 'pending') baseMatch["orderedItems.itemStatus"] = 'Return Requested';
-        else if (status === 'processed') baseMatch["orderedItems.itemStatus"] = 'Returned';
-        else if (status === 'rejected') baseMatch["orderedItems.itemStatus"] = 'Return Rejected';
+        if (status === 'pending') baseMatch["orderedItems.itemStatus"] = ITEM_STATUS.RETURN_REQUESTED;
+        else if (status === 'processed') baseMatch["orderedItems.itemStatus"] = ITEM_STATUS.RETURNED;
+        else if (status === 'rejected') baseMatch["orderedItems.itemStatus"] = ITEM_STATUS.RETURN_REJECTED;
     }
 
     // Build Pipeline
@@ -134,7 +135,7 @@ const getRefundPageData = async (pageQuery, search, status, exportType) => {
         { $unwind: "$orderedItems" },
         {
             $match: {
-                "orderedItems.itemStatus": { $in: ["Return Requested", "Returned", "Return Rejected"] }
+                "orderedItems.itemStatus": { $in: [ITEM_STATUS.RETURN_REQUESTED, ITEM_STATUS.RETURNED, ITEM_STATUS.RETURN_REJECTED] }
             }
         },
         {
@@ -152,10 +153,10 @@ const getRefundPageData = async (pageQuery, search, status, exportType) => {
     let processedRefunds = 0;
 
     stats.forEach(stat => {
-        if (stat._id === 'Returned') {
+        if (stat._id === ITEM_STATUS.RETURNED) {
             totalRefundAmount += stat.totalAmount;
             processedRefunds += stat.count;
-        } else if (stat._id === 'Return Requested') {
+        } else if (stat._id === ITEM_STATUS.RETURN_REQUESTED) {
             pendingRefunds += stat.count;
         }
     });

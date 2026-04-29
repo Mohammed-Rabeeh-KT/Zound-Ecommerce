@@ -163,7 +163,7 @@ function applyCouponCode(code) {
 
 async function removeCoupon() {
     try {
-        await axios.post('/api/user/checkout/remove-coupon');
+        await axios.delete('/api/user/checkout/remove-coupon');
 
         appliedCouponCode = null;
         couponDiscount = 0;

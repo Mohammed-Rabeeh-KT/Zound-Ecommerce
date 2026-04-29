@@ -4,6 +4,7 @@ import Product from '../../models/productSchema.js';
 import Order from '../../models/orderSchema.js';
 import AppError from '../../utils/AppError.js';
 import { STATUS } from '../../utils/response.js';
+import { ORDER_STATUS } from '../../utils/orderConstants.js';
 
 const reviewService = {
     // Add a new review
@@ -113,7 +114,7 @@ const reviewService = {
         if (productIds.length > 0) {
             const deliveredOrders = await Order.find({
                 userId: userId,
-                status: 'Delivered',
+                status: ORDER_STATUS.DELIVERED,
                 'orderedItems.product': { $in: productIds }
             }).select('orderedItems.product orderedItems.variantId').lean();
 

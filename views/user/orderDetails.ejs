@@ -889,7 +889,7 @@
 
         if (result.isConfirmed) {
             try {
-                const response = await axios.post('/api/user/orders/cancel', {
+                const response = await axios.patch('/api/user/orders/cancel', {
                     orderId: orderData.orderId,
                     itemIds: itemIds,
                     cancelAll: isCancelAll,
@@ -1096,7 +1096,7 @@
 
         if (result.isConfirmed) {
             try {
-                const response = await axios.post('/api/user/orders/return', {
+                const response = await axios.patch('/api/user/orders/return', {
                     orderId: orderData.orderId,
                     itemIds: itemIds,
                     returnAll: isReturnAll,

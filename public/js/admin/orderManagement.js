@@ -43,7 +43,7 @@ function updateOrderStatus(orderId, newStatus, currentStatus) {
         confirmButtonText: 'Yes, Update it!'
     }).then((result) => {
         if (result.isConfirmed) {
-            axios.post('/api/admin/orders/update-status', {
+            axios.patch('/api/admin/orders/update-status', {
                 orderId,
                 status: newStatus
             })

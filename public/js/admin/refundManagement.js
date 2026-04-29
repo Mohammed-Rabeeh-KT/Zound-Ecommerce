@@ -18,7 +18,7 @@ function handleAction(orderId, itemId, action) {
         if (result.isConfirmed) {
             const rejectReason = result.value;
 
-            axios.post('/api/admin/orders/return-request', {
+            axios.patch('/api/admin/orders/return-request', {
                 orderId,
                 itemId,
                 action,

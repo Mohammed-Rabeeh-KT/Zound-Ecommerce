@@ -2,6 +2,7 @@ import Order from "../../models/orderSchema.js";
 import User from "../../models/userSchema.js";
 import AppError from "../../utils/AppError.js";
 import { STATUS } from "../../utils/response.js";
+import { ORDER_STATUS, ITEM_STATUS } from "../../utils/orderConstants.js";
 
 function getDateRange(filter) {
     const now = new Date();
@@ -50,7 +51,7 @@ async function buildSalesChartData(filter) {
                 {
                     $match: {
                         createdOn: { $gte: startDate },
-                        status: { $nin: ['Cancelled', 'Returned'] }
+                        status: { $nin: [ORDER_STATUS.CANCELLED, ORDER_STATUS.RETURNED] }
                     }
                 },
                 {
@@ -82,7 +83,7 @@ async function buildSalesChartData(filter) {
                 {
                     $match: {
                         createdOn: { $gte: startDate },
-                        status: { $nin: ['Cancelled', 'Returned'] }
+                        status: { $nin: [ORDER_STATUS.CANCELLED, ORDER_STATUS.RETURNED] }
                     }
                 },
                 {
@@ -120,7 +121,7 @@ async function buildSalesChartData(filter) {
                 {
                     $match: {
                         createdOn: { $gte: startDate },
-                        status: { $nin: ['Cancelled', 'Returned'] }
+                        status: { $nin: [ORDER_STATUS.CANCELLED, ORDER_STATUS.RETURNED] }
                     }
                 },
                 {
@@ -154,7 +155,7 @@ async function buildSalesChartData(filter) {
                     {
                         $match: {
                             createdOn: { $gte: weekStart, $lt: weekEnd },
-                            status: { $nin: ['Cancelled', 'Returned'] }
+                            status: { $nin: [ORDER_STATUS.CANCELLED, ORDER_STATUS.RETURNED] }
                         }
                     },
                     {
@@ -176,7 +177,7 @@ async function buildSalesChartData(filter) {
                 {
                     $match: {
                         createdOn: { $gte: startDate },
-                        status: { $nin: ['Cancelled', 'Returned'] }
+                        status: { $nin: [ORDER_STATUS.CANCELLED, ORDER_STATUS.RETURNED] }
                     }
                 },
                 {
@@ -221,9 +222,9 @@ async function buildSalesChartData(filter) {
 const getBestSellingData = async (type) => {
     if (type === 'products') {
         const data = await Order.aggregate([
-            { $match: { status: { $nin: ['Cancelled', 'Returned'] } } },
+            { $match: { status: { $nin: [ORDER_STATUS.CANCELLED, ORDER_STATUS.RETURNED] } } },
             { $unwind: '$orderedItems' },
-            { $match: { 'orderedItems.itemStatus': { $nin: ['Cancelled', 'Returned'] } } },
+            { $match: { 'orderedItems.itemStatus': { $nin: [ITEM_STATUS.CANCELLED, ITEM_STATUS.RETURNED] } } },
             {
                 $group: {
                     _id: '$orderedItems.product',
@@ -272,9 +273,9 @@ const getBestSellingData = async (type) => {
 
     if (type === 'categories') {
         const data = await Order.aggregate([
-            { $match: { status: { $nin: ['Cancelled', 'Returned'] } } },
+            { $match: { status: { $nin: [ORDER_STATUS.CANCELLED, ORDER_STATUS.RETURNED] } } },
             { $unwind: '$orderedItems' },
-            { $match: { 'orderedItems.itemStatus': { $nin: ['Cancelled', 'Returned'] } } },
+            { $match: { 'orderedItems.itemStatus': { $nin: [ITEM_STATUS.CANCELLED, ITEM_STATUS.RETURNED] } } },
             { $lookup: { from: 'products', localField: 'orderedItems.product', foreignField: '_id', as: 'productInfo' } },
             { $unwind: '$productInfo' },
             { $lookup: { from: 'categories', localField: 'productInfo.category', foreignField: '_id', as: 'categoryInfo' } },
@@ -295,9 +296,9 @@ const getBestSellingData = async (type) => {
 
     if (type === 'brands') {
         const data = await Order.aggregate([
-            { $match: { status: { $nin: ['Cancelled', 'Returned'] } } },
+            { $match: { status: { $nin: [ORDER_STATUS.CANCELLED, ORDER_STATUS.RETURNED] } } },
             { $unwind: '$orderedItems' },
-            { $match: { 'orderedItems.itemStatus': { $nin: ['Cancelled', 'Returned'] } } },
+            { $match: { 'orderedItems.itemStatus': { $nin: [ITEM_STATUS.CANCELLED, ITEM_STATUS.RETURNED] } } },
             { $lookup: { from: 'products', localField: 'orderedItems.product', foreignField: '_id', as: 'productInfo' } },
             { $unwind: '$productInfo' },
             { $lookup: { from: 'brands', localField: 'productInfo.brand', foreignField: '_id', as: 'brandInfo' } },
@@ -341,7 +342,7 @@ const generateLedgerBook = async (startDate, endDate) => {
     const ledgerEntries = [];
 
     for (const order of orders) {
-        const isRevenue = !['Cancelled', 'Returned'].includes(order.status);
+        const isRevenue = ![ORDER_STATUS.CANCELLED, ORDER_STATUS.RETURNED].includes(order.status);
         const amount = order.finalAmount;
 
         if (isRevenue) {
@@ -395,12 +396,12 @@ const getDashboardPageData = async () => {
     // ===== TOTAL REVENUE =====
     const currentMonthOrders = await Order.find({
         createdOn: { $gte: startOfMonth },
-        status: { $nin: ['Cancelled', 'Returned'] }
+        status: { $nin: [ORDER_STATUS.CANCELLED, ORDER_STATUS.RETURNED] }
     });
 
     const lastMonthOrders = await Order.find({
         createdOn: { $gte: startOfLastMonth, $lte: endOfLastMonth },
-        status: { $nin: ['Cancelled', 'Returned'] }
+        status: { $nin: [ORDER_STATUS.CANCELLED, ORDER_STATUS.RETURNED] }
     });
 
     const totalRevenue = currentMonthOrders.reduce((sum, order) => sum + order.finalAmount, 0);
@@ -444,7 +445,7 @@ const getDashboardPageData = async () => {
         {
             $match: {
                 createdOn: { $gte: startOfMonth },
-                status: { $nin: ['Cancelled', 'Returned'] }
+                status: { $nin: [ORDER_STATUS.CANCELLED, ORDER_STATUS.RETURNED] }
             }
         },
         { $unwind: '$orderedItems' },

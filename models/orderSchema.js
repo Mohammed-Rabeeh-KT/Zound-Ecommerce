@@ -1,5 +1,11 @@
 import mongoose from 'mongoose';
 const { Schema } = mongoose;
+import {
+    ALL_ORDER_STATUSES, ORDER_STATUS,
+    ALL_ITEM_STATUSES, ITEM_STATUS,
+    ALL_PAYMENT_METHODS, PAYMENT_METHOD,
+    ALL_PAYMENT_STATUSES, PAYMENT_STATUS,
+} from '../utils/orderConstants.js';
 
 const orderSchema = new Schema({
     orderId: {
@@ -48,8 +54,8 @@ const orderSchema = new Schema({
         },
         itemStatus: {
             type: String,
-            enum: ['Active', 'Cancelled', 'Return Requested', 'Returned', 'Return Rejected', 'Delivered'],
-            default: 'Active'
+            enum: ALL_ITEM_STATUSES,
+            default: ITEM_STATUS.ACTIVE
         },
         cancelReason: {
             type: String,
@@ -87,8 +93,8 @@ const orderSchema = new Schema({
     status: {
         type: String,
         required: true,
-        enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Return Request', 'Returned'],
-        default: 'Pending'
+        enum: ALL_ORDER_STATUSES,
+        default: ORDER_STATUS.PENDING
     },
     createdOn: {
         type: Date,
@@ -101,13 +107,13 @@ const orderSchema = new Schema({
     },
     paymentMethod: {
         type: String,
-        enum: ['COD', 'Razorpay', 'Wallet'],
-        default: 'COD'
+        enum: ALL_PAYMENT_METHODS,
+        default: PAYMENT_METHOD.COD
     },
     paymentStatus: {
         type: String,
-        enum: ['Pending', 'Paid', 'Failed', 'Refunded'],
-        default: 'Pending'
+        enum: ALL_PAYMENT_STATUSES,
+        default: PAYMENT_STATUS.PENDING
     },
     paymentId: {
         type: String,

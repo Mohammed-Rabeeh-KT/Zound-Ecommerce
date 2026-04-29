@@ -258,6 +258,8 @@ async function createUserFromSession(sessionData, referredByCode) {
             // Credit referrer (inviter)
             if (config && config.referrerReward > 0) {
                 referrer.wallet += config.referrerReward;
+                referrer.referralCount = (referrer.referralCount || 0) + 1;
+                referrer.redeemedUsers.push(userData._id);
                 await referrer.save();
 
                 // Record referrer wallet transaction

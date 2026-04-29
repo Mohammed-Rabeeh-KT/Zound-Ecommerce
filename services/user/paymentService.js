@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import razorpayInstance from '../../config/razorpay.js';
 import Order from '../../models/orderSchema.js';
+import { ORDER_STATUS, PAYMENT_STATUS } from '../../utils/orderConstants.js';
 
 const createRazorpayOrder = async (amount, orderId) => {
     if (!amount || amount <= 0) {
@@ -43,18 +44,18 @@ const verifyPayment = async (data) => {
     if (expectedSignature !== razorpay_signature) {
         // Payment failed - update order status
         await Order.findByIdAndUpdate(orderId, {
-            paymentStatus: 'Failed',
-            status: 'Pending'
+            paymentStatus: PAYMENT_STATUS.FAILED,
+            status: ORDER_STATUS.PENDING
         });
         throw new Error('Payment verification failed');
     }
 
     // Payment successful - update order
     await Order.findByIdAndUpdate(orderId, {
-        paymentStatus: 'Paid',
+        paymentStatus: PAYMENT_STATUS.PAID,
         paymentId: razorpay_payment_id,
         razorpayOrderId: razorpay_order_id,
-        status: 'Processing'
+        status: ORDER_STATUS.PROCESSING
     });
 
     const order = await Order.findById(orderId);
@@ -71,8 +72,8 @@ const verifyPayment = async (data) => {
 
 const handlePaymentFailure = async (orderId, error) => {
     await Order.findByIdAndUpdate(orderId, {
-        paymentStatus: 'Failed',
-        status: 'Pending',
+        paymentStatus: PAYMENT_STATUS.FAILED,
+        status: ORDER_STATUS.PENDING,
         paymentError: error?.description || 'Payment was cancelled or failed'
     });
     return true;

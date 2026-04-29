@@ -753,7 +753,7 @@ async function handleChangePassword() {
             btn.disabled = true;
         }
 
-        const response = await axios.post('/api/user/change-password', { currentPassword, newPassword });
+        const response = await axios.patch('/api/user/change-password', { currentPassword, newPassword });
 
         const data = response.data;
 
@@ -971,7 +971,7 @@ async function saveCroppedImage() {
         formData.append('profileImage', blob, 'profile.jpg');
 
         // Upload to server
-        const { data: data } = await axios.post('/api/user/upload-profile-picture', formData);
+        const { data: data } = await axios.patch('/api/user/upload-profile-picture', formData);
 
         if (data.success) {
             // Update avatar in UI

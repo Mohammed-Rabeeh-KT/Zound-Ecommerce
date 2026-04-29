@@ -3,6 +3,7 @@ import Product from '../../models/productSchema.js';
 import User from '../../models/userSchema.js';
 import AppError from '../../utils/AppError.js';
 import { STATUS } from '../../utils/response.js';
+import { ORDER_STATUS } from '../../utils/orderConstants.js';
 
 const reviewManagementService = {
     // Get all reviews with filtering and pagination
@@ -52,7 +53,7 @@ const reviewManagementService = {
                 // Try to find the variant from the user's delivered order
                 const order = await Order.findOne({
                     userId: review.user?._id,
-                    status: 'Delivered',
+                    status: ORDER_STATUS.DELIVERED,
                     'orderedItems.product': review.product._id
                 }).select('orderedItems.product orderedItems.variantId').lean();
                 if (order) {

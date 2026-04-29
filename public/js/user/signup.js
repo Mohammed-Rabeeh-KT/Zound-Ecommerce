@@ -127,6 +127,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Update Google sign-up link when referral code changes
+    const googleSignupBtn = document.getElementById('google-signup-btn');
+    if (referralInput && googleSignupBtn) {
+        referralInput.addEventListener('input', () => {
+            const code = referralInput.value.trim();
+            googleSignupBtn.href = code ? `/auth/google?ref=${encodeURIComponent(code)}` : '/auth/google';
+        });
+    }
+
     // Form Submission
     let isSubmitting = false;
 

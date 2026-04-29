@@ -45,13 +45,13 @@ router.get('/products/:id', productApiController.getProductById);
 router.put('/products/:id', uploadProductImage.any(), productApiController.updateProduct);
 router.patch('/products/:id/toggle', productApiController.toggleProductStatus);
 router.delete('/products/:id', productApiController.softDeleteProduct);
-router.post('/product/variant/delete', productApiController.deleteVariant);
-router.post('/product/variant/toggle', productApiController.toggleVariantStatus);
+router.delete('/product/variant/delete', productApiController.deleteVariant);
+router.patch('/product/variant/toggle', productApiController.toggleVariantStatus);
 
 // ORDER MANAGEMENT
-router.post("/orders/update-status", orderApiController.updateOrderStatus);
-router.post("/orders/return-request", orderApiController.handleReturnRequest);
-router.post("/orders/update-item-status", orderApiController.updateItemStatus);
+router.patch("/orders/update-status", orderApiController.updateOrderStatus);
+router.patch("/orders/return-request", orderApiController.handleReturnRequest);
+router.patch("/orders/update-item-status", orderApiController.updateItemStatus);
 
 // BRAND MANAGEMENT 
 router.get("/brands/data", brandApiController.getBrandsData);
@@ -92,9 +92,9 @@ router.get("/banners/stats", bannerManagementApiController.getBannerStats);
 router.get("/banners/products", bannerManagementApiController.getProductsForBanner);
 router.get("/banners/:id", bannerManagementApiController.getBannerById);
 router.post("/banners", bannerManagementApiController.createBanner);
+router.put("/banners/reorder", bannerManagementApiController.reorderBanners);
 router.put("/banners/:id", bannerManagementApiController.updateBanner);
 router.delete("/banners/:id", bannerManagementApiController.deleteBanner);
 router.patch("/banners/:id/toggle", bannerManagementApiController.toggleBannerStatus);
-router.put("/banners/reorder", bannerManagementApiController.reorderBanners);
 
 export default router;

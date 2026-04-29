@@ -48,7 +48,7 @@ async function handleReturnRequest(orderId, itemId, action) {
             requestBody.rejectReason = rejectReason;
         }
 
-        const response = await axios.post('/api/admin/orders/return-request', requestBody);
+        const response = await axios.patch('/api/admin/orders/return-request', requestBody);
 
         const data = response.data;
 

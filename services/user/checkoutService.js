@@ -9,6 +9,12 @@ import Coupon from '../../models/couponSchema.js';
 import AppError from '../../utils/AppError.js';
 import { STATUS } from '../../utils/response.js';
 import razorpayInstance from '../../config/razorpay.js';
+import {
+    ORDER_STATUS, ITEM_STATUS,
+    PAYMENT_METHOD, PAYMENT_METHOD_MAP,
+    PAYMENT_STATUS,
+    WALLET_TRANSACTION_TYPE,
+} from '../../utils/orderConstants.js';
 
 // =====================================================
 // HELPER FUNCTIONS FOR COUPONS
@@ -272,18 +278,18 @@ const placeOrder = async (userId, data) => {
             price: item.effectivePrice,
             productName: item.productId.productName,
             discountAllocated: itemDiscount,
-            itemStatus: 'Active'
+            itemStatus: ITEM_STATUS.ACTIVE
         };
     });
 
-    let paymentStatus = 'Pending';
+    let paymentStatus = PAYMENT_STATUS.PENDING;
     if (paymentMethod === 'wallet') {
-        paymentStatus = 'Paid';
+        paymentStatus = PAYMENT_STATUS.PAID;
     } else if (paymentMethod === 'razorpay') {
         if (data.paymentFailure) {
             throw new AppError('Payment failed. Order was not created.', STATUS.BAD_REQUEST);
         }
-        paymentStatus = 'Paid';
+        paymentStatus = PAYMENT_STATUS.PAID;
     }
 
     let appliedCouponId = null;
@@ -303,12 +309,6 @@ const placeOrder = async (userId, data) => {
         }
     }
 
-    const paymentMethodMap = {
-        'cod': 'COD',
-        'razorpay': 'Razorpay',
-        'wallet': 'Wallet'
-    };
-
     const order = new Order({
         userId: userId,
         orderedItems: orderedItems,
@@ -316,8 +316,8 @@ const placeOrder = async (userId, data) => {
         discount: discount,
         finalAmount: finalAmount,
         address: addressId,
-        status: 'Pending',
-        paymentMethod: paymentMethodMap[paymentMethod] || 'COD',
+        status: ORDER_STATUS.PENDING,
+        paymentMethod: PAYMENT_METHOD_MAP[paymentMethod] || PAYMENT_METHOD.COD,
         paymentStatus: paymentStatus,
         couponApplied: couponCode || null,
         invoiceDate: new Date(),
@@ -337,7 +337,7 @@ const placeOrder = async (userId, data) => {
             await WalletTransaction.create({
                 userId,
                 amount: finalAmount,
-                type: 'Debit',
+                type: WALLET_TRANSACTION_TYPE.DEBIT,
                 description: `Payment for Order #${order.orderId}`,
                 date: new Date()
             });
