@@ -205,7 +205,7 @@ const updateItemStatus = async (orderId, itemId, status) => {
     return order;
 };
 
-const getOrderManagementPageData = async (pageQuery, searchQuery, statusQuery , paymentQuery , dateQuery) => {
+const getOrderManagementPageData = async (pageQuery, searchQuery, statusQuery , paymentQuery , startDateQuery, endDateQuery) => {
     const page = parseInt(pageQuery) || 1;
     const limit = 10;
     const skip = (page - 1) * limit;
@@ -218,6 +218,20 @@ const getOrderManagementPageData = async (pageQuery, searchQuery, statusQuery , 
 
     if(paymentQuery && paymentQuery !== ''){
         query.paymentMethod = paymentQuery;
+    }
+
+    if (startDateQuery || endDateQuery) {
+        query.createdOn = {};
+        if (startDateQuery && startDateQuery !== '') {
+            const startDate = new Date(startDateQuery);
+            startDate.setHours(0, 0, 0, 0);
+            query.createdOn.$gte = startDate;
+        }
+        if (endDateQuery && endDateQuery !== '') {
+            const endDate = new Date(endDateQuery);
+            endDate.setHours(23, 59, 59, 999);
+            query.createdOn.$lte = endDate;
+        }
     }
 
     console.log(query)
@@ -264,7 +278,8 @@ const getOrderManagementPageData = async (pageQuery, searchQuery, statusQuery , 
             search: searchQuery || '',
             status: statusQuery || '',
             paymentMethod: paymentQuery || '',
-            date: dateQuery || ''
+            startDate: startDateQuery || '',
+            endDate: endDateQuery || ''
         }
     };
 };

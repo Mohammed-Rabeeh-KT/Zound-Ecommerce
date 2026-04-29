@@ -52,6 +52,14 @@
                     <% }) %>
                 </select>
 
+                <select class="filter-select" style="width: 150px;" onchange="applyFilter('brand', this.value)">
+                    <option value="">Brand: All</option>
+                    <% brands.forEach(b => { %>
+                        <option value="<%= b._id %>" <%=filters.brand==b._id ? 'selected' : '' %>><%= b.brandName %>
+                        </option>
+                    <% }) %>
+                </select>
+
                 <select class="filter-select" style="width: 150px;" onchange="applyFilter('status', this.value)">
                     <option value="">Status: All</option>
                     <option value="active" <%=filters.status=='active' ? 'selected' : '' %>>Active</option>

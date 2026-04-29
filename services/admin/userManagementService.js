@@ -5,15 +5,32 @@ import mongoose from "mongoose";
 
 const USERS_PER_PAGE = 10;
 
-const getUsersList = async (page = 1, search = "") => {
-    const query = search
-        ? {
-            $or: [
-                { name: { $regex: search, $options: "i" } },
-                { email: { $regex: search, $options: "i" } }
-            ]
+const getUsersList = async (page = 1, search = "", status = "", startDate = "", endDate = "") => {
+    const query = {};
+    
+    if (search) {
+        query.$or = [
+            { name: { $regex: search, $options: "i" } },
+            { email: { $regex: search, $options: "i" } }
+        ];
+    }
+
+    if (status === "active") query.isBlocked = false;
+    else if (status === "inactive") query.isBlocked = true;
+
+    if (startDate || endDate) {
+        query.createdAt = {};
+        if (startDate) {
+            const start = new Date(startDate);
+            start.setHours(0, 0, 0, 0);
+            query.createdAt.$gte = start;
         }
-        : {};
+        if (endDate) {
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            query.createdAt.$lte = end;
+        }
+    }
 
     const totalUsers = await User.countDocuments(query);
     const users = await User.find(query)

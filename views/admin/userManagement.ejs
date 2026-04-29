@@ -12,35 +12,46 @@
 
         <!-- SEARCH BAR -->
         <form method="GET" action="/admin/users" id="searchForm">
-            <div class="search-container">
-                  <div class="search-wrapper">
-        
-        <!-- Search Icon -->
-        <span class="search-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" 
-                fill="none" stroke="#6c6c6c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-        </span>
+    <div class="filters-container" style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+        <!-- Search Bar -->
+        <div class="search-wrapper" style="flex: 1; min-width: 250px; position: relative;">
+            <span class="search-icon" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" 
+                    fill="none" stroke="#6c6c6c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </span>
+            <input type="text" id="searchInput" value="<%= typeof search !== 'undefined' ? search : '' %>" 
+                class="search-input" style="width: 100%; padding-left: 35px;"
+                placeholder="Search by name or email..." 
+            />
+            <span class="clear-icon" id="clearSearchIcon" style="display: none; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" 
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </span>
+        </div>
 
-        <!-- Input -->
-        <input type="text" name="search" value="<%= search %>" 
-            class="search-input"
-            placeholder="Search by name or email..." 
-        />
+        <!-- Status Filter -->
+        <select id="statusFilter" class="filter-select" style="padding: 10px; border-radius: 8px; border: 1px solid #ccc; outline: none; background: white;">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+        </select>
 
-        <!-- Clear Icon -->
-        <span class="clear-icon" id="clearSearchIcon" style="display: none;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" 
-                viewBox="0 0 24 24" fill="none" stroke="currentColor" 
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-        </span>
+        <!-- Date Filters -->
+        <input type="date" id="startDateFilter" class="filter-input" style="padding: 10px; border-radius: 8px; border: 1px solid #ccc; outline: none; background: white;" title="Start Date">
+        <input type="date" id="endDateFilter" class="filter-input" style="padding: 10px; border-radius: 8px; border: 1px solid #ccc; outline: none; background: white;" title="End Date">
+
+        <!-- Reset Button -->
+        <button id="resetFilters" class="btn btn-outline" style="padding: 10px 15px; border-radius: 8px; border: 1px solid #ccc; background: #f9f9f9; cursor: pointer; font-weight: 500;">
+            Reset
+        </button>
     </div>
-            </div>
         </form>
 
         <!-- TABLE -->

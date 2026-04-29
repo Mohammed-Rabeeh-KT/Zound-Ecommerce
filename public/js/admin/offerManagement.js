@@ -227,10 +227,18 @@ async function deleteOffer(id, type) {
 const pageState = { all: 1, product: 1, category: 1, brand: 1, scheduled: 1 };
 const itemsPerPage = 10;
 const searchState = { all: '', product: '', category: '', brand: '', scheduled: '' };
+const statusState = { all: 'all', product: 'all', category: 'all', brand: 'all', scheduled: 'all' };
 
 function filterTable(tableId, query) {
     const type = tableId.replace('Table', '');
     searchState[type] = query.toLowerCase();
+    pageState[type] = 1;
+    paginateTable(type);
+}
+
+function filterOffersByStatus(tableId, status) {
+    const type = tableId.replace('Table', '');
+    statusState[type] = status;
     pageState[type] = 1;
     paginateTable(type);
 }
@@ -252,11 +260,28 @@ function paginateTable(type) {
 
     // Filter
     dataRows.forEach(row => {
+        let matchesSearch = false;
+        let matchesStatus = false;
+
         if (!query) {
-            visibleRows.push(row);
+            matchesSearch = true;
         } else {
             const text = row.textContent.toLowerCase();
-            if (text.includes(query)) visibleRows.push(row);
+            if (text.includes(query)) matchesSearch = true;
+        }
+
+        const status = statusState[type];
+        if (status === 'all' || !status) {
+            matchesStatus = true;
+        } else {
+            const badge = row.querySelector('.status-badge');
+            if (badge && badge.classList.contains('status-' + status)) {
+                matchesStatus = true;
+            }
+        }
+
+        if (matchesSearch && matchesStatus) {
+            visibleRows.push(row);
         }
     });
 

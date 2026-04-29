@@ -56,12 +56,21 @@
                             <input type="text" placeholder="Search all offers..."
                                 onkeyup="filterTable('allTable', this.value)">
                         </div>
-                        <div class="filter-badges">
-                            <span class="filter-badge">
-                                <%= (typeof productOffers !=='undefined' ? productOffers.length : 0) + (typeof
-                                    categoryOffers !=='undefined' ? categoryOffers.length : 0) + (typeof brandOffers
-                                    !=='undefined' ? brandOffers.length : 0) %> Total
-                            </span>
+                        <div class="header-actions" style="display: flex; align-items: center; gap: 15px; margin-left: auto;">
+                            <select class="filter-select" onchange="filterOffersByStatus('allTable', this.value)" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; outline: none;">
+                                <option value="all">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="scheduled">Scheduled</option>
+                                <option value="expired">Expired</option>
+                            </select>
+                            <div class="filter-badges">
+                                <span class="filter-badge">
+                                    <%= (typeof productOffers !=='undefined' ? productOffers.length : 0) + (typeof
+                                        categoryOffers !=='undefined' ? categoryOffers.length : 0) + (typeof brandOffers
+                                        !=='undefined' ? brandOffers.length : 0) %> Total
+                                </span>
+                            </div>
                         </div>
                     </div>
                     <table class="custom-table" id="allTable">
@@ -197,6 +206,15 @@
                             <input type="text" placeholder="Search product offers..."
                                 onkeyup="filterTable('productTable', this.value)">
                         </div>
+                        <div class="header-actions" style="display: flex; align-items: center; margin-left: auto;">
+                            <select class="filter-select" onchange="filterOffersByStatus('productTable', this.value)" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; outline: none;">
+                                <option value="all">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="scheduled">Scheduled</option>
+                                <option value="expired">Expired</option>
+                            </select>
+                        </div>
                     </div>
                     <table class="custom-table" id="productTable">
                         <thead>
@@ -301,6 +319,15 @@
                             <input type="text" placeholder="Search category offers..."
                                 onkeyup="filterTable('categoryTable', this.value)">
                         </div>
+                        <div class="header-actions" style="display: flex; align-items: center; margin-left: auto;">
+                            <select class="filter-select" onchange="filterOffersByStatus('categoryTable', this.value)" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; outline: none;">
+                                <option value="all">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="scheduled">Scheduled</option>
+                                <option value="expired">Expired</option>
+                            </select>
+                        </div>
                     </div>
                     <table class="custom-table" id="categoryTable">
                         <thead>
@@ -404,6 +431,15 @@
                             <i class="bi bi-search search-icon"></i>
                             <input type="text" placeholder="Search brand offers..."
                                 onkeyup="filterTable('brandTable', this.value)">
+                        </div>
+                        <div class="header-actions" style="display: flex; align-items: center; margin-left: auto;">
+                            <select class="filter-select" onchange="filterOffersByStatus('brandTable', this.value)" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; outline: none;">
+                                <option value="all">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="scheduled">Scheduled</option>
+                                <option value="expired">Expired</option>
+                            </select>
                         </div>
                     </div>
                     <table class="custom-table" id="brandTable">

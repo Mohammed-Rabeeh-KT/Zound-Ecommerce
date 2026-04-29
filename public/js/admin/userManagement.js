@@ -3,19 +3,41 @@
 document.addEventListener("DOMContentLoaded", () => {
     loadUsers(1);
 
-    const searchInput = document.querySelector(".search-input");
+    const searchInput = document.getElementById("searchInput");
     const clearIcon = document.getElementById("clearSearchIcon");
+    const statusFilter = document.getElementById("statusFilter");
+    const startDateFilter = document.getElementById("startDateFilter");
+    const endDateFilter = document.getElementById("endDateFilter");
+    const resetFilters = document.getElementById("resetFilters");
 
     // Live search
     searchInput.addEventListener("input", () => {
         clearIcon.style.display = searchInput.value ? "block" : "none";
         loadUsers(1);
     });
-});
-async function loadUsers(page) {
-    const search = document.querySelector(".search-input").value;
 
-    const res = await axios.get(`/api/admin/users/data?page=${page}&search=${search}`);
+    statusFilter.addEventListener("change", () => loadUsers(1));
+    startDateFilter.addEventListener("change", () => loadUsers(1));
+    endDateFilter.addEventListener("change", () => loadUsers(1));
+
+    resetFilters.addEventListener("click", (e) => {
+        e.preventDefault();
+        searchInput.value = "";
+        statusFilter.value = "";
+        startDateFilter.value = "";
+        endDateFilter.value = "";
+        clearIcon.style.display = "none";
+        loadUsers(1);
+    });
+});
+
+async function loadUsers(page) {
+    const search = document.getElementById("searchInput").value;
+    const status = document.getElementById("statusFilter").value;
+    const startDate = document.getElementById("startDateFilter").value;
+    const endDate = document.getElementById("endDateFilter").value;
+
+    const res = await axios.get(`/api/admin/users/data?page=${page}&search=${search}&status=${status}&startDate=${startDate}&endDate=${endDate}`);
     const data = res.data;
 
     renderTable(data.users, data.currentPage, data.usersPerPage);
@@ -132,7 +154,8 @@ async function unblockUser(id) {
 
 
 function clearSearch() {
-    document.querySelector(".search-input").value = "";
+    document.getElementById("searchInput").value = "";
+    document.getElementById("clearSearchIcon").style.display = "none";
     loadUsers(1); // Reload results
     window.history.replaceState({}, "", "/admin/users"); // Remove search query from URL
 }

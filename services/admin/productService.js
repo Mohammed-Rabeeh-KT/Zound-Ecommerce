@@ -383,6 +383,9 @@ const getProductPageData = async (queryData) => {
     if (queryData.status) {
         query.status = queryData.status === 'active' ? 'Active' : 'Inactive';
     }
+    if (queryData.brand) {
+        query.brand = queryData.brand;
+    }
 
     const totalProducts = await Product.countDocuments(query);
     const products = await Product.find(query)

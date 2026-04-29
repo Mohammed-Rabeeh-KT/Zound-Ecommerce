@@ -67,10 +67,16 @@
                     <option value="Shipped" <%=filters.status==='Shipped' ? 'selected' : '' %>>Shipped</option>
                     <option value="Delivered" <%=filters.status==='Delivered' ? 'selected' : '' %>>Delivered</option>
                     <option value="Cancelled" <%=filters.status==='Cancelled' ? 'selected' : '' %>>Cancelled</option>
-                    <option value="Return Request" <%=filters.status==='Return Request' ? 'selected' : '' %>>Return
-                        Requests</option>
+                    <option value="Return Request" <%=filters.status==='Return Request' ? 'selected' : '' %>>Return Requests</option>
                     <option value="Returned" <%=filters.status==='Returned' ? 'selected' : '' %>>Returned</option>
                 </select>
+
+                <!-- Date Filter -->
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <input type="date" class="filter-select" title="Start Date" value="<%= typeof filters.startDate !== 'undefined' ? filters.startDate : '' %>" onchange="applyFilter('startDate', this.value)">
+                    <span style="color: #64748b; font-size: 13px;">to</span>
+                    <input type="date" class="filter-select" title="End Date" value="<%= typeof filters.endDate !== 'undefined' ? filters.endDate : '' %>" onchange="applyFilter('endDate', this.value)">
+                </div>
 
                 <!-- Sort is implicit (Desc by date), but could add if needed. Requirement said "List order in desc order by order date" (implied default) -->
                 <!-- We could add a clear all filters button if complex -->

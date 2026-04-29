@@ -3,7 +3,10 @@ import { STATUS } from "../../utils/response.js";
 
 export const protectAdmin = (req, res, next) => {
     if(!req.session.admin){
-        return next(new AppError("Please log in as admin", STATUS.UNAUTHORIZED));
+        if (req.originalUrl && req.originalUrl.startsWith('/api')) {
+            return next(new AppError("Please log in as admin", STATUS.UNAUTHORIZED));
+        }
+        return res.redirect('/admin/login');
     }
     next();
 }

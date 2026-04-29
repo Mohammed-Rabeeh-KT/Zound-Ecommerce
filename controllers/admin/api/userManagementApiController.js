@@ -5,8 +5,11 @@ import userManagementService from "../../../services/admin/userManagementService
 const getUsersData = catchAsync(async (req, res) => {
     const page = Number(req.query.page) || 1;
     const search = req.query.search || "";
+    const status = req.query.status || "";
+    const startDate = req.query.startDate || "";
+    const endDate = req.query.endDate || "";
 
-    const data = await userManagementService.getUsersList(page, search);
+    const data = await userManagementService.getUsersList(page, search, status, startDate, endDate);
 
     return res.json(data);
 })
