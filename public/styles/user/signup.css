@@ -152,8 +152,7 @@ label {
 }
 
 .divider-row span {
-  padding: 0 12px;
-  white-space: nowrap;
+  padding: 0 10px;
 }
 
 /* SOCIAL BUTTONS */
@@ -254,8 +253,7 @@ label {
   }
 }
 
-.social-btn,
-a.social-btn {
+.social-btn {
   flex: 1;
   border: 1px solid #d1d5db;
   padding: 10px;
@@ -268,12 +266,8 @@ a.social-btn {
   gap: 6px;
   cursor: pointer;
   transition: 0.25s;
-  text-decoration: none;
-  color: #111827;
 }
 
-.social-btn:hover,
-a.social-btn:hover {
+.social-btn:hover {
   background: #f3f4f6;
-  text-decoration: none;
 }

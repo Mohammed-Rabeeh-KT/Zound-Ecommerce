@@ -136,6 +136,10 @@ label {
     background: #e5e7eb;
 }
 
+.divider-row span {
+    padding: 0 10px;
+}
+
 /* SOCIAL BUTTONS */
 .social-buttons {
     display: flex;

@@ -79,9 +79,13 @@
 
 /* Ensure all alerts and toasts are on top of everything (including header z-10001) */
 .swal2-container {
-    z-index: 999999 !important;
+    z-index: 2147483647 !important;
+}
+
+.swal2-container.swal2-toast-shown {
+    z-index: 2147483647 !important;
 }
 
 .zound-swal-popup, .zound-toast-popup {
-    z-index: 1000000 !important;
+    z-index: 2147483647 !important;
 }
